@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F4F8F7;
+            color: #0D1B16;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .error-card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 56px 48px;
+            text-align: center;
+            border: 1px solid #E8EFED;
+            box-shadow: 0 20px 60px -10px rgba(15, 110, 86, 0.1);
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .error-icon {
+            width: 90px;
+            height: 90px;
+            background: #fef2f2;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+            font-size: 40px;
+            color: #ef4444;
+        }
+
+        .error-code {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #0F6E56;
+            line-height: 1;
+            margin-bottom: 12px;
+            letter-spacing: -3px;
+        }
+
+        .error-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #0D1B16;
+        }
+
+        .error-message {
+            font-size: 14px;
+            color: #64748B;
+            line-height: 1.7;
+            margin-bottom: 36px;
+        }
+
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #0F6E56;
+            color: #ffffff;
+            padding: 14px 32px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .btn-home:hover {
+            background: #1D9E75;
+            transform: translateY(-2px);
+            color: #ffffff;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #64748B;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 16px;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover { color: #0F6E56; }
+    </style>
+</head>
+<body>
+
+    <div class="error-card">
+        <div class="error-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+
+        <div class="error-code">404</div>
+        <div class="error-title">Page Not Found</div>
+        <p class="error-message">
+            <%= (typeof message !== 'undefined' && message) ? message : 'The page you are looking for does not exist or has been moved.' %>
+        </p>
+
+        <a href="/" class="btn-home">
+            <i class="fa-solid fa-house-chimney"></i>
+            Go Back Home
+        </a>
+
+        <br>
+
+        <a href="javascript:history.back()" class="btn-back">
+            <i class="fa-solid fa-chevron-left"></i> Go back
+        </a>
+    </div>
+
+</body>
+</html>

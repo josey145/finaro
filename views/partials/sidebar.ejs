@@ -1,0 +1,43 @@
+<!-- Sidebar Partial -->
+<aside class="sidebar bg-light">
+  <nav class="navbar flex-column">
+    <div class="container-fluid">
+      <h5 class="mb-4">Menu</h5>
+      <ul class="navbar-nav">
+        <% if (user?.role === 'user') { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/user/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/user/profile">Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/user/kyc">KYC Verification</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/user/withdraw">Withdraw Funds</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/user/transactions">Transactions</a>
+          </li>
+        <% } else if (user?.role === 'admin') { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/users">Users</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/transactions">Transactions</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/kyc">KYC Review</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/settings">Settings</a>
+          </li>
+        <% } %>
+      </ul>
+    </div>
+  </nav>
+</aside>

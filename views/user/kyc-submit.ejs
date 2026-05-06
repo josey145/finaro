@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="<%= typeof theme !== 'undefined' ? theme : (typeof _theme !== 'undefined' ? _theme : 'light') %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Finora Bank</title>
+    <script>
+        // Apply theme immediately before any rendering
+        (function() {
+            const t = document.documentElement.getAttribute('data-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F6E56;
+            --accent: #1D9E75;
+            --bg-body: #F4F8F7;
+            --bg-card: #FFFFFF;
+            --text-main: #0D1B16;
+            --text-muted: #64748B;
+            --border: #E8EFED;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --nav-bg: rgba(255,255,255,0.95);
+            --bg-input: #F4F8F7;
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --nav-bg: rgba(15,23,42,0.97);
+            --bg-input: #0f172a;
+        }
+        @media(prefers-color-scheme:dark) {
+            [data-theme="auto"] {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border: #334155;
+                --nav-bg: rgba(15,23,42,0.97);
+                --bg-input: #0f172a;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 90px;
+            transition: background .3s, color .3s;
+        }
+
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+        .flash-message { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .flash-danger  { background: #fef2f2; color: var(--danger);  border: 1px solid #fecaca; }
+        .flash-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+
+        /* HERO */
+        .header-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 24px; padding: 28px 32px; color: white;
+            margin-bottom: 20px; box-shadow: 0 15px 35px rgba(15,110,86,0.3);
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        }
+        .header-card h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+        .header-card p  { font-size: 14px; opacity: 0.85; margin: 4px 0 0; }
+        .header-icon { width: 56px; height: 56px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+        /* STATUS BANNER */
+        .status-banner { border-radius: 16px; padding: 18px 22px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; border: 1.5px solid; }
+        .status-banner-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .banner-approved { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+        .banner-approved .status-banner-icon { background: #dcfce7; color: var(--success); }
+        .banner-pending  { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+        .banner-pending .status-banner-icon  { background: #fef9c3; color: var(--warning); }
+        .banner-rejected { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+        .banner-rejected .status-banner-icon { background: #fee2e2; color: var(--danger); }
+        .banner-title { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+        .banner-sub   { font-size: 13px; opacity: 0.85; }
+
+        /* STEPS */
+        .steps-row { display: flex; align-items: center; margin-bottom: 24px; }
+        .step-dot { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+        .step-dot:not(:last-child)::after { content: ''; position: absolute; top: 18px; left: 60%; width: 80%; height: 2px; background: var(--border); }
+        .step-dot.done:not(:last-child)::after { background: var(--primary); }
+        .step-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; position: relative; z-index: 1; }
+        .step-dot.done .step-circle   { background: var(--primary); border-color: var(--primary); color: white; }
+        .step-dot.active .step-circle { border-color: var(--primary); color: var(--primary); }
+        .step-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center; }
+        .step-dot.done .step-label   { color: var(--primary); }
+        .step-dot.active .step-label { color: var(--text-main); font-weight: 700; }
+
+        /* CARD */
+        .f-card { background: var(--white); border-radius: 24px; padding: 32px; border: 1px solid var(--border); box-shadow: 0 10px 30px -5px rgba(15,110,86,0.05); margin-bottom: 20px; }
+        .form-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .form-label { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .form-control, .form-select { background: var(--bg-body); border: 1.5px solid var(--border); border-radius: 14px; padding: 13px 16px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-main); transition: all 0.2s; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15,110,86,0.1); background: var(--white); outline: none; }
+
+        /* ID TYPE GRID */
+        .id-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+        .id-type-option { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+        .id-type-label { border: 2px solid var(--border); border-radius: 16px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg-body); display: block; }
+        .id-type-label i { font-size: 24px; color: var(--text-muted); display: block; margin-bottom: 8px; }
+        .id-type-label span { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .id-type-option:checked + .id-type-label { border-color: var(--primary); background: #f0fdf8; }
+        .id-type-option:checked + .id-type-label i,
+        .id-type-option:checked + .id-type-label span { color: var(--primary); }
+
+        /* UPLOAD AREAS */
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        @media (max-width: 576px) { .upload-grid { grid-template-columns: 1fr; } }
+
+        .file-upload-area {
+            border: 2px dashed var(--border); border-radius: 16px;
+            padding: 28px 16px; text-align: center; cursor: pointer;
+            transition: all 0.2s; background: var(--bg-body); position: relative;
+        }
+        .file-upload-area:hover, .file-upload-area.dragover { border-color: var(--primary); background: #f0fdf8; }
+        .file-upload-area.has-file { border-color: var(--success); background: #f0fdf4; border-style: solid; }
+
+        .upload-icon { width: 48px; height: 48px; background: #E1F5EE; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 20px; color: var(--primary); }
+        .upload-icon.success-icon { background: #dcfce7; color: var(--success); }
+
+        .file-upload-area h6 { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .file-upload-area p  { font-size: 12px; color: var(--text-muted); margin: 0; }
+        .file-upload-area .file-name { font-size: 12px; color: var(--success); font-weight: 600; margin-top: 8px; word-break: break-all; }
+
+        .upload-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.9); border: 1px solid var(--border);
+            border-radius: 20px; padding: 4px 12px;
+            font-size: 11px; font-weight: 700; color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        .upload-badge.front { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+        .upload-badge.back  { border-color: var(--warning); color: #92400e; background: #fffbeb; }
+
+        /* SUBMIT */
+        .btn-submit { background: var(--primary); color: white; border: none; border-radius: 14px; padding: 15px 32px; font-size: 15px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; width: 100%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-submit:hover { background: var(--accent); transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* INFO BOX */
+        .info-box { background: #f0fdf8; border: 1px solid #bbf7d0; border-radius: 16px; padding: 20px; }
+        .info-box h6 { font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 12px; }
+        .info-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 13px; color: #064e3b; }
+        .info-item:last-child { margin-bottom: 0; }
+        .info-item i { color: var(--primary); margin-top: 2px; flex-shrink: 0; }
+
+        /* MOBILE NAV */
+        .mobile-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 25px; z-index: 1000; }
+        .nav-item { text-align: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+
+        @media (max-width: 576px) {
+            .id-type-grid { gap: 8px; }
+            .id-type-label { padding: 12px 6px; }
+            .id-type-label i { font-size: 20px; }
+            .id-type-label span { font-size: 11px; }
+            .f-card { padding: 20px; }
+        }
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav { display: none; }
+            body { padding-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success"><i class="fas fa-circle-check"></i> <%= success_msg %></div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger"><i class="fas fa-circle-exclamation"></i> <%= error_msg %></div>
+    <% } %>
+
+    <!-- Header -->
+    <div class="header-card">
+        <div>
+            <div class="mb-1">
+                <a href="/user/dashboard" class="text-white text-decoration-none opacity-75" style="font-size:13px;">
+                    <i class="fa-solid fa-chevron-left me-1"></i> Dashboard
+                </a>
+            </div>
+            <h1>KYC Verification</h1>
+            <p>Verify your identity to unlock full account access</p>
+        </div>
+        <div class="header-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    </div>
+
+    <%
+        const kycData  = (typeof kycStatus !== 'undefined' && kycStatus) ? kycStatus : null;
+        const kycValue = kycData?.status || (typeof user !== 'undefined' && user?.kyc_status) || 'not_submitted';
+    %>
+
+    <!-- Status Banner -->
+    <% if (kycValue === 'approved') { %>
+        <div class="status-banner banner-approved">
+            <div class="status-banner-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div><div class="banner-title">KYC Verified</div><div class="banner-sub">Your identity has been verified. You have full access to all features.</div></div>
+        </div>
+    <% } else if (kycValue === 'pending') { %>
+        <div class="status-banner banner-pending">
+            <div class="status-banner-icon"><i class="fa-solid fa-clock"></i></div>
+            <div><div class="banner-title">Under Review</div><div class="banner-sub">Your documents are being reviewed. This usually takes 1–2 business days.</div></div>
+        </div>
+    <% } else if (kycValue === 'rejected') { %>
+        <div class="status-banner banner-rejected">
+            <div class="status-banner-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+            <div><div class="banner-title">Verification Rejected</div><div class="banner-sub"><%= kycData?.admin_notes || 'Your submission was rejected. Please re-submit with valid documents.' %></div></div>
+        </div>
+    <% } %>
+
+    <!-- Steps -->
+    <div class="steps-row">
+        <div class="step-dot done">
+            <div class="step-circle"><i class="fa-solid fa-check" style="font-size:13px;"></i></div>
+            <div class="step-label">Register</div>
+        </div>
+        <div class="step-dot <%= kycValue === 'not_submitted' || kycValue === 'rejected' ? 'active' : 'done' %>">
+            <div class="step-circle">
+                <% if (kycValue === 'not_submitted' || kycValue === 'rejected') { %>2<% } else { %><i class="fa-solid fa-check" style="font-size:13px;"></i><% } %>
+            </div>
+            <div class="step-label">Submit KYC</div>
+        </div>
+        <div class="step-dot <%= kycValue === 'pending' ? 'active' : kycValue === 'approved' ? 'done' : '' %>">
+            <div class="step-circle">
+                <% if (kycValue === 'approved') { %><i class="fa-solid fa-check" style="font-size:13px;"></i><% } else { %>3<% } %>
+            </div>
+            <div class="step-label">Under Review</div>
+        </div>
+        <div class="step-dot <%= kycValue === 'approved' ? 'done' : '' %>">
+            <div class="step-circle">
+                <% if (kycValue === 'approved') { %><i class="fa-solid fa-check" style="font-size:13px;"></i><% } else { %>4<% } %>
+            </div>
+            <div class="step-label">Verified</div>
+        </div>
+    </div>
+
+    <% if (kycValue !== 'approved' && kycValue !== 'pending') { %>
+
+    <div class="f-card">
+        <div class="form-section-title"><i class="fa-solid fa-id-card me-2"></i> Identity Document</div>
+
+        <form action="/user/kyc-submit" method="POST" enctype="multipart/form-data" id="kycForm">
+
+            <!-- Document Type -->
+            <div class="mb-4">
+                <div class="form-label mb-3">Select Document Type</div>
+                <div class="id-type-grid">
+                    <div>
+                        <input class="id-type-option" type="radio" name="document_type" id="type_passport" value="passport" required>
+                        <label class="id-type-label" for="type_passport">
+                            <i class="fa-solid fa-passport"></i><span>Passport</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input class="id-type-option" type="radio" name="document_type" id="type_driver" value="driver_license">
+                        <label class="id-type-label" for="type_driver">
+                            <i class="fa-solid fa-car"></i><span>Driver's License</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input class="id-type-option" type="radio" name="document_type" id="type_national" value="national_id">
+                        <label class="id-type-label" for="type_national">
+                            <i class="fa-solid fa-id-card"></i><span>National ID</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Number -->
+            <div class="mb-4">
+                <label class="form-label" for="document_number">Document Number</label>
+                <input type="text" class="form-control" id="document_number"
+                       name="document_number" placeholder="e.g. A1234567" required>
+            </div>
+
+            <div class="form-section-title mt-2">
+                <i class="fa-solid fa-upload me-2"></i> Upload Front & Back
+            </div>
+
+            <!-- FRONT + BACK UPLOAD GRID -->
+            <div class="upload-grid">
+
+                <!-- FRONT -->
+                <div>
+                    <div class="file-upload-area" id="dropFront" onclick="document.getElementById('frontFile').click()">
+                        <div class="upload-badge front">
+                            <i class="fa-solid fa-arrow-up"></i> Front Side
+                        </div>
+                        <input type="file" name="document_front" id="frontFile"
+                               accept=".pdf,.jpg,.jpeg,.png" required
+                               onchange="handleFile(this, 'front')"
+                               style="display:none;">
+                        <div class="upload-icon" id="frontIcon">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <h6 id="frontTitle">Upload Front</h6>
+                        <p>JPG, PNG or PDF · Max 5MB</p>
+                        <div class="file-name" id="frontName"></div>
+                    </div>
+                </div>
+
+                <!-- BACK -->
+                <div>
+                    <div class="file-upload-area" id="dropBack" onclick="document.getElementById('backFile').click()">
+                        <div class="upload-badge back">
+                            <i class="fa-solid fa-arrow-down"></i> Back Side
+                        </div>
+                        <input type="file" name="document_back" id="backFile"
+                               accept=".pdf,.jpg,.jpeg,.png" required
+                               onchange="handleFile(this, 'back')"
+                               style="display:none;">
+                        <div class="upload-icon" id="backIcon">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <h6 id="backTitle">Upload Back</h6>
+                        <p>JPG, PNG or PDF · Max 5MB</p>
+                        <div class="file-name" id="backName"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress indicator -->
+            <div id="uploadProgress" class="d-flex gap-2 mb-4" style="display:none!important;">
+                <div id="prog-front" style="flex:1; padding:10px 14px; border-radius:12px; background:var(--bg-body); border:1px solid var(--border); font-size:12px; font-weight:600; color:var(--text-muted); text-align:center;">
+                    <i class="fa-solid fa-circle-xmark me-1"></i> Front not uploaded
+                </div>
+                <div id="prog-back" style="flex:1; padding:10px 14px; border-radius:12px; background:var(--bg-body); border:1px solid var(--border); font-size:12px; font-weight:600; color:var(--text-muted); text-align:center;">
+                    <i class="fa-solid fa-circle-xmark me-1"></i> Back not uploaded
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="fa-solid fa-shield-halved"></i> Submit for Verification
+            </button>
+        </form>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <h6><i class="fa-solid fa-circle-info me-2"></i> Tips for a successful submission</h6>
+        <div class="info-item"><i class="fa-solid fa-sun"></i><span>Make sure the document is well-lit with no shadows or glare.</span></div>
+        <div class="info-item"><i class="fa-solid fa-expand"></i><span>All four corners of the document must be clearly visible.</span></div>
+        <div class="info-item"><i class="fa-solid fa-eye"></i><span>All text must be sharp and readable — no blurry images.</span></div>
+        <div class="info-item"><i class="fa-solid fa-clock"></i><span>Review typically takes 1–2 business days after submission.</span></div>
+        <div class="info-item"><i class="fa-solid fa-lock"></i><span>Your documents are encrypted and stored securely.</span></div>
+    </div>
+
+    <% } else if (kycValue === 'approved') { %>
+
+    <div class="f-card text-center py-5">
+        <div style="width:80px;height:80px;background:#f0fdf4;border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;color:var(--success);">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h5 style="font-weight:800;font-size:1.2rem;margin-bottom:8px;">You're fully verified</h5>
+        <p style="font-size:14px;color:var(--text-muted);max-width:360px;margin:0 auto 24px;">Enjoy unrestricted access to all Finora Bank features.</p>
+        <a href="/user/dashboard" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:#fff;padding:13px 28px;border-radius:14px;font-weight:700;font-size:14px;text-decoration:none;">
+            <i class="fa-solid fa-house-chimney"></i> Go to Dashboard
+        </a>
+    </div>
+
+    <% } else { %>
+
+    <div class="f-card text-center py-5">
+        <div style="width:80px;height:80px;background:#fffbeb;border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;color:var(--warning);">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <h5 style="font-weight:800;font-size:1.2rem;margin-bottom:8px;">Verification in progress</h5>
+        <p style="font-size:14px;color:var(--text-muted);max-width:360px;margin:0 auto 24px;">Our team is reviewing your documents. We'll notify you by email once done.</p>
+        <a href="/user/dashboard" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:#fff;padding:13px 28px;border-radius:14px;font-weight:700;font-size:14px;text-decoration:none;">
+            <i class="fa-solid fa-house-chimney"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <% } %>
+</div>
+
+<!-- Mobile Nav -->
+<%- include('../mobile_partier/nav') %>
+
+<script>
+    let frontUploaded = false;
+    let backUploaded  = false;
+
+    function handleFile(input, side) {
+        const file = input.files[0];
+        if (!file) return;
+
+        // Validate size
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size exceeds 5MB. Please choose a smaller file.');
+            input.value = '';
+            return;
+        }
+
+        // Validate type
+        const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
+        if (!allowed.includes(file.type)) {
+            alert('Only PDF, JPG, and PNG files are allowed.');
+            input.value = '';
+            return;
+        }
+
+        const sizeTxt = (file.size / 1024).toFixed(1) + ' KB';
+
+        if (side === 'front') {
+            frontUploaded = true;
+            document.getElementById('dropFront').classList.add('has-file');
+            document.getElementById('frontIcon').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            document.getElementById('frontIcon').classList.add('success-icon');
+            document.getElementById('frontTitle').textContent = 'Front uploaded ✓';
+            document.getElementById('frontName').textContent  = file.name + ' · ' + sizeTxt;
+            document.getElementById('prog-front').innerHTML   = '<i class="fa-solid fa-circle-check me-1" style="color:#22c55e;"></i> Front uploaded';
+            document.getElementById('prog-front').style.borderColor = '#22c55e';
+            document.getElementById('prog-front').style.color = '#22c55e';
+        } else {
+            backUploaded = true;
+            document.getElementById('dropBack').classList.add('has-file');
+            document.getElementById('backIcon').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            document.getElementById('backIcon').classList.add('success-icon');
+            document.getElementById('backTitle').textContent = 'Back uploaded ✓';
+            document.getElementById('backName').textContent  = file.name + ' · ' + sizeTxt;
+            document.getElementById('prog-back').innerHTML   = '<i class="fa-solid fa-circle-check me-1" style="color:#22c55e;"></i> Back uploaded';
+            document.getElementById('prog-back').style.borderColor = '#22c55e';
+            document.getElementById('prog-back').style.color = '#22c55e';
+        }
+
+        // Show progress bar once either file is selected
+        document.getElementById('uploadProgress').style.display = 'flex';
+    }
+
+    // Form validation
+    document.getElementById('kycForm')?.addEventListener('submit', function(e) {
+        const front = document.getElementById('frontFile').files[0];
+        const back  = document.getElementById('backFile').files[0];
+
+        if (!front || !back) {
+            e.preventDefault();
+            alert('Please upload both the front and back of your document.');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+    });
+</script>
+
+</body>
+</html>

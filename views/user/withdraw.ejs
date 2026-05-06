@@ -1,0 +1,663 @@
+<%
+  // ── SAFE LOCALS ── Fallbacks for every variable the template uses
+  const _lang     = typeof lang           !== 'undefined' ? lang           : (typeof user !== 'undefined' && user?.preferred_language) ? user.preferred_language : 'en';
+  const _theme    = typeof theme          !== 'undefined' ? theme          : (typeof user !== 'undefined' && user?.preferred_theme)    ? user.preferred_theme    : 'light';
+  const _symbol   = typeof currencySymbol !== 'undefined' ? currencySymbol : (typeof symbol !== 'undefined' ? symbol : '$');
+  const _currency = typeof currency       !== 'undefined' ? currency       : 'USD';
+  const _fmt      = typeof formatMoney    === 'function'  ? formatMoney    : (n) => _symbol + parseFloat(n||0).toFixed(2);
+
+  // Safe data objects
+  const _activeAccount = typeof activeAccount !== 'undefined' ? activeAccount : (typeof account !== 'undefined' ? account : null);
+  const _account       = typeof account       !== 'undefined' ? account       : _activeAccount;
+  const _accounts      = typeof accounts      !== 'undefined' ? accounts      : [];
+  const _balance       = typeof balance       !== 'undefined' ? balance       : (_account?.balance || 0);
+  const _displayBalance = typeof displayBalance !== 'undefined' ? displayBalance : _fmt(_balance);
+  const _kycApproved   = typeof kycApproved !== 'undefined' ? kycApproved   : false;
+  const _kycStatus     = typeof kycStatus     !== 'undefined' ? kycStatus     : 'not_submitted';
+  const _stepsRequired = typeof stepsRequired !== 'undefined' ? stepsRequired : false;
+%>
+
+<!DOCTYPE html>
+<html lang="<%= _lang %>" data-theme="<%= _theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Finora Bank</title>
+
+    <script>
+        document.documentElement.setAttribute('data-theme', '<%= _theme %>');
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/user-withdraw.css">
+
+
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success"><i class="fas fa-circle-check"></i> <%= success_msg %></div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger"><i class="fas fa-circle-exclamation"></i> <%= error_msg %></div>
+    <% } %>
+
+    <!-- Header -->
+    <div class="header-card">
+        <div>
+            <div class="mb-1">
+                <a href="/user/dashboard" class="text-white text-decoration-none opacity-75" style="font-size:13px;">
+                    <i class="fa-solid fa-chevron-left me-1"></i> Dashboard
+                </a>
+            </div>
+            <h1>Withdraw & Transfer</h1>
+            <p>Send money out, transfer between accounts, or move to savings</p>
+            <div class="balance-pill">
+                <i class="fa-solid fa-wallet"></i>
+                Available:
+                <strong><%= _displayBalance %></strong>
+                &nbsp;·&nbsp;
+                <span style="opacity:0.8;">···· <%= _activeAccount?.account_number?.slice(-4) || '0000' %></span>
+            </div>
+        </div>
+        <div class="header-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+    </div>
+
+    <!-- KYC Alert -->
+    <% if (!_kycApproved) { %>
+    <div class="kyc-alert">
+        <div class="kyc-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <strong style="font-size:14px;">KYC Verification Required</strong>
+            <p class="mb-1" style="font-size:13px;color:var(--text-muted);">
+                External withdrawals are locked until your identity is verified.
+                Internal transfers between your own accounts are still available.
+            </p>
+            <a href="/user/kyc-submit"><i class="fa-solid fa-shield-halved me-1"></i>Complete KYC now →</a>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+        <div class="mode-tab tab-external active" onclick="switchMode('external', this)">
+            <div class="mode-tab-icon"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+            <strong>Withdraw</strong>
+            <span>Send to bank / mobile / crypto</span>
+        </div>
+        <div class="mode-tab tab-internal" onclick="switchMode('internal', this)">
+            <div class="mode-tab-icon"><i class="fa-solid fa-user-group"></i></div>
+            <strong>Send to Client</strong>
+            <span>Transfer to another Finora user</span>
+        </div>
+        <div class="mode-tab tab-savings" onclick="switchMode('savings', this)">
+            <div class="mode-tab-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+            <strong>Move to Savings</strong>
+            <span>Between your own accounts</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Forms -->
+        <div class="col-12 col-lg-7">
+            <div class="f-card">
+
+                <!-- PANEL 1 — EXTERNAL WITHDRAWAL -->
+                <div class="form-panel active" id="panel-external">
+                    <div class="section-label">
+                        <i class="fa-solid fa-arrow-up-from-bracket me-2" style="color:#ef4444;"></i>
+                        External Withdrawal
+                    </div>
+
+                    <form action="/user/withdraw" method="POST" id="withdrawForm" data-ajax="true">
+            
+                        <input type="hidden" name="mode" value="external">
+                        <input type="hidden" name="account_id" value="<%= _activeAccount?.id %>">
+
+                        <div class="mb-2">
+                            <label class="form-label">Amount</label>
+                            <div class="amount-wrapper">
+                                <span class="amount-prefix"><%= _symbol %></span>
+                                <input type="number" class="amount-input" name="amount"
+                                       id="ext-amount" placeholder="0.00"
+                                       min="1" max="10000" step="0.01" required
+                                       <%= !_kycApproved ? 'disabled' : '' %>>
+                            </div>
+                        </div>
+                        <div class="quick-amounts mb-4">
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',100)"><%= _symbol %>100</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',500)"><%= _symbol %>500</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',1000)"><%= _symbol %>1,000</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',2500)"><%= _symbol %>2,500</button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Withdrawal Method</label>
+                            <select class="form-select" name="method" id="ext-method"
+                                    onchange="toggleMethodFields()"
+                                    <%= !_kycApproved ? 'disabled' : '' %> required>
+                                <option value="">— Select method —</option>
+                                <option value="bank_transfer">🏦 Bank Transfer</option>
+                                <option value="mobile_money">📱 Mobile Money</option>
+                                <option value="crypto">₿ Cryptocurrency</option>
+                            </select>
+                        </div>
+
+                        <div id="fields-bank" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Bank Name</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-building-columns"></i>
+                                    <input type="text" class="form-control" name="bank_name" placeholder="e.g. First National Bank" <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Account Number</label>
+                                    <input type="text" class="form-control" name="bank_account_number" placeholder="e.g. 0123456789" <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Routing / Sort Code</label>
+                                    <input type="text" class="form-control" name="routing_number" placeholder="e.g. 021000021" <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Account Holder Name</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-user"></i>
+                                    <input type="text" class="form-control" name="account_holder" placeholder="Full name on the account" <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="fields-mobile" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Mobile Network</label>
+                                <select class="form-select" name="mobile_network" <%= !_kycApproved ? 'disabled' : '' %>>
+                                    <option value="">— Select network —</option>
+                                    <option value="mtn">MTN Mobile Money</option>
+                                    <option value="airtel">Airtel Money</option>
+                                    <option value="mpesa">M-Pesa</option>
+                                    <option value="vodafone">Vodafone Cash</option>
+                                    <option value="orange">Orange Money</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mobile Number</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-mobile-screen"></i>
+                                    <input type="tel" class="form-control" name="mobile_number" placeholder="e.g. +234 800 000 0000" <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Account Name</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-user"></i>
+                                    <input type="text" class="form-control" name="mobile_account_name" placeholder="Name registered to this number" <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="fields-crypto" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Cryptocurrency</label>
+                                <select class="form-select" name="crypto_currency" <%= !_kycApproved ? 'disabled' : '' %>>
+                                    <option value="">— Select coin —</option>
+                                    <option value="BTC">Bitcoin (BTC)</option>
+                                    <option value="ETH">Ethereum (ETH)</option>
+                                    <option value="USDT">Tether (USDT)</option>
+                                    <option value="USDC">USD Coin (USDC)</option>
+                                    <option value="BNB">BNB</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Wallet Address</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-brands fa-bitcoin"></i>
+                                    <input type="text" class="form-control" name="wallet_address" placeholder="e.g. 0x1a2b3c..." style="font-family:monospace;font-size:13px;" <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                                    <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>
+                                    Double-check the address. Crypto transfers are irreversible.
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Network</label>
+                                <select class="form-select" name="crypto_network" <%= !_kycApproved ? 'disabled' : '' %>>
+                                    <option value="mainnet">Mainnet</option>
+                                    <option value="bsc">BSC (BEP-20)</option>
+                                    <option value="polygon">Polygon</option>
+                                    <option value="tron">Tron (TRC-20)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Note (optional)</label>
+                            <div class="input-icon-wrap">
+                                <i class="i-icon fa-solid fa-pen-to-square"></i>
+                                <input type="text" class="form-control" name="description" placeholder="What is this for?" <%= !_kycApproved ? 'disabled' : '' %>>
+                            </div>
+                        </div>
+
+                        
+
+                        <button type="button" class="btn-submit btn-submit-red" onclick="openConfirm('external')" <%= !_kycApproved ? 'disabled' : '' %>>
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i> Withdraw Funds
+                        </button>
+                    </form>
+                </div>
+
+                <!-- PANEL 2 — SEND TO FINORA CLIENT -->
+                <div class="form-panel" id="panel-internal">
+                    <div class="section-label">
+                        <i class="fa-solid fa-user-group me-2" style="color:#3b82f6;"></i>
+                        Send to Finora Client
+                    </div>
+
+                    <form action="/user/transfer" method="POST" id="internalForm">
+                        <input type="hidden" name="mode" value="internal">
+
+                        <div class="mb-3">
+                            <label class="form-label">Recipient Account Number</label>
+                            <div class="input-icon-wrap" style="position:relative;">
+                                <i class="i-icon fa-solid fa-hashtag"></i>
+                                <input type="text" class="form-control" id="recipient_account" name="recipient_account" placeholder="Enter Finora account number" autocomplete="off" required oninput="lookupAccount(this.value)">
+                                <i class="fa-solid fa-spinner fa-spin lookup-spinner" id="lookupSpinner"></i>
+                            </div>
+                            <div class="recipient-box" id="recipientBox">
+                                <div class="recipient-avatar" id="recipientInitials">?</div>
+                                <div>
+                                    <div class="recipient-name" id="recipientName">—</div>
+                                    <div class="recipient-sub" id="recipientSub">—</div>
+                                </div>
+                                <div class="ms-auto" id="recipientBadge"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Amount</label>
+                            <div class="amount-wrapper">
+                                <span class="amount-prefix"><%= _symbol %></span>
+                                <input type="number" class="amount-input" name="amount" id="int-amount" placeholder="0.00" min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="quick-amounts mb-4">
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',50)"><%= _symbol %>50</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',100)"><%= _symbol %>100</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',500)"><%= _symbol %>500</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',1000)"><%= _symbol %>1,000</button>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Note (optional)</label>
+                            <div class="input-icon-wrap">
+                                <i class="i-icon fa-solid fa-pen-to-square"></i>
+                                <input type="text" class="form-control" name="description" placeholder="e.g. Rent, loan repayment...">
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-submit btn-submit-blue" onclick="openConfirm('internal')">
+                            <i class="fa-solid fa-paper-plane"></i> Send Money
+                        </button>
+                    </form>
+                </div>
+
+                <!-- PANEL 3 — MOVE TO SAVINGS -->
+                <div class="form-panel" id="panel-savings">
+                    <div class="section-label">
+                        <i class="fa-solid fa-piggy-bank me-2" style="color:#22c55e;"></i>
+                        Move Between Your Accounts
+                    </div>
+
+                    <form action="/user/move-money" method="POST" id="savingsForm">
+                        <input type="hidden" name="mode" value="savings">
+
+                        <div class="mb-3">
+                            <label class="form-label">From Account</label>
+                            <div class="account-pick" id="fromPicker">
+                                <% if (_accounts && _accounts.length > 0) { %>
+                                    <% _accounts.forEach(acc => { %>
+                                    <div class="acc-card <%= acc.id === _activeAccount?.id ? 'selected' : '' %>" onclick="pickAccount('from', '<%= acc.id %>', this)">
+                                        <div class="acc-card-icon acc-icon-<%= acc.account_type?.replace('_builder','') || 'checking' %>">
+                                            <i class="fa-solid <%= acc.account_type === 'savings' ? 'fa-piggy-bank' : acc.account_type === 'credit_builder' ? 'fa-credit-card' : 'fa-building-columns' %>"></i>
+                                        </div>
+                                        <strong class="text-capitalize"><%= (acc.account_type || 'Account').replace('_', ' ') %></strong>
+                                        <span>···· <%= acc.account_number?.slice(-4) || '0000' %></span>
+                                        <div class="acc-bal"><%= acc.displayBalance || _fmt(acc.balance || 0) %></div>
+                                    </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+                            <input type="hidden" name="from_account" id="from_account_input" value="<%= _activeAccount?.id %>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">To Account</label>
+                            <div class="account-pick" id="toPicker">
+                                <% if (_accounts && _accounts.length > 0) { %>
+                                    <% _accounts.forEach(acc => { %>
+                                    <div class="acc-card" onclick="pickAccount('to', '<%= acc.id %>', this)">
+                                        <div class="acc-card-icon acc-icon-<%= acc.account_type?.replace('_builder','') || 'checking' %>">
+                                            <i class="fa-solid <%= acc.account_type === 'savings' ? 'fa-piggy-bank' : acc.account_type === 'credit_builder' ? 'fa-credit-card' : 'fa-building-columns' %>"></i>
+                                        </div>
+                                        <strong class="text-capitalize"><%= (acc.account_type || 'Account').replace('_', ' ') %></strong>
+                                        <span>···· <%= acc.account_number?.slice(-4) || '0000' %></span>
+                                        <div class="acc-bal"><%= acc.displayBalance || _fmt(acc.balance || 0) %></div>
+                                    </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+                            <input type="hidden" name="to_account" id="to_account_input" value="">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Amount to Move</label>
+                            <div class="amount-wrapper">
+                                <span class="amount-prefix"><%= _symbol %></span>
+                                <input type="number" class="amount-input" name="amount" id="sav-amount" placeholder="0.00" min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="quick-amounts mb-4">
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',50)"><%= _symbol %>50</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',100)"><%= _symbol %>100</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',500)"><%= _symbol %>500</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',1000)"><%= _symbol %>1,000</button>
+                        </div>
+
+                        <button type="button" class="btn-submit btn-submit-green" onclick="openConfirm('savings')">
+                            <i class="fa-solid fa-piggy-bank"></i> Move Money
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: Info panel -->
+        <div class="col-12 col-lg-5 d-flex flex-column gap-4">
+
+            <div class="f-card" id="info-external">
+            <div class="section-label"><i class="fa-solid fa-circle-info me-2"></i> Withdrawal Info</div>
+            <div class="info-row"><span class="label">Daily limit</span><span class="value"><%= typeof dailyLimit !== 'undefined' ? dailyLimit : _fmt(5000) %></span></div>
+            <div class="info-row"><span class="label">Per transaction</span><span class="value"><%= typeof perTransaction !== 'undefined' ? perTransaction : _fmt(2500) %></span></div>
+            <div class="info-row"><span class="label">Monthly limit</span><span class="value"><%= typeof monthlyLimit !== 'undefined' ? monthlyLimit : _fmt(50000) %></span></div>
+            <div class="info-row"><span class="label">Processing time</span><span class="value">1–3 business days</span></div>
+            <div class="info-row"><span class="label">Fee</span><span class="value">Free</span></div>
+            ...
+        </div>
+
+            <div class="f-card" id="info-internal" style="display:none;">
+                <div class="section-label"><i class="fa-solid fa-circle-info me-2"></i> Client Transfer Info</div>
+                <div class="info-row"><span class="label">Speed</span><span class="value" style="color:#22c55e;">Instant</span></div>
+                <div class="info-row"><span class="label">Fee</span><span class="value" style="color:#22c55e;">Free</span></div>
+                <div class="info-row"><span class="label">Limit</span><span class="value">No limit</span></div>
+                <div class="info-row"><span class="label">Reversible?</span><span class="value" style="color:#ef4444;">No</span></div>
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px;margin-top:16px;font-size:12px;color:#064e3b;">
+                    <i class="fa-solid fa-shield-halved me-2" style="color:#22c55e;"></i>
+                    Transfers to other Finora users are instant and free. Always verify the recipient's name before confirming.
+                </div>
+            </div>
+
+            <div class="f-card" id="info-savings" style="display:none;">
+                <div class="section-label"><i class="fa-solid fa-circle-info me-2"></i> Move Money Info</div>
+                <div class="info-row"><span class="label">Speed</span><span class="value" style="color:#22c55e;">Instant</span></div>
+                <div class="info-row"><span class="label">Fee</span><span class="value" style="color:#22c55e;">Free</span></div>
+                <div class="info-row"><span class="label">From → To</span><span class="value">Any of your accounts</span></div>
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px;margin-top:16px;font-size:12px;color:#064e3b;">
+                    <i class="fa-solid fa-piggy-bank me-2" style="color:#22c55e;"></i>
+                    Moving money between your own accounts is always instant and free.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-hdr" id="modalHdr">
+                <h5 id="modalTitle">Confirm Transaction</h5>
+            </div>
+            <div class="modal-body p-4">
+                <div id="confirmRows"></div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 gap-2">
+                <button class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-confirm" id="confirmBtn" onclick="submitActive()">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+    <a href="/user/dashboard" class="nav-item"><i class="fa-solid fa-house-chimney"></i> Home</a>
+    <a href="/user/transactions" class="nav-item"><i class="fa-solid fa-chart-column"></i> Activity</a>
+    <a href="/user/withdraw" class="nav-item active"><i class="fa-solid fa-money-bill-transfer"></i> Transfer</a>
+    <a href="/user/profile" class="nav-item"><i class="fa-solid fa-user-gear"></i> Profile</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentMode='external', recipientValid=false, recipientData={}, lookupTimer=null;
+    const currencySymbol='<%= _symbol %>';
+
+    function switchMode(mode,el){
+        currentMode=mode;
+        document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('active'));
+        document.getElementById('panel-'+mode).classList.add('active');
+        ['external','internal','savings'].forEach(m=>{
+            document.getElementById('info-'+m).style.display=m===mode?'':'none';
+        });
+    }
+
+    function setAmt(id,val){
+        document.getElementById(id).value=val;
+        event.target.closest('.quick-amounts').querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    function toggleMethodFields(){
+        const method=document.getElementById('ext-method').value;
+        ['bank','mobile','crypto'].forEach(f=>document.getElementById('fields-'+f).style.display='none');
+        if(method==='bank_transfer') document.getElementById('fields-bank').style.display='';
+        if(method==='mobile_money') document.getElementById('fields-mobile').style.display='';
+        if(method==='crypto') document.getElementById('fields-crypto').style.display='';
+    }
+
+
+
+    function lookupAccount(val){
+        const box=document.getElementById('recipientBox'), spinner=document.getElementById('lookupSpinner');
+        box.className='recipient-box'; clearTimeout(lookupTimer);
+        if(!val||val.length<5)return; spinner.style.display='block';
+        lookupTimer=setTimeout(async()=>{
+            try{
+                const res=await fetch('/user/transfer/lookup?account_number='+encodeURIComponent(val));
+                const data=await res.json(); spinner.style.display='none';
+                if(data.found){
+                    recipientValid=true; recipientData=data;
+                    const initials=data.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+                    document.getElementById('recipientInitials').textContent=initials;
+                    document.getElementById('recipientInitials').style.background='#0F6E56';
+                    document.getElementById('recipientName').textContent=data.name;
+                    document.getElementById('recipientSub').textContent='Finora account · '+data.account;
+                    document.getElementById('recipientBadge').innerHTML='<span style="background:#f0fdf4;color:#22c55e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;"><i class="fa-solid fa-circle-check me-1"></i>Verified</span>';
+                    box.classList.add('show','ok');
+                }else{
+                    recipientValid=false;
+                    document.getElementById('recipientInitials').textContent='!';
+                    document.getElementById('recipientInitials').style.background='#ef4444';
+                    document.getElementById('recipientName').textContent='Account not found';
+                    document.getElementById('recipientSub').textContent='Check the account number and try again';
+                    document.getElementById('recipientBadge').innerHTML='';
+                    box.classList.add('show','fail');
+                }
+            }catch(e){spinner.style.display='none';}
+        },600);
+    }
+
+    function pickAccount(side,id,el){
+        const picker=side==='from'?'fromPicker':'toPicker';
+        document.getElementById(picker).querySelectorAll('.acc-card').forEach(c=>c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById(side+'_account_input').value=id;
+    }
+
+    function openConfirm(mode){
+        const hdr=document.getElementById('modalHdr'), btn=document.getElementById('confirmBtn'), rows=document.getElementById('confirmRows');
+        hdr.className='modal-hdr'; let rowsHTML='';
+
+        if(mode==='external'){
+            const amt=parseFloat(document.getElementById('ext-amount').value);
+            const method=document.getElementById('ext-method');
+            const label=method.options[method.selectedIndex]?.text||'—';
+            if(!amt||amt<=0)return alert('Please enter a valid amount.');
+            
+            hdr.classList.add('red'); hdr.querySelector('h5').textContent='Confirm Withdrawal';
+            btn.style.background='#ef4444';
+            rowsHTML=row('Amount',currencySymbol+amt.toLocaleString(undefined,{minimumFractionDigits:2}),true)+row('Method',label)+row('Fee','Free');
+        }else if(mode==='internal'){
+            const amt=parseFloat(document.getElementById('int-amount').value);
+            if(!amt||amt<=0)return alert('Please enter a valid amount.');
+            if(!recipientValid)return alert('Please enter a valid recipient account.');
+            hdr.classList.add('blue'); hdr.querySelector('h5').textContent='Confirm Transfer';
+            btn.style.background='#3b82f6';
+            rowsHTML=row('To',recipientData.name)+row('Account',recipientData.account)+row('Amount',currencySymbol+amt.toLocaleString(undefined,{minimumFractionDigits:2}),true)+row('Fee','Free')+row('Speed','Instant');
+        }else if(mode==='savings'){
+            const amt=parseFloat(document.getElementById('sav-amount').value);
+            const from=document.getElementById('from_account_input').value;
+            const to=document.getElementById('to_account_input').value;
+            if(!amt||amt<=0)return alert('Please enter a valid amount.');
+            if(!from)return alert('Please select a From account.');
+            if(!to)return alert('Please select a To account.');
+            if(from===to)return alert('From and To accounts must be different.');
+            hdr.classList.add('green'); hdr.querySelector('h5').textContent='Confirm Move';
+            btn.style.background='#0F6E56';
+            rowsHTML=row('Amount',currencySymbol+amt.toLocaleString(undefined,{minimumFractionDigits:2}),true)+row('Fee','Free')+row('Speed','Instant');
+        }
+        rows.innerHTML=rowsHTML;
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    }
+
+    function row(label,value,big=false){
+        return `<div class="confirm-row"><span class="cl">${label}</span><span class="cv${big?' big':''}">${value}</span></div>`;
+    }
+
+    // ✅ UPDATED: Handle form submission with fetch for withdrawals
+   function submitActive(){
+    const btn = document.getElementById('confirmBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Processing…';
+
+    if(currentMode === 'external'){
+        submitWithdrawWithFetch(btn);
+    } else if(currentMode === 'internal') {
+        document.getElementById('internalForm').submit();
+    } else {
+        document.getElementById('savingsForm').submit();
+    }
+}
+
+async function submitWithdrawWithFetch(btn) {
+    // Collect values from the external withdrawal form
+    const amount = document.getElementById('ext-amount').value;
+    const description = document.querySelector('#panel-external [name="description"]')?.value || '';
+    
+    // Build recipient_account from method-specific fields
+    const method = document.getElementById('ext-method').value;
+    let recipient_account = '';
+    
+    if (method === 'bank_transfer') {
+        const bankName = document.querySelector('[name="bank_name"]')?.value || '';
+        const accNum = document.querySelector('[name="bank_account_number"]')?.value || '';
+        recipient_account = `BANK:${bankName}:${accNum}`;
+    } else if (method === 'mobile_money') {
+        const network = document.querySelector('[name="mobile_network"]')?.value || '';
+        const number = document.querySelector('[name="mobile_number"]')?.value || '';
+        recipient_account = `MOBILE:${network}:${number}`;
+    } else if (method === 'crypto') {
+        const coin = document.querySelector('[name="crypto_currency"]')?.value || '';
+        const address = document.querySelector('[name="wallet_address"]')?.value || '';
+        recipient_account = `CRYPTO:${coin}:${address}`;
+    }
+
+    // Validate
+    if (!amount || parseFloat(amount) <= 0) {
+        alert('Please enter a valid amount.');
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm';
+        return;
+    }
+    
+    if (!recipient_account) {
+        alert('Please fill in the recipient details.');
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm';
+        return;
+    }
+
+    const payload = {
+        amount: amount,
+        recipient_account: recipient_account,
+        description: description
+    };
+
+    console.log('Sending payload:', payload);
+
+    try {
+        const response = await fetch('/user/withdraw/initiate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // Handle non-JSON responses
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text.substring(0, 200));
+            throw new Error('Server returned non-JSON response');
+        }
+
+        const data = await response.json();
+        console.log('Response:', data);
+
+        if (data.success) {
+            if (data.requiresSteps && data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                window.location.href = '/user/dashboard';
+            }
+        } else {
+            alert(data.message || 'Withdrawal failed');
+            btn.disabled = false;
+            btn.innerHTML = 'Confirm';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm';
+    }
+}
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Pricing | Finaro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230F6E56%22></rect><path d=%22M30 40 L50 60 L70 40%22 stroke=%22white%22 stroke-width=%228%22 fill=%2２none%２２ stroke-linecap=%２round%２２/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/pricing.css"/>
+     <style>
+        .footer-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px; max-width: 1200px; margin: 0 auto 40px;
+        }
+        .footer-col h4 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-dark); }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 12px; }
+        .footer-col a { color: var(--text-light); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .footer-col a:hover { color: var(--primary); }
+        .footer-bottom {
+            border-top: 1px solid var(--border); padding-top: 30px;
+            text-align: center; color: var(--text-muted); font-size: 14px;
+            max-width: 1200px; margin: 0 auto;
+        }
+    </style>
+<base target="_blank">
+<base target="_blank">
+</head>
+<body>
+     <%- include('../partials/nav') %>
+
+    <section class="page-banner">
+        <h1 data-aos="fade-up" data-aos-duration="1000">Simple <span style="color: var(--accent);">Pricing</span></h1>
+        <p data-aos="fade-up" data-aos-delay="200">No hidden fees. No maintenance charges. Just transparent banking. Plans subject to change during early access.</p>
+    </section>
+
+    <section id="pricing">
+        <div class="pricing-grid">
+            <div class="price-card" data-aos="fade-up" data-aos-delay="100">
+                <h3>Personal</h3>
+                <div class="amount">$0<span>/mo</span></div>
+                <ul>
+                    <li><i class="fas fa-check"></i> Standard Debit Card</li>
+                    <li><i class="fas fa-check"></i> Unlimited Domestic Transfers</li>
+                    <li><i class="fas fa-check"></i> Basic Savings Vaults</li>
+                    <li><i class="fas fa-check"></i> Mobile App Access</li>
+                    <li><i class="fas fa-check"></i> Email Support</li>
+                </ul>
+                <a href="/auth/register" class="btn-nav" style="background: transparent; color: var(--text-dark); border: 1px solid var(--border); width: 100%; text-decoration: none; display: inline-block; text-align: center;">Join Early Access</a>
+            </div>
+            <div class="price-card featured" data-aos="fade-up" data-aos-delay="200">
+                <div style="background: var(--accent); color: white; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 700;"><i class="fas fa-fire"></i> EARLY ACCESS</div>
+                <h3>Pro Plan</h3>
+                <div class="amount">$9<span>/mo</span></div>
+                <ul>
+                    <li><i class="fas fa-check"></i> Metal Debit Card</li>
+                    <li><i class="fas fa-check"></i> Higher Interest Rates (up to 4.5%)</li>
+                    <li><i class="fas fa-check"></i> Global Travel Insurance</li>
+                    <li><i class="fas fa-check"></i> Priority Support</li>
+                    <li><i class="fas fa-check"></i> Unlimited FX Transfers</li>
+                    <li><i class="fas fa-check"></i> Lounge Access</li>
+                </ul>
+                <a href="/auth/register" class="btn-nav" style="width: 100%; background: var(--primary); text-decoration: none; display: inline-block; text-align: center;">Join Early Access</a>
+            </div>
+            <div class="price-card" data-aos="fade-up" data-aos-delay="300">
+                <h3>Business</h3>
+                <div class="amount">$29<span>/mo</span></div>
+                <ul>
+                    <li><i class="fas fa-check"></i> Everything in Pro</li>
+                    <li><i class="fas fa-check"></i> Multi-user Access</li>
+                    <li><i class="fas fa-check"></i> API Access</li>
+                    <li><i class="fas fa-check"></i> Bulk Payroll</li>
+                    <li><i class="fas fa-check"></i> Dedicated Account Manager</li>
+                    <li><i class="fas fa-check"></i> Custom Integrations</li>
+                </ul>
+                <a href="/contact" class="btn-nav" style="background: transparent; color: var(--text-dark); border: 1px solid var(--border); width: 100%; text-decoration: none; display: inline-block; text-align: center;">Contact Us</a>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Compare Features</h2>
+            <p>Find the perfect plan for your needs. Features may expand during early access.</p>
+        </div>
+        <div style="max-width: 900px; margin: 0 auto; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; background: var(--card-bg, white); border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);" data-aos="fade-up">
+                <thead>
+                    <tr style="background: var(--primary); color: white;">
+                        <th style="padding: 20px; text-align: left;">Feature</th>
+                        <th style="padding: 20px; text-align: center;">Personal</th>
+                        <th style="padding: 20px; text-align: center;">Pro</th>
+                        <th style="padding: 20px; text-align: center;">Business</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 16px 20px;"><i class="fas fa-credit-card" style="color: var(--primary); margin-right: 8px;"></i> Debit Card</td>
+                        <td style="padding: 16px; text-align: center;"><i class="fas fa-check" style="color: var(--accent);"></i></td>
+                        <td style="padding: 16px; text-align: center;"><i class="fas fa-check" style="color: var(--accent);"></i></td>
+                        <td style="padding: 16px; text-align: center;"><i class="fas fa-check" style="color: var(--accent);"></i></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
+                        <td style="padding: 16px 20px;"><i class="fas fa-percent" style="color: var(--primary); margin-right: 8px;"></i> APY Rate</td>
+                        <td style="padding: 16px; text-align: center; color: var(--text-light);">Up to 3.5%</td>
+                        <td style="padding: 16px; text-align: center; color: var(--accent); font-weight: 600;">Up to 4.5%</td>
+                        <td style="padding: 16px; text-align: center; color: var(--accent); font-weight: 600;">Up to 4.5%</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 16px 20px;"><i class="fas fa-globe" style="color: var(--primary); margin-right: 8px;"></i> FX Transfers</td>
+                        <td style="padding: 16px; text-align: center; color: var(--text-light);">5/mo</td>
+                        <td style="padding: 16px; text-align: center; color: var(--accent);">Unlimited</td>
+                        <td style="padding: 16px; text-align: center; color: var(--accent);">Unlimited</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
+                        <td style="padding: 16px 20px;"><i class="fas fa-headset" style="color: var(--primary); margin-right: 8px;"></i> Support</td>
+                        <td style="padding: 16px; text-align: center; color: var(--text-light);">Email</td>
+                        <td style="padding: 16px; text-align: center; color: var(--accent);">Priority</td>
+                        <td style="padding: 16px; text-align: center; color: var(--accent);">Dedicated</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 16px 20px;"><i class="fas fa-plug" style="color: var(--primary); margin-right: 8px;"></i> API Access</td>
+                        <td style="padding: 16px; text-align: center; color: var(--text-light);">—</td>
+                        <td style="padding: 16px; text-align: center; color: var(--text-light);">—</td>
+                        <td style="padding: 16px; text-align: center;"><i class="fas fa-check" style="color: var(--accent);"></i></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <div class="section-header" data-aos="fade-up">
+            <h2>Frequently Asked Questions</h2>
+            <p>Got questions? We've got answers.</p>
+        </div>
+        <div style="max-width: 800px; margin: 0 auto;">
+            <div style="margin-bottom: 20px; padding: 25px; background: var(--surface); border-radius: var(--radius);" data-aos="fade-up" data-aos-delay="100">
+                <h4 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;"><i class="fas fa-circle-question" style="color: var(--primary);"></i> Can I switch plans anytime?</h4>
+                <p style="color: var(--text-light);">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately and we'll prorate any difference.</p>
+            </div>
+            <div style="margin-bottom: 20px; padding: 25px; background: var(--surface); border-radius: var(--radius);" data-aos="fade-up" data-aos-delay="200">
+                <h4 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;"><i class="fas fa-circle-question" style="color: var(--primary);"></i> Is there a free trial for Pro?</h4>
+                <p style="color: var(--text-light);">Yes! Every new user gets a 30-day free trial of Pro features during early access. No credit card required to start.</p>
+            </div>
+            <div style="margin-bottom: 20px; padding: 25px; background: var(--surface); border-radius: var(--radius);" data-aos="fade-up" data-aos-delay="300">
+                <h4 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;"><i class="fas fa-circle-question" style="color: var(--primary);"></i> What payment methods do you accept?</h4>
+                <p style="color: var(--text-light);">We accept all major credit cards and bank transfers. Additional payment methods will be added as we expand.</p>
+            </div>
+            <div style="margin-bottom: 20px; padding: 25px; background: var(--surface); border-radius: var(--radius);" data-aos="fade-up" data-aos-delay="400">
+                <h4 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;"><i class="fas fa-circle-question" style="color: var(--primary);"></i> Will pricing change after launch?</h4>
+                <p style="color: var(--text-light);">Early access members will lock in their current pricing for 12 months after full launch. Any future changes will be communicated 60 days in advance.</p>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../partials/footer') %>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true, offset: 100, easing: 'ease-out-cubic' });
+    </script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Review - Finora Bank</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F4F8F7;
+            color: #0D1B16;
+            padding-bottom: 90px;
+        }
+
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+        /* FLASH */
+        .flash-message {
+            padding: 14px 18px; border-radius: 12px; margin-bottom: 20px;
+            font-size: 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .flash-danger  { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+        .flash-success { background: #f0fdf4; color: #22c55e; border: 1px solid #bbf7d0; }
+
+        /* HERO */
+        .hero-card {
+            background: linear-gradient(135deg, #0F6E56 0%, #1D9E75 100%);
+            border-radius: 24px; padding: 32px; color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 15px 35px rgba(15,110,86,0.3);
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+        }
+        .hero-card h1 { font-size: 1.8rem; font-weight: 800; margin: 0 0 4px; }
+        .hero-card p  { opacity: 0.85; font-size: 14px; margin: 0; }
+        .hero-icon {
+            width: 64px; height: 64px; background: rgba(255,255,255,0.15);
+            border-radius: 18px; display: flex; align-items: center;
+            justify-content: center; font-size: 28px; flex-shrink: 0;
+        }
+
+        /* STAT PILLS */
+        .stat-pills {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
+        }
+        .stat-pill {
+            background: #fff; border: 1px solid #E8EFED;
+            border-radius: 20px; padding: 8px 18px;
+            font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .pill-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+
+        /* KYC CARD */
+        .kyc-card {
+            background: #fff; border-radius: 20px;
+            border: 1px solid #E8EFED; overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(15,110,86,0.06);
+            transition: box-shadow 0.2s;
+        }
+        .kyc-card:hover { box-shadow: 0 8px 32px rgba(15,110,86,0.12); }
+
+        /* CARD HEADER */
+        .kyc-card-header {
+            background: #F4F8F7; padding: 18px 24px;
+            border-bottom: 1px solid #E8EFED;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            flex-wrap: wrap;
+        }
+        .user-avatar {
+            width: 48px; height: 48px; border-radius: 14px;
+            background: linear-gradient(135deg, #0F6E56, #1D9E75);
+            color: white; font-weight: 800; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .user-name  { font-weight: 700; font-size: 15px; }
+        .user-email { font-size: 13px; color: #64748B; }
+
+        /* STATUS BADGES */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 12px; font-weight: 700;
+        }
+        .badge-pending  { background: #fffbeb; color: #f59e0b; }
+        .badge-approved { background: #f0fdf4; color: #22c55e; }
+        .badge-rejected { background: #fef2f2; color: #ef4444; }
+
+        /* CARD BODY */
+        .kyc-card-body { padding: 24px; }
+
+        /* INFO CHIPS */
+        .info-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+        .info-chip {
+            background: #F4F8F7; border: 1px solid #E8EFED;
+            border-radius: 12px; padding: 10px 14px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .info-chip i { color: #0F6E56; font-size: 14px; width: 16px; text-align: center; }
+        .chip-label  { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748B; }
+        .chip-value  { font-size: 13px; font-weight: 700; color: #0D1B16; margin-top: 1px; }
+
+        /* DOCUMENT SECTION */
+        .doc-section-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: #64748B; margin-bottom: 14px;
+            padding-bottom: 10px; border-bottom: 1px solid #E8EFED;
+        }
+
+        /* FRONT / BACK GRID */
+        .doc-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .doc-side {
+            border-radius: 16px; overflow: hidden;
+            border: 2px solid #E8EFED; background: #F4F8F7;
+            position: relative;
+        }
+
+        .doc-side-label {
+            position: absolute; top: 10px; left: 10px; z-index: 2;
+            background: rgba(15,27,22,0.75); color: #fff;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+            padding: 4px 10px; border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .doc-side img {
+            width: 100%; height: 200px; object-fit: cover;
+            display: block; cursor: zoom-in;
+            transition: transform 0.2s;
+        }
+        .doc-side img:hover { transform: scale(1.03); }
+
+        .doc-side-pdf {
+            height: 200px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 10px;
+        }
+        .doc-side-pdf i { font-size: 40px; color: #ef4444; }
+        .doc-side-pdf a {
+            font-size: 13px; font-weight: 600; color: #0F6E56;
+            text-decoration: none; display: flex; align-items: center; gap: 6px;
+        }
+        .doc-side-pdf a:hover { text-decoration: underline; }
+
+        .doc-side-missing {
+            height: 200px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 8px;
+            color: #64748B;
+        }
+        .doc-side-missing i    { font-size: 32px; opacity: 0.4; }
+        .doc-side-missing span { font-size: 13px; font-weight: 600; opacity: 0.6; }
+
+        /* ACTION AREA */
+        .action-area {
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #0F6E56, #1D9E75);
+            color: white; border: none; padding: 12px 24px;
+            border-radius: 14px; font-weight: 700; font-size: 14px;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .btn-approve:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,110,86,0.3); }
+
+        .btn-reject {
+            background: #fef2f2; color: #ef4444;
+            border: 1.5px solid #fecaca; padding: 12px 24px;
+            border-radius: 14px; font-weight: 700; font-size: 14px;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .btn-reject:hover { background: #ef4444; color: white; transform: translateY(-2px); }
+
+        .admin-notes-box {
+            background: #fffbeb; border: 1px solid #fde68a;
+            border-radius: 12px; padding: 12px 16px;
+            font-size: 13px; color: #92400e;
+            display: flex; align-items: flex-start; gap: 8px;
+        }
+        .admin-notes-box i { margin-top: 2px; flex-shrink: 0; }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center; padding: 70px 20px; color: #64748B;
+        }
+        .empty-icon {
+            width: 90px; height: 90px; border-radius: 24px;
+            background: #F4F8F7; border: 2px dashed #E8EFED;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; margin: 0 auto 20px;
+        }
+
+        /* MODAL */
+        .modal-content { border-radius: 24px; border: none; }
+        .modal-hdr {
+            background: linear-gradient(135deg, #0F6E56, #1D9E75);
+            border-radius: 24px 24px 0 0; padding: 20px 24px; color: white;
+        }
+        .modal-hdr h5 { font-weight: 800; margin: 0; }
+        .modal-body-pad { padding: 24px; }
+        .modal-footer-pad { padding: 16px 24px; border-top: 1px solid #E8EFED; }
+
+        .form-control {
+            background: #F4F8F7; border: 1.5px solid #E8EFED;
+            border-radius: 14px; padding: 12px 16px;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px;
+            outline: none; width: 100%; transition: border 0.2s;
+        }
+        .form-control:focus { border-color: #0F6E56; box-shadow: 0 0 0 3px rgba(15,110,86,0.1); }
+
+        .btn-modal-cancel {
+            background: #F4F8F7; color: #64748B; border: 1.5px solid #E8EFED;
+            border-radius: 12px; padding: 11px 24px; font-size: 14px; font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+        }
+        .btn-modal-confirm {
+            background: #ef4444; color: white; border: none;
+            border-radius: 12px; padding: 11px 24px; font-size: 14px; font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-modal-confirm:hover { background: #dc2626; }
+
+        /* IMAGE LIGHTBOX */
+        #lightboxModal .modal-content { background: transparent; border: none; box-shadow: none; }
+        #lightboxModal .modal-body { padding: 0; text-align: center; position: relative; }
+        #lightboxModal img {
+            max-width: 100%; max-height: 85vh;
+            border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .lightbox-label {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(0,0,0,0.6); color: white;
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+        }
+
+        /* MOBILE NAV */
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid #E8EFED;
+            display: flex; justify-content: space-around;
+            padding: 10px 0 25px; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: #64748B; text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: #0F6E56; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+
+        @media (max-width: 576px) {
+            .doc-grid { grid-template-columns: 1fr; }
+            .hero-card { flex-direction: column; align-items: flex-start; }
+            .hero-icon { display: none; }
+        }
+
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav { display: none; }
+            body { padding-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success"><i class="fas fa-circle-check"></i> <%= success_msg %></div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger"><i class="fas fa-circle-exclamation"></i> <%= error_msg %></div>
+    <% } %>
+
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="small mb-0">
+                <a href="/admin/dashboard" class="text-decoration-none" style="color:#0F6E56;">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+                </a>
+            </p>
+            <h1 class="h4 fw-bold mb-0 mt-1">KYC Review</h1>
+        </div>
+        <a href="/auth/logout" class="bg-white p-2 rounded-3 border text-decoration-none">
+            <i class="fa-solid fa-right-from-bracket text-danger"></i>
+        </a>
+    </header>
+
+    <!-- Hero -->
+    <%
+        const allDocs   = (typeof documents !== 'undefined' && documents) ? documents : [];
+        const pending   = allDocs.filter(d => d.status === 'pending').length;
+        const approved  = allDocs.filter(d => d.status === 'approved').length;
+        const rejected  = allDocs.filter(d => d.status === 'rejected').length;
+    %>
+    <div class="hero-card">
+        <div>
+            <h1><i class="fa-solid fa-id-card me-2" style="opacity:0.8;"></i> Identity Documents</h1>
+            <p>Review front and back of each submitted ID before approving or rejecting</p>
+        </div>
+        <div class="hero-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    </div>
+
+    <!-- Stat Pills -->
+    <div class="stat-pills">
+        <div class="stat-pill">
+            <span class="pill-dot" style="background:#f59e0b;"></span>
+            <%= pending %> Pending
+        </div>
+        <div class="stat-pill">
+            <span class="pill-dot" style="background:#22c55e;"></span>
+            <%= approved %> Approved
+        </div>
+        <div class="stat-pill">
+            <span class="pill-dot" style="background:#ef4444;"></span>
+            <%= rejected %> Rejected
+        </div>
+        <div class="stat-pill">
+            <span class="pill-dot" style="background:#64748B;"></span>
+            <%= allDocs.length %> Total
+        </div>
+    </div>
+
+    <!-- KYC List -->
+    <% if (allDocs.length > 0) { %>
+        <% allDocs.forEach(doc => {
+            const isImage = p => p && /\.(jpg|jpeg|png|webp)$/i.test(p);
+            const isPDF   = p => p && /\.pdf$/i.test(p);
+        %>
+        <div class="kyc-card">
+
+            <!-- Card Header -->
+            <div class="kyc-card-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="user-avatar">
+                        <%= doc.first_name ? doc.first_name[0].toUpperCase() : 'U' %>
+                    </div>
+                    <div>
+                        <div class="user-name"><%= doc.first_name %> <%= doc.last_name %></div>
+                        <div class="user-email"><%= doc.email %></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <% if (doc.status === 'approved') { %>
+                        <span class="status-badge badge-approved"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                    <% } else if (doc.status === 'rejected') { %>
+                        <span class="status-badge badge-rejected"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
+                    <% } else { %>
+                        <span class="status-badge badge-pending"><i class="fa-solid fa-clock"></i> Pending Review</span>
+                    <% } %>
+                    <% if (doc.reviewed_at) { %>
+                        <span style="font-size:12px;color:#64748B;">
+                            Reviewed <%= new Date(doc.reviewed_at).toLocaleDateString() %>
+                        </span>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="kyc-card-body">
+
+                <!-- Info Chips -->
+                <div class="info-chips">
+                    <div class="info-chip">
+                        <i class="fa-solid fa-id-badge"></i>
+                        <div>
+                            <div class="chip-label">Document Type</div>
+                            <div class="chip-value"><%= (doc.document_type || 'N/A').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) %></div>
+                        </div>
+                    </div>
+                    <div class="info-chip">
+                        <i class="fa-solid fa-hashtag"></i>
+                        <div>
+                            <div class="chip-label">ID Number</div>
+                            <div class="chip-value"><%= doc.document_number || 'N/A' %></div>
+                        </div>
+                    </div>
+                    <div class="info-chip">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <div>
+                            <div class="chip-label">Submitted</div>
+                            <div class="chip-value">
+                                <%= doc.submitted_at ? new Date(doc.submitted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'N/A' %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-chip">
+                        <i class="fa-solid fa-file"></i>
+                        <div>
+                            <div class="chip-label">Sides Uploaded</div>
+                            <div class="chip-value">
+                                <%= doc.file_path ? '✅ Front' : '❌ Front' %>
+                                &nbsp;·&nbsp;
+                                <%= doc.file_path_back ? '✅ Back' : '❌ Back' %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Preview: Front & Back -->
+                <div class="doc-section-title">
+                    <i class="fa-solid fa-images me-2"></i>Document Images — Front & Back
+                </div>
+
+                <div class="doc-grid">
+
+                    <!-- FRONT -->
+                    <div class="doc-side">
+                        <div class="doc-side-label">FRONT</div>
+                        <% if (isImage(doc.file_path)) { %>
+                            <img src="<%= doc.file_path %>"
+                                 alt="Front of ID"
+                                 onclick="openLightbox('<%= doc.file_path %>', 'FRONT')">
+                        <% } else if (isPDF(doc.file_path)) { %>
+                            <div class="doc-side-pdf">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span style="font-size:13px;font-weight:600;color:#64748B;">PDF Document</span>
+                                <a href="<%= doc.file_path %>" target="_blank">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open PDF
+                                </a>
+                            </div>
+                        <% } else { %>
+                            <div class="doc-side-missing">
+                                <i class="fa-solid fa-image-slash"></i>
+                                <span>No front image uploaded</span>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- BACK -->
+                    <div class="doc-side">
+                        <div class="doc-side-label">BACK</div>
+                        <% if (isImage(doc.file_path_back)) { %>
+                            <img src="<%= doc.file_path_back %>"
+                                 alt="Back of ID"
+                                 onclick="openLightbox('<%= doc.file_path_back %>', 'BACK')">
+                        <% } else if (isPDF(doc.file_path_back)) { %>
+                            <div class="doc-side-pdf">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span style="font-size:13px;font-weight:600;color:#64748B;">PDF Document</span>
+                                <a href="<%= doc.file_path_back %>" target="_blank">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open PDF
+                                </a>
+                            </div>
+                        <% } else { %>
+                            <div class="doc-side-missing">
+                                <i class="fa-solid fa-image-slash"></i>
+                                <span>No back image uploaded</span>
+                            </div>
+                        <% } %>
+                    </div>
+
+                </div>
+
+                <!-- Admin Notes (if rejected) -->
+                <% if (doc.admin_notes) { %>
+                <div class="admin-notes-box mb-4">
+                    <i class="fa-solid fa-note-sticky"></i>
+                    <div>
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;">Admin Notes</div>
+                        <%= doc.admin_notes %>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Action Buttons -->
+                <% if (doc.status === 'pending') { %>
+                <div class="action-area">
+                    <button class="btn-approve" onclick="approveKYC(<%= doc.id %>)">
+                        <i class="fa-solid fa-circle-check"></i> Approve
+                    </button>
+                    <button class="btn-reject" onclick="openRejectModal(<%= doc.id %>)">
+                        <i class="fa-solid fa-circle-xmark"></i> Reject
+                    </button>
+                    <span style="font-size:12px;color:#64748B;">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i>
+                        Click any image to enlarge
+                    </span>
+                </div>
+                <% } else { %>
+                <div style="font-size:13px;color:#64748B;">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    This document has already been <strong><%= doc.status %></strong>.
+                </div>
+                <% } %>
+
+            </div>
+        </div>
+        <% }) %>
+
+    <% } else { %>
+        <div class="kyc-card">
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-id-card"></i></div>
+                <h5 style="font-weight:800;margin-bottom:8px;">No KYC Submissions</h5>
+                <p style="font-size:14px;">No documents have been submitted yet. Check back later.</p>
+                <a href="/admin/dashboard"
+                   style="display:inline-flex;align-items:center;gap:8px;background:#0F6E56;color:#fff;padding:12px 24px;border-radius:14px;font-weight:700;font-size:14px;text-decoration:none;margin-top:16px;">
+                    <i class="fa-solid fa-house-chimney"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    <% } %>
+
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-hdr">
+                <h5><i class="fa-solid fa-circle-xmark me-2"></i>Reject KYC Document</h5>
+            </div>
+            <div class="modal-body-pad">
+                <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px;">
+                    Reason for rejection <span style="color:#ef4444;">*</span>
+                </label>
+                <textarea id="rejectNotes" class="form-control" rows="4"
+                          placeholder="e.g. Document is blurry, ID is expired, front and back don't match..."></textarea>
+                <div style="font-size:12px;color:#64748B;margin-top:8px;">
+                    This reason will be shown to the user so they can resubmit correctly.
+                </div>
+            </div>
+            <div class="modal-footer-pad d-flex gap-2 justify-content-end">
+                <button class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-modal-confirm" onclick="confirmReject()">
+                    <i class="fa-solid fa-circle-xmark me-1"></i> Confirm Reject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div class="modal fade" id="lightboxModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" style="background:transparent;border:none;">
+            <div class="modal-body" style="padding:0;text-align:center;position:relative;">
+                <div class="lightbox-label" id="lightboxLabel">FRONT</div>
+                <button type="button" class="btn-close"
+                        style="position:absolute;top:12px;right:12px;z-index:10;background:white;border-radius:50%;padding:10px;opacity:1;"
+                        data-bs-dismiss="modal"></button>
+                <img id="lightboxImg" src="" alt="Document">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+    <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house-chimney"></i> Home</a>
+    <a href="/admin/users"     class="nav-item"><i class="fa-solid fa-users"></i> Users</a>
+    <a href="/admin/kyc"       class="nav-item active"><i class="fa-solid fa-id-card"></i> KYC</a>
+    <a href="/admin/settings"  class="nav-item"><i class="fa-solid fa-gear"></i> Settings</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentKycId = null;
+
+    // ── Lightbox ─────────────────────────────────────────────────────────────
+    function openLightbox(src, side) {
+        document.getElementById('lightboxImg').src   = src;
+        document.getElementById('lightboxLabel').textContent = side;
+        new bootstrap.Modal(document.getElementById('lightboxModal')).show();
+    }
+
+    // ── Approve ───────────────────────────────────────────────────────────────
+    async function approveKYC(id) {
+        if (!confirm('Approve this KYC document?')) return;
+        try {
+            const res  = await fetch(`/admin/kyc/${id}`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ action: 'approved', notes: '' }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('KYC approved successfully', 'success');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                toast('Failed to approve', 'danger');
+            }
+        } catch { toast('Something went wrong', 'danger'); }
+    }
+
+    // ── Reject ────────────────────────────────────────────────────────────────
+    function openRejectModal(id) {
+        currentKycId = id;
+        document.getElementById('rejectNotes').value = '';
+        new bootstrap.Modal(document.getElementById('rejectModal')).show();
+    }
+
+    async function confirmReject() {
+        const notes = document.getElementById('rejectNotes').value.trim();
+        if (!notes) { alert('Please provide a reason for rejection.'); return; }
+        try {
+            const res  = await fetch(`/admin/kyc/${currentKycId}`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ action: 'rejected', notes }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+                toast('KYC rejected', 'danger');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                toast('Failed to reject', 'danger');
+            }
+        } catch { toast('Something went wrong', 'danger'); }
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function toast(msg, type) {
+        const el = document.createElement('div');
+        el.style.cssText = `
+            position:fixed; top:20px; right:20px; z-index:9999;
+            padding:14px 20px; border-radius:14px; font-weight:600;
+            font-family:'Plus Jakarta Sans',sans-serif; font-size:14px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.15);
+            background:${type==='success'?'#f0fdf4':'#fef2f2'};
+            color:${type==='success'?'#22c55e':'#ef4444'};
+            border:1px solid ${type==='success'?'#bbf7d0':'#fecaca'};
+            display:flex; align-items:center; gap:8px;
+        `;
+        el.innerHTML = `<i class="fas fa-${type==='success'?'circle-check':'circle-xmark'}"></i> ${msg}`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+</script>
+</body>
+</html>

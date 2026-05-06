@@ -1,0 +1,480 @@
+<%
+  // All formatting done in controller via formatMoney() — same pattern as getDashboard.
+  // tx.displayAmount, totalCreditDisplay, totalDebitDisplay arrive pre-converted.
+  const txList = (typeof transactions !== 'undefined' && transactions) ? transactions : [];
+%>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Finora Bank</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0F6E56; --accent: #1D9E75;
+            --bg-body: #F4F8F7; --bg-card: #FFFFFF; --bg-input: #F4F8F7;
+            --text-main: #0D1B16; --text-muted: #64748B; --border: #E8EFED;
+            --danger: #ef4444; --success: #22c55e; --warning: #f59e0b;
+            --nav-bg: rgba(255,255,255,0.95);
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #172032;
+            --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --nav-bg: rgba(15,23,42,0.97);
+        }
+        @media(prefers-color-scheme:dark) {
+            [data-theme="auto"] {
+                --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #172032;
+                --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+                --nav-bg: rgba(15,23,42,0.97);
+            }
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg-body); color:var(--text-main); padding-bottom:90px; transition:background .3s,color .3s; }
+        .main-content { padding:20px; max-width:960px; margin:0 auto; }
+
+        /* FLASH MESSAGES */
+        .flash-message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .flash-danger  { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+        .flash-success { background: #f0fdf4; color: #22c55e; border: 1px solid #bbf7d0; }
+
+        /* PAGE HEADER CARD */
+        .header-card {
+            background: linear-gradient(135deg, #0F6E56 0%, #1D9E75 100%);
+            border-radius: 24px;
+            padding: 28px 32px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 35px rgba(15, 110, 86, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header-card h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+        .header-card p  { font-size: 14px; opacity: 0.85; margin: 4px 0 0; }
+        .header-icon {
+            width: 56px; height: 56px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+
+        /* SUMMARY STRIP */
+        .summary-strip {
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            padding: 20px 28px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            box-shadow: 0 10px 30px -5px rgba(15, 110, 86, 0.05);
+        }
+        .summary-item { text-align: center; }
+        .summary-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px;
+        }
+        .summary-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
+        .summary-value.credit { color: #22c55e; }
+        .summary-value.debit  { color: #ef4444; }
+        .summary-divider { border-left: 1px solid var(--border); }
+
+        /* FILTER BAR */
+        .filter-bar {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            border: 1.5px solid var(--border); background: var(--bg-body);
+            color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active { background: #0F6E56; color: #ffffff; border-color: #0F6E56; }
+        .filter-search { margin-left: auto; position: relative; }
+        .filter-search input {
+            padding: 8px 16px 8px 36px; border-radius: 20px;
+            border: 1.5px solid var(--border); background: var(--bg-body);
+            font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main); outline: none; width: 200px; transition: border 0.2s;
+        }
+        .filter-search input:focus { border-color: #0F6E56; }
+        .filter-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+
+        /* TRANSACTION CARD */
+        .f-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px -5px rgba(15, 110, 86, 0.05);
+        }
+
+        /* GROUP HEADER */
+        .tx-group-label {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-muted); margin: 20px 0 10px;
+        }
+        .tx-group-label:first-child { margin-top: 0; }
+
+        /* TRANSACTION ITEM */
+        .transaction-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; background: var(--bg-body);
+            border-radius: 16px; margin-bottom: 8px;
+            border: 1px solid var(--border);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .transaction-item:hover { transform: translateX(4px); box-shadow: 0 4px 16px rgba(15,110,86,0.08); }
+        .transaction-item:last-child { margin-bottom: 0; }
+
+        .transaction-icon {
+            width: 46px; height: 46px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .tx-deposit    { background: #f0fdf4; color: #22c55e; }
+        .tx-withdrawal { background: #fef2f2; color: #ef4444; }
+        .tx-transfer   { background: #eff6ff; color: #3b82f6; }
+        .tx-admin      { background: #fefce8; color: #f59e0b; }
+
+        .tx-info { flex: 1; padding: 0 14px; min-width: 0; }
+        .tx-description { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tx-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 8px; }
+
+        .tx-status {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+        }
+        .status-completed { background: #f0fdf4; color: #22c55e; }
+        .status-pending   { background: #fffbeb; color: #f59e0b; }
+        .status-failed    { background: #fef2f2; color: #ef4444; }
+
+        .tx-amount { font-size: 15px; font-weight: 800; white-space: nowrap; flex-shrink: 0; }
+        .tx-amount.credit  { color: #22c55e; }
+        .tx-amount.debit   { color: #ef4444; }
+        .tx-amount.neutral { color: var(--text-main); }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-icon {
+            width: 80px; height: 80px; background: var(--bg-body);
+            border-radius: 24px; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; color: var(--text-muted); margin: 0 auto 20px;
+        }
+        .empty-state h5 { font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .empty-state p  { font-size: 14px; }
+
+        /* MOBILE NAV */
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--nav-bg); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border); display: flex;
+            justify-content: space-around; padding: 10px 0 25px; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: #0F6E56; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+
+        @media (max-width: 576px) {
+            .summary-strip { grid-template-columns: 1fr; }
+            .summary-divider { border-left: none; border-top: 1px solid var(--border); padding-top: 12px; }
+            .filter-search { margin-left: 0; width: 100%; }
+            .filter-search input { width: 100%; }
+        }
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav { display: none; }
+            body { padding-bottom: 0; }
+        }
+    </style>
+</head>
+<body data-theme="<%= _theme %>">
+
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success">
+            <i class="fas fa-circle-check"></i> <%= success_msg %>
+        </div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger">
+            <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+        </div>
+    <% } %>
+    <% if (typeof pendingWithdrawals !== 'undefined' && pendingWithdrawals && pendingWithdrawals.length > 0) { %>
+<div style="background:linear-gradient(135deg,#fffbeb,#fef3c7); border:1.5px solid #f59e0b; border-radius:20px; padding:20px 24px; margin-bottom:20px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+        <div style="width:42px;height:42px;background:#f59e0b;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fa-solid fa-clock" style="color:white;font-size:18px;"></i>
+        </div>
+        <div>
+            <div style="font-weight:800;font-size:15px;color:#92400e;">
+                <%= pendingWithdrawals.length %> Incomplete Withdrawal<%= pendingWithdrawals.length > 1 ? 's' : '' %>
+            </div>
+            <div style="font-size:12px;color:#b45309;">
+                You have withdrawals waiting for your action
+            </div>
+        </div>
+        <a href="/user/pending-withdrawals" style="margin-left:auto; background:#f59e0b; color:white; padding:8px 18px; border-radius:20px; font-size:12px; font-weight:700; text-decoration:none;">
+            View All
+        </a>
+    </div>
+    <% pendingWithdrawals.forEach(function(pw) { %>
+    <div style="background:white; border-radius:12px; padding:12px 16px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; border:1px solid #fde68a;">
+        <div>
+            <div style="font-weight:700; font-size:13px;">Withdrawal #<%= pw.id %></div>
+            <div style="font-size:11px; color:#92400e;">
+                Step <%= pw.withdrawal_step %> in progress &bull;
+                <%= new Date(pw.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) %>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-weight:800; color:#b45309;"><%= pw.displayAmount %></span>
+            <a href="/user/withdraw/steps/<%= pw.id %>" style="background:#0F6E56;color:white;padding:6px 14px;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;">
+                Resume
+            </a>
+        </div>
+    </div>
+    <% }) %>
+</div>
+<% } %>
+
+    <!-- Page Header -->
+    <div class="header-card">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a href="/user/dashboard" class="text-white text-decoration-none opacity-75" style="font-size:13px;">
+                    <i class="fa-solid fa-chevron-left me-1"></i> Dashboard
+                </a>
+            </div>
+            <h1>Transaction History</h1>
+            <p>All your financial activity in one place</p>
+        </div>
+        <div class="header-icon">
+            <i class="fa-solid fa-receipt"></i>
+        </div>
+    </div>
+
+    <!-- Summary Strip -->
+    <div class="summary-strip">
+        <div class="summary-item">
+            <div class="summary-label"><i class="fa-solid fa-layer-group me-1"></i> Total Transactions</div>
+            <div class="summary-value"><%= txList.length %></div>
+        </div>
+        <div class="summary-item summary-divider">
+            <div class="summary-label"><i class="fa-solid fa-arrow-down me-1"></i> Total Credited</div>
+            <div class="summary-value credit"><%= totalCreditDisplay %></div>
+        </div>
+        <div class="summary-item summary-divider">
+            <div class="summary-label"><i class="fa-solid fa-arrow-up me-1"></i> Total Debited</div>
+            <div class="summary-value debit"><%= totalDebitDisplay %></div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterTx('all', this)">All</button>
+        <button class="filter-btn" onclick="filterTx('credit', this)">Credits</button>
+        <button class="filter-btn" onclick="filterTx('debit', this)">Debits</button>
+        <button class="filter-btn" onclick="filterTx('pending', this)">Pending</button>
+        <div class="filter-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Search transactions..." oninput="searchTx(this.value)">
+        </div>
+    </div>
+
+    <!-- Transaction List -->
+    <div class="f-card">
+        <% if (txList.length > 0) { %>
+            <%
+                // Group transactions by date
+                const groups = {};
+                txList.forEach(tx => {
+                    const d         = new Date(tx.created_at);
+                    const today     = new Date();
+                    const yesterday = new Date();
+                    yesterday.setDate(today.getDate() - 1);
+
+                    let label;
+                    if (d.toDateString() === today.toDateString()) {
+                        label = 'Today';
+                    } else if (d.toDateString() === yesterday.toDateString()) {
+                        label = 'Yesterday';
+                    } else {
+                        label = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+                    }
+
+                    if (!groups[label]) groups[label] = [];
+                    groups[label].push(tx);
+                });
+            %>
+
+            <div id="txContainer">
+                <% Object.entries(groups).forEach(([dateLabel, txGroup]) => { %>
+                    <div class="tx-group-label"><%= dateLabel %></div>
+
+                    <% txGroup.forEach(tx => {
+                        const isCredit  = tx.type === 'deposit'    || tx.type === 'admin_credit';
+                        const isDebit   = tx.type === 'withdrawal' || tx.type === 'admin_debit';
+
+                        const iconClass = isCredit ? 'tx-deposit'
+                                        : isDebit  ? 'tx-withdrawal'
+                                        : (tx.type === 'admin_credit' || tx.type === 'admin_debit') ? 'tx-admin'
+                                        : 'tx-transfer';
+
+                        const icon = isCredit ? 'fa-arrow-down'
+                                   : isDebit  ? 'fa-arrow-up'
+                                   : 'fa-exchange-alt';
+
+                        const amountClass = isCredit ? 'credit' : isDebit ? 'debit' : 'neutral';
+                        const amountSign  = isCredit ? '+' : isDebit ? '-' : '';
+
+                        const statusClass = tx.status === 'completed' ? 'status-completed'
+                                          : tx.status === 'pending'   ? 'status-pending'
+                                          : 'status-failed';
+
+                        const typeLabel = tx.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    %>
+                        <%# Inside the txGroup.forEach loop, replace the transaction-item div with: %>
+                    <div class="transaction-item"
+                        data-type="<%= isCredit ? 'credit' : isDebit ? 'debit' : 'other' %>"
+                        data-status="<%= tx.status %>"
+                        data-desc="<%= (tx.description || typeLabel).toLowerCase() %>">
+
+                        <div class="transaction-icon <%= iconClass %>">
+                            <i class="fa-solid <%= icon %>"></i>
+                        </div>
+
+                        <div class="tx-info">
+                            <div class="tx-description">
+                                <%= tx.description || typeLabel %>
+                            </div>
+                            <div class="tx-meta">
+                                <%= new Date(tx.created_at).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) %>
+                                <span class="tx-status <%= statusClass %>">
+                                    <i class="fa-solid <%= tx.status === 'completed' ? 'fa-circle-check' : tx.status === 'pending' ? 'fa-clock' : 'fa-circle-xmark' %>"></i>
+                                    <%= tx.status.charAt(0).toUpperCase() + tx.status.slice(1) %>
+                                </span>
+                                <span><%= typeLabel %></span>
+                                <%# ── RESUME BUTTON for incomplete withdrawals ── %>
+                                <% if (tx.type === 'withdrawal' && tx.status === 'pending' && tx.withdrawal_step) { %>
+                                <a href="/user/withdraw/steps/<%= tx.id %>"
+                                style="background:#0F6E56;color:white;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;text-decoration:none;margin-left:4px;">
+                                    Resume →
+                                </a>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="tx-amount <%= amountClass %>">
+                            <%= amountSign %><%= tx.displayAmount %>
+                        </div>
+                    </div>
+                    <% }) %>
+                <% }) %>
+            </div>
+
+            <!-- No results placeholder (shown by JS) -->
+            <div id="noResults" class="empty-state" style="display:none;">
+                <div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <h5>No results found</h5>
+                <p>Try adjusting your search or filter.</p>
+            </div>
+
+        <% } else { %>
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-receipt"></i></div>
+                <h5>No Transactions Yet</h5>
+                <p>Your transaction history will appear here once you start using your account.</p>
+                <a href="/user/dashboard" class="btn mt-3 px-4 py-2 rounded-pill fw-bold"
+                   style="background:#0F6E56; color:#fff; text-decoration:none;">
+                    Go to Dashboard
+                </a>
+            </div>
+        <% } %>
+    </div>
+
+</div>
+
+<%- include('../mobile_partier/nav') %>
+
+<script>
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    function filterTx(type, btn) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters();
+    }
+
+    function searchTx(val) {
+        currentSearch = val.toLowerCase();
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const items  = document.querySelectorAll('.transaction-item');
+        const groups = document.querySelectorAll('.tx-group-label');
+        let anyVisible = false;
+
+        groups.forEach(g => g.style.display = 'none');
+
+        items.forEach(item => {
+            const typeMatch   = currentFilter === 'all'
+                              || item.dataset.type   === currentFilter
+                              || (currentFilter === 'pending' && item.dataset.status === 'pending');
+            const searchMatch = !currentSearch || item.dataset.desc.includes(currentSearch);
+            const show        = typeMatch && searchMatch;
+
+            item.style.display = show ? '' : 'none';
+            if (show) anyVisible = true;
+        });
+
+        groups.forEach(label => {
+            let sibling = label.nextElementSibling;
+            while (sibling && sibling.classList.contains('transaction-item')) {
+                if (sibling.style.display !== 'none') {
+                    label.style.display = '';
+                    break;
+                }
+                sibling = sibling.nextElementSibling;
+            }
+        });
+
+        document.getElementById('noResults').style.display = anyVisible ? 'none' : 'block';
+    }
+</script>
+
+<%- include('../mobile_partier/footer') %>

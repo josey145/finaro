@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Finora Bank</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0F6E56;
+      --accent:  #1D9E75;
+      --bg-body: #F4F8F7;
+      --white:   #FFFFFF;
+      --text-main:  #0D1B16;
+      --text-muted: #64748B;
+      --border:  #E8EFED;
+      --danger:  #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Plus Jakarta Sans',sans-serif;
+      background:var(--bg-body);
+      color:var(--text-main);
+      padding-bottom:90px;
+    }
+    .main-content { padding:20px; max-width:1200px; margin:0 auto; }
+
+    /* FLASH */
+    .flash-message {
+      padding:14px 18px; border-radius:12px; margin-bottom:20px;
+      font-size:14px; display:flex; align-items:center; gap:10px;
+    }
+    .flash-danger  { background:#fef2f2; color:var(--danger);  border:1px solid #fecaca; }
+    .flash-success { background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; }
+
+    /* HERO */
+    .balance-card {
+      background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+      border-radius:24px; padding:28px 32px; color:white;
+      margin-bottom:28px;
+      box-shadow:0 15px 35px rgba(15,110,86,.3);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    }
+    .balance-label { font-size:13px; opacity:.85; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
+    .balance-title { font-size:1.8rem; font-weight:800; letter-spacing:-.5px; }
+    .hero-icon {
+      width:56px; height:56px; border-radius:16px;
+      background:rgba(255,255,255,.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; color:white;
+    }
+
+    /* CARD */
+    .f-card {
+      background:var(--white); border-radius:24px; padding:28px;
+      border:1px solid var(--border);
+      box-shadow:0 10px 30px -5px rgba(15,110,86,.06);
+      margin-bottom:20px;
+    }
+    .f-card h6 {
+      font-size:15px; font-weight:700; margin-bottom:20px;
+      color:var(--text-main); display:flex; align-items:center; gap:10px;
+    }
+    .section-icon {
+      width:32px; height:32px; border-radius:10px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex; align-items:center; justify-content:center;
+      color:white; font-size:13px; flex-shrink:0;
+    }
+
+    /* FORM */
+    .form-group { margin-bottom:20px; }
+    .form-label {
+      font-size:13px; font-weight:600; color:var(--text-main);
+      margin-bottom:8px; display:flex; align-items:center; gap:6px;
+    }
+    .label-icon { color:var(--primary); font-size:12px; }
+    .form-hint  { font-size:11.5px; color:var(--text-muted); margin-top:6px; }
+
+    .f-input, .f-select {
+      width:100%; padding:13px 16px;
+      border:1.5px solid var(--border); border-radius:14px;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:14px; font-weight:500; color:var(--text-main);
+      background:var(--bg-body); transition:all .2s; outline:none;
+      -webkit-appearance:none;
+    }
+    .f-input:focus,.f-select:focus {
+      border-color:var(--accent); background:var(--white);
+      box-shadow:0 0 0 4px rgba(29,158,117,.1);
+    }
+
+    /* COLOR PICKER */
+    .color-row { display:flex; align-items:center; gap:12px; }
+    .color-swatch {
+      width:48px; height:48px; border-radius:14px;
+      border:1.5px solid var(--border); cursor:pointer;
+      overflow:hidden; flex-shrink:0; position:relative;
+    }
+    .color-swatch input[type=color] {
+      position:absolute; inset:-8px;
+      width:calc(100%+16px); height:calc(100%+16px);
+      cursor:pointer; border:none; padding:0; background:none;
+    }
+    .color-hex {
+      flex:1; padding:13px 16px;
+      border:1.5px solid var(--border); border-radius:14px;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:14px; font-weight:600; color:var(--text-main);
+      background:var(--bg-body); outline:none;
+    }
+    .color-hex:focus { border-color:var(--accent); background:var(--white); box-shadow:0 0 0 4px rgba(29,158,117,.1); }
+
+    /* SELECT */
+    .select-wrap { position:relative; }
+    .select-wrap::after {
+      content:'\f107'; font-family:'Font Awesome 6 Free'; font-weight:900;
+      position:absolute; right:16px; top:50%; transform:translateY(-50%);
+      color:var(--text-muted); pointer-events:none; font-size:13px;
+    }
+
+    /* TOGGLE */
+    .toggle-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 20px; background:var(--bg-body);
+      border-radius:16px; border:1.5px solid var(--border);
+      margin-bottom:14px; transition:border-color .2s;
+    }
+    .toggle-row:last-child { margin-bottom:0; }
+    .toggle-row:hover { border-color:var(--accent); }
+    .toggle-info .toggle-name { font-size:14px; font-weight:600; color:var(--text-main); margin-bottom:3px; }
+    .toggle-info .toggle-desc { font-size:12px; color:var(--text-muted); }
+    .toggle-switch { position:relative; width:48px; height:26px; flex-shrink:0; margin-left:16px; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider {
+      position:absolute; cursor:pointer; inset:0;
+      background:#D1D5DB; border-radius:100px; transition:.3s;
+    }
+    .toggle-slider::before {
+      content:''; position:absolute;
+      height:20px; width:20px; left:3px; bottom:3px;
+      background:white; border-radius:50%; transition:.3s;
+      box-shadow:0 1px 4px rgba(0,0,0,.2);
+    }
+    input:checked + .toggle-slider { background:var(--primary); }
+    input:checked + .toggle-slider::before { transform:translateX(22px); }
+
+    /* LOGO UPLOAD */
+    .logo-upload-area {
+      border:2px dashed var(--border); border-radius:20px;
+      padding:28px; text-align:center;
+      cursor:pointer; transition:all .25s; position:relative;
+      background:var(--bg-body);
+    }
+    .logo-upload-area:hover { border-color:var(--accent); background:rgba(29,158,117,.03); }
+    .logo-upload-area input[type=file] {
+      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+    }
+    .logo-preview {
+      width:72px; height:72px; border-radius:18px; object-fit:cover;
+      margin:0 auto 12px; display:block;
+      border:2px solid var(--border);
+    }
+    .logo-placeholder-icon {
+      width:72px; height:72px; border-radius:18px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex; align-items:center; justify-content:center;
+      color:white; font-size:28px; font-weight:800;
+      margin:0 auto 12px;
+    }
+    .upload-label { font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:4px; }
+    .upload-sub   { font-size:12px; color:var(--text-muted); }
+
+    /* STATUS */
+    .status-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 12px; border-radius:20px;
+      font-size:12px; font-weight:600;
+    }
+    .badge-success { background:#f0fdf4; color:var(--success); }
+    .badge-warning { background:#fffbeb; color:var(--warning); }
+    .badge-danger  { background:#fef2f2; color:var(--danger);  }
+
+    /* QUICK LINK */
+    .quick-link {
+      display:flex; align-items:center; gap:12px;
+      padding:14px 16px; background:var(--bg-body);
+      border:1px solid var(--border); border-radius:16px;
+      text-decoration:none; margin-bottom:10px; transition:all .2s;
+    }
+    .quick-link:hover { border-color:var(--accent); background:white; }
+    .ql-icon { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:14px; flex-shrink:0; }
+    .ql-label { font-size:13px; font-weight:600; color:var(--text-main); }
+    .ql-sub   { font-size:11px; color:var(--text-muted); }
+    .ql-arrow { margin-left:auto; color:var(--text-muted); font-size:12px; }
+
+    /* SAVE BTN */
+    .save-btn {
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      color:white; border:none; border-radius:16px;
+      padding:15px 32px;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:14px; font-weight:700;
+      cursor:pointer; transition:all .3s;
+      display:flex; align-items:center; gap:10px;
+      box-shadow:0 8px 20px rgba(15,110,86,.3);
+      width:100%; justify-content:center;
+    }
+    .save-btn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(15,110,86,.4); }
+    .save-btn:active { transform:translateY(0); }
+
+    /* MOBILE NAV */
+    .mobile-nav {
+      position:fixed; bottom:0; left:0; width:100%;
+      background:rgba(255,255,255,.95); backdrop-filter:blur(10px);
+      border-top:1px solid var(--border);
+      display:flex; justify-content:space-around;
+      padding:10px 0 25px; z-index:1000;
+    }
+    .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
+    .nav-item.active { color:var(--primary); }
+    .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+
+    /* GRID */
+    #main-grid { display:grid; grid-template-columns:1fr; gap:20px; }
+
+    @media(min-width:992px) {
+      .main-content { padding:40px; }
+      .mobile-nav { display:none; }
+      body { padding-bottom:0; }
+      #main-grid { grid-template-columns:1fr 360px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-content">
+
+  <!-- Flash Messages -->
+  <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+    <div class="flash-message flash-success">
+      <i class="fas fa-circle-check"></i> <%= success_msg %>
+    </div>
+  <% } %>
+  <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+    <div class="flash-message flash-danger">
+      <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+    </div>
+  <% } %>
+
+  <!-- Header -->
+  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Logged in as</p>
+      <h1 style="font-size:1.2rem;font-weight:800;margin:0;display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i>
+        Admin Panel
+      </h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="/admin/settings" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
+        <i class="fa-solid fa-gear" style="color:var(--primary);"></i>
+      </a>
+      <a href="/auth/logout" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
+        <i class="fa-solid fa-right-from-bracket" style="color:var(--danger);"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO BANNER -->
+  <div class="balance-card">
+    <div>
+      <div class="balance-label">Configuration</div>
+      <div class="balance-title">System Settings</div>
+    </div>
+    <div class="hero-icon"><i class="fa-solid fa-sliders"></i></div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div id="main-grid">
+
+    <!-- ── LEFT: FORM ── -->
+    <div>
+      <form method="POST" action="/admin/settings/update" enctype="multipart/form-data">
+
+        <!-- 1. BRANDING -->
+        <div class="f-card">
+          <h6>
+            <span class="section-icon"><i class="fa-solid fa-palette"></i></span>
+            Branding
+          </h6>
+
+          <!-- Site Logo -->
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-image label-icon"></i> Site Logo
+            </label>
+            <div class="logo-upload-area" id="dropZone">
+              <input type="file" name="site_logo" accept="image/*" id="logoInput" onchange="previewLogo(event)">
+              <% if (settings && settings.site_logo) { %>
+                <img src="<%= settings.site_logo %>" class="logo-preview" id="logoPreviewImg" alt="Site Logo">
+                <div class="logo-placeholder-icon" id="logoPlaceholder" style="display:none;">
+                  <%= (settings.site_name || 'F').charAt(0).toUpperCase() %>
+                </div>
+              <% } else { %>
+                <div class="logo-placeholder-icon" id="logoPlaceholder">
+                  <%= (settings && settings.site_name ? settings.site_name.charAt(0).toUpperCase() : 'F') %>
+                </div>
+                <img id="logoPreviewImg" class="logo-preview" style="display:none;" alt="Logo preview">
+              <% } %>
+              <div class="upload-label">Click or drag to upload logo</div>
+              <div class="upload-sub">PNG, JPG or SVG · max 2 MB</div>
+            </div>
+            <% if (settings && settings.site_logo) { %>
+              <div class="form-hint">Current: <code><%= settings.site_logo %></code></div>
+            <% } else { %>
+              <div class="form-hint">No logo uploaded yet. Upload one to replace the text placeholder.</div>
+            <% } %>
+          </div>
+
+          <!-- Site Name -->
+          <div class="form-group">
+            <label class="form-label" for="site_name">
+              <i class="fa-solid fa-tag label-icon"></i> Site Name
+            </label>
+            <input type="text" class="f-input" id="site_name" name="site_name"
+                   value="<%= settings && settings.site_name ? settings.site_name : 'Finora Bank' %>"
+                   placeholder="e.g. My Bank" required>
+            <div class="form-hint">Shown in the browser tab, emails, and across the platform.</div>
+          </div>
+
+          <!-- Theme Primary Color -->
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-droplet label-icon"></i> Theme Primary Color
+            </label>
+            <div class="color-row">
+              <div class="color-swatch" id="colorSwatch"
+                   style="background:<%= settings && settings.theme_primary_color ? settings.theme_primary_color : '#0F6E56' %>;">
+                <input type="color" name="theme_primary_color" id="colorPicker"
+                       value="<%= settings && settings.theme_primary_color ? settings.theme_primary_color : '#0F6E56' %>"
+                       oninput="syncColor(this.value)">
+              </div>
+              <input type="text" class="color-hex" id="colorHex"
+                     value="<%= settings && settings.theme_primary_color ? settings.theme_primary_color : '#0F6E56' %>"
+                     maxlength="7" placeholder="#0F6E56"
+                     oninput="syncHex(this.value)">
+            </div>
+            <div class="form-hint">Controls buttons, links, and accent elements site-wide.</div>
+          </div>
+        </div>
+
+        <!-- 2. PLATFORM CONTROLS -->
+        <div class="f-card">
+          <h6>
+            <span class="section-icon"><i class="fa-solid fa-wrench"></i></span>
+            Platform Controls
+          </h6>
+
+          <!-- Maintenance Mode -->
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-name">Maintenance Mode</div>
+              <div class="toggle-desc">Hide the platform behind a maintenance notice</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" name="maintenance_mode" value="on"
+                     <%= settings && settings.maintenance_mode === 'true' ? 'checked' : '' %>
+                     onchange="updateMaintenanceBadge(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Status indicator -->
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-body);border-radius:12px;border:1px solid var(--border);">
+            <i class="fa-solid fa-circle-info" style="color:var(--text-muted);font-size:13px;"></i>
+            <span style="font-size:13px;color:var(--text-muted);">Current status:</span>
+            <% if (settings && settings.maintenance_mode === 'true') { %>
+              <span class="status-badge badge-warning" id="maintenanceBadge">
+                <i class="fa-solid fa-circle" style="font-size:8px;"></i> Maintenance
+              </span>
+            <% } else { %>
+              <span class="status-badge badge-success" id="maintenanceBadge">
+                <i class="fa-solid fa-circle" style="font-size:8px;"></i> Live
+              </span>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- 3. ALERT CONFIGURATION -->
+<div class="f-card">
+  <h6>
+    <span class="section-icon"><i class="fa-solid fa-bell"></i></span>
+    Alert Configuration
+  </h6>
+
+  <!-- Email Alerts -->
+  <div class="toggle-row">
+    <div class="toggle-info">
+      <div class="toggle-name">📧 Email Alerts</div>
+      <div class="toggle-desc">Send email notifications for all transactions</div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" name="alert_email_enabled" value="on"
+             <%= settings && settings.alert_email_enabled === 'true' ? 'checked' : '' %>>
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <!-- SMS Alerts -->
+  <div class="toggle-row">
+    <div class="toggle-info">
+      <div class="toggle-name">📱 SMS Alerts</div>
+      <div class="toggle-desc">Send SMS notifications for all transactions (requires Twilio)</div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" name="alert_sms_enabled" value="on"
+             <%= settings && settings.alert_sms_enabled === 'true' ? 'checked' : '' %>>
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <!-- Withdrawal Steps -->
+  <div class="toggle-row">
+    <div class="toggle-info">
+      <div class="toggle-name">🔒 Withdrawal Steps</div>
+      <div class="toggle-desc">Require multi-step verification for withdrawals globally</div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" name="global_withdrawal_steps_required" value="on"
+             <%= settings && settings.global_withdrawal_steps_required === 'true' ? 'checked' : '' %>>
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+</div>
+
+<!-- SAVE -->
+<button type="submit" class="save-btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Save Settings
+</button>
+
+      </form>
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div>
+
+      <!-- System Status -->
+      <div class="f-card">
+        <h6>
+          <span class="section-icon"><i class="fa-solid fa-server"></i></span>
+          System Status
+        </h6>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-body);border-radius:14px;border:1px solid var(--border);">
+            <span style="font-size:13px;font-weight:600;">Platform</span>
+            <span class="status-badge badge-success"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Online</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-body);border-radius:14px;border:1px solid var(--border);">
+            <span style="font-size:13px;font-weight:600;">Database</span>
+            <span class="status-badge badge-success"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Connected</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-body);border-radius:14px;border:1px solid var(--border);">
+            <span style="font-size:13px;font-weight:600;">Maintenance</span>
+            <% if (settings && settings.maintenance_mode === 'true') { %>
+              <span class="status-badge badge-warning" id="sidebarMaintBadge">
+                <i class="fa-solid fa-circle" style="font-size:8px;"></i> Enabled
+              </span>
+            <% } else { %>
+              <span class="status-badge badge-success" id="sidebarMaintBadge">
+                <i class="fa-solid fa-circle" style="font-size:8px;"></i> Disabled
+              </span>
+            <% } %>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-body);border-radius:14px;border:1px solid var(--border);">
+            <span style="font-size:13px;font-weight:600;">Site Name</span>
+            <span style="font-size:13px;font-weight:700;color:var(--primary);">
+              <%= settings && settings.site_name ? settings.site_name : 'Not set' %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Nav -->
+      <div class="f-card">
+        <h6>
+          <span class="section-icon"><i class="fa-solid fa-bolt"></i></span>
+          Quick Navigation
+        </h6>
+        <a href="/admin/users/create" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,var(--primary),var(--accent));"><i class="fa-solid fa-user-plus"></i></div>
+          <div><div class="ql-label">Create User</div><div class="ql-sub">Add new account</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+        <a href="/admin/kyc" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><i class="fa-solid fa-id-card-clip"></i></div>
+          <div><div class="ql-label">Review KYC</div><div class="ql-sub">Check pending approvals</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+        <a href="/admin/transactions" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a);"><i class="fa-solid fa-money-bill-transfer"></i></div>
+          <div><div class="ql-label">Transactions</div><div class="ql-sub">View all activity</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+        <a href="/admin/dashboard" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,#64748b,#475569);"><i class="fa-solid fa-house-chimney"></i></div>
+          <div><div class="ql-label">Dashboard</div><div class="ql-sub">Back to overview</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="f-card" style="border-color:#fecaca;">
+        <h6>
+          <span class="section-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626);">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </span>
+          Danger Zone
+        </h6>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+          These actions are irreversible. Proceed with caution.
+        </p>
+        <form method="POST" action="/admin/settings/reset"
+              onsubmit="return confirm('Are you sure? This will reset all settings to defaults.')">
+          <button type="submit"
+            style="width:100%;padding:12px;border-radius:14px;border:1.5px solid #fecaca;background:#fef2f2;color:var(--danger);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <i class="fa-solid fa-rotate-left"></i> Reset All Settings
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div><!-- /main-grid -->
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+  <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house-chimney"></i>Home</a>
+  <a href="/admin/users"     class="nav-item"><i class="fa-solid fa-users"></i>Users</a>
+  <a href="/admin/kyc"       class="nav-item"><i class="fa-solid fa-id-card"></i>KYC</a>
+  <a href="/admin/settings"  class="nav-item active"><i class="fa-solid fa-gear"></i>Settings</a>
+</nav>
+
+<script>
+  // Color picker <-> hex text sync
+  function syncColor(val) {
+    document.getElementById('colorSwatch').style.background = val;
+    document.getElementById('colorHex').value = val;
+  }
+  function syncHex(val) {
+    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+      document.getElementById('colorPicker').value = val;
+      document.getElementById('colorSwatch').style.background = val;
+    }
+  }
+
+  // Logo drag-and-drop highlight
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--border)'; });
+  dropZone.addEventListener('drop', e => { dropZone.style.borderColor = 'var(--border)'; });
+
+  // Logo file preview
+  function previewLogo(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    document.getElementById('logoPlaceholder').style.display = 'none';
+    const img = document.getElementById('logoPreviewImg');
+    img.src = url;
+    img.style.display = 'block';
+  }
+
+  // Maintenance toggle updates status badges instantly
+  function updateMaintenanceBadge(checked) {
+    const badge   = document.getElementById('maintenanceBadge');
+    const sidebar = document.getElementById('sidebarMaintBadge');
+    if (checked) {
+      badge.className   = 'status-badge badge-warning';
+      badge.innerHTML   = '<i class="fa-solid fa-circle" style="font-size:8px;"></i> Maintenance';
+      sidebar.className = 'status-badge badge-warning';
+      sidebar.innerHTML = '<i class="fa-solid fa-circle" style="font-size:8px;"></i> Enabled';
+    } else {
+      badge.className   = 'status-badge badge-success';
+      badge.innerHTML   = '<i class="fa-solid fa-circle" style="font-size:8px;"></i> Live';
+      sidebar.className = 'status-badge badge-success';
+      sidebar.innerHTML = '<i class="fa-solid fa-circle" style="font-size:8px;"></i> Disabled';
+    }
+  }
+</script>
+</body>
+</html>

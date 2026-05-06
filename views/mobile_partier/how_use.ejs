@@ -1,0 +1,106 @@
+<%- 
+  /*
+  ════════════════════════════════════════════════════════════
+  HOW TO UPDATE EVERY USER PAGE TO USE PARTIALS + PREFERENCES
+  ════════════════════════════════════════════════════════════
+
+  STEP 1 — Replace the top of every user EJS page:
+  ─────────────────────────────────────────────────
+  REMOVE this from the top of each page:
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      ... all the CSS ...
+    </head>
+    <body>
+
+      how_use.ejs
+
+  REPLACE with just:
+    <%- include('../partials/header') %>
+
+  ─────────────────────────────────────────────────
+  STEP 2 — Replace the bottom of every user EJS page:
+  ─────────────────────────────────────────────────
+  REMOVE this from the bottom of each page:
+    <nav class="mobile-nav">
+      ... all nav items ...
+    </nav>
+    <script src="bootstrap..."></script>
+    </body>
+    </html>
+
+  REPLACE with:
+    <%- include('../partials/nav') %>
+    <%- include('../partials/footer') %>
+
+  ─────────────────────────────────────────────────
+  STEP 3 — Replace $ hardcoded amounts with formatMoney:
+  ─────────────────────────────────────────────────
+  BEFORE:
+    $<%= parseFloat(account.balance).toLocaleString(...) %>
+
+  AFTER (server-side EJS):
+    <%= formatMoney(account.balance) %>
+
+  OR (HTML attribute for JS to format client-side):
+    <span data-money="<%= account.balance %>"></span>
+
+  ─────────────────────────────────────────────────
+  STEP 4 — Set currentPath on each page's render call:
+  ─────────────────────────────────────────────────
+  In your controller, pass currentPath so nav highlights correctly:
+
+  res.render('user/dashboard', {
+    title: 'Dashboard',
+    currentPath: 'dashboard',   // ← add this
+    ...
+  });
+
+  res.render('user/transactions', {
+    title: 'Transactions',
+    currentPath: 'transactions', // ← add this
+    ...
+  });
+
+  ════════════════════════════════════════════════════════════
+  */ 
+%>
+
+<%# ════════════════════════════════════════════════════════
+    EXAMPLE: dashboard.ejs  (top section only)
+════════════════════════════════════════════════════════ %>
+
+<%- include('../partials/header') %>
+
+<div class="main-content" style="padding:20px; max-width:1200px; margin:0 auto;">
+
+    <%# Flash Messages — these come from res.locals set in app.js %>
+    <% if (success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success">
+            <i class="fas fa-circle-check"></i> <%= success_msg %>
+        </div>
+    <% } %>
+    <% if (error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger">
+            <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+        </div>
+    <% } %>
+
+    <%# Balance — use formatMoney() instead of hardcoded $ %>
+    <div class="balance-amount">
+        <%= formatMoney(activeAccount?.balance || 0) %>
+    </div>
+
+    <%# OR use data-money for client-side formatting %>
+    <div class="balance-amount" data-money="<%= activeAccount?.balance || 0 %>"></div>
+
+    <%# Translated text example %>
+    <% const _t = typeof t !== 'undefined' ? t : {}; %>
+    <h1><%= (_t.dashboard && _t.dashboard.welcome) ? _t.dashboard.welcome.replace('{{name}}', user.first_name) : 'Welcome back, ' + user.first_name %></h1>
+
+</div>
+
+<%# Bottom of the page — replace old mobile nav + script tags %>
+<%- include('../partials/nav') %>
+<%- include('../partials/footer') %>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter PIN - Finora Bank</title>
+    <style>
+
+        
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light-gray: #f1f5f9;
+            --white: #ffffff;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .pin-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .pin-header {
+            background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: 50px 40px;
+        }
+
+        .pin-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+        }
+
+        .pin-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .pin-header p {
+            opacity: 0.9;
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        .pin-body {
+            padding: 40px;
+        }
+
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+
+        .pin-display {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .pin-dot {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--light-gray);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .pin-dot.filled {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .pin-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .key {
+            padding: 20px;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            background: var(--white);
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .key:hover {
+            background: var(--light-gray);
+        }
+
+        .key:active {
+            transform: scale(0.95);
+        }
+
+        .key.delete {
+            font-size: 16px;
+            color: var(--danger);
+        }
+
+        .logout-link {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .logout-link:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pin-container">
+        <div class="pin-header">
+            <div class="pin-icon">🔒</div>
+            <h1>Enter PIN</h1>
+            <p>Enter your 4-digit PIN to access your account</p>
+        </div>
+
+        <div class="pin-body">
+            
+            <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+                <div class="alert alert-danger"><%= error_msg %></div>
+            <% } %>
+
+            <form action="/auth/pin-entry" method="POST" id="pinForm">
+                
+                <!-- Hidden actual input -->
+                <input type="password" 
+                       name="pin" 
+                       id="realPin"
+                       class="pin-input"
+                       maxlength="4"
+                       pattern="\d{4}"
+                       required>
+
+                <!-- Visual dots -->
+                <div class="pin-display" id="pinDisplay">
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                </div>
+
+                <!-- Keypad -->
+                <div class="keypad">
+                    <button type="button" class="key" onclick="addDigit('1')">1</button>
+                    <button type="button" class="key" onclick="addDigit('2')">2</button>
+                    <button type="button" class="key" onclick="addDigit('3')">3</button>
+                    <button type="button" class="key" onclick="addDigit('4')">4</button>
+                    <button type="button" class="key" onclick="addDigit('5')">5</button>
+                    <button type="button" class="key" onclick="addDigit('6')">6</button>
+                    <button type="button" class="key" onclick="addDigit('7')">7</button>
+                    <button type="button" class="key" onclick="addDigit('8')">8</button>
+                    <button type="button" class="key" onclick="addDigit('9')">9</button>
+                    <button type="button" class="key" style="visibility:hidden"></button>
+                    <button type="button" class="key" onclick="addDigit('0')">0</button>
+                    <button type="button" class="key delete" onclick="deleteDigit()">⌫</button>
+                </div>
+
+                <button type="submit" style="display:none" id="submitBtn"></button>
+
+            </form>
+
+            <a href="/auth/logout" class="logout-link">Logout</a>
+
+        </div>
+    </div>
+
+    <script>
+        let pin = '';
+        const realInput = document.getElementById('realPin');
+        const dots = document.querySelectorAll('.pin-dot');
+
+        function addDigit(digit) {
+            if (pin.length < 4) {
+                pin += digit;
+                updateDisplay();
+                
+                if (pin.length === 4) {
+                    // Auto-submit
+                    realInput.value = pin;
+                    document.getElementById('pinForm').submit();
+                }
+            }
+        }
+
+        function deleteDigit() {
+            pin = pin.slice(0, -1);
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            dots.forEach((dot, index) => {
+                if (index < pin.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') {
+                addDigit(e.key);
+            } else if (e.key === 'Backspace') {
+                deleteDigit();
+            }
+        });
+    </script>
+
+</body>
+</html>

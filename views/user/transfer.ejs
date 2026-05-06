@@ -1,0 +1,499 @@
+<%
+  // ── SAFE LOCALS ── Fallbacks for every variable the template uses
+  const _lang     = typeof lang           !== 'undefined' ? lang           : (typeof user !== 'undefined' && user?.preferred_language) ? user.preferred_language : 'en';
+  const _theme    = typeof theme          !== 'undefined' ? theme          : (typeof user !== 'undefined' && user?.preferred_theme)    ? user.preferred_theme    : 'light';
+  const _symbol   = typeof currencySymbol !== 'undefined' ? currencySymbol : (typeof symbol !== 'undefined' ? symbol : '$');
+  const _currency = typeof currency       !== 'undefined' ? currency       : 'USD';
+
+  // Sync formatter — NEVER call async formatMoney/formatCurrency here
+  const _fmt = (n) => _symbol + parseFloat(n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  // Safe data objects
+  const _activeAccount = typeof activeAccount !== 'undefined' ? activeAccount : (typeof account !== 'undefined' ? account : null);
+  const _account       = typeof account       !== 'undefined' ? account       : _activeAccount;
+  const _accounts      = typeof accounts      !== 'undefined' ? accounts      : [];
+  const _balance       = typeof balance       !== 'undefined' ? balance       : (_account?.balance || 0);
+
+  // Use controller-preformatted displayBalance if available, else format sync
+  const _displayBalance = typeof displayBalance !== 'undefined' 
+      ? displayBalance 
+      : (_account?.displayBalance || _fmt(_balance));
+%>
+
+
+
+<!DOCTYPE html>
+<html lang="<%= _lang %>" data-theme="<%= _theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Finora Bank</title>
+
+    <script>
+        document.documentElement.setAttribute('data-theme', '<%= _theme %>');
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0F6E56; --accent: #1D9E75;
+            --bg-body: #F4F8F7; --bg-card: #FFFFFF; --bg-input: #F4F8F7;
+            --text-main: #0D1B16; --text-muted: #64748B; --border: #E8EFED;
+            --danger: #ef4444; --success: #22c55e; --warning: #f59e0b;
+            --nav-bg: rgba(255,255,255,0.95);
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #172032;
+            --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --nav-bg: rgba(15,23,42,0.97);
+        }
+        @media(prefers-color-scheme:dark) {
+            [data-theme="auto"] {
+                --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #172032;
+                --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+                --nav-bg: rgba(15,23,42,0.97);
+            }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg-body); color:var(--text-main); padding-bottom:90px; transition:background .3s,color .3s; }
+        .main-content { padding:20px; max-width:960px; margin:0 auto; }
+
+        .flash-message { padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; display:flex; align-items:center; gap:10px; }
+        .flash-danger  { background:#fef2f2; color:var(--danger);  border:1px solid #fecaca; }
+        .flash-success { background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; }
+
+        .header-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius:24px; padding:28px 32px; color:white;
+            margin-bottom:20px; box-shadow:0 15px 35px rgba(15,110,86,.3);
+            display:flex; align-items:center; justify-content:space-between; gap:16px;
+        }
+        .header-card h1 { font-size:1.6rem; font-weight:800; margin:0; }
+        .header-card p  { font-size:14px; opacity:.85; margin:4px 0 0; }
+
+        .header-icon { width:56px; height:56px; background:rgba(255,255,255,.15); border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+        .balance-pill { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:6px 16px; font-size:13px; font-weight:600; margin-top:10px; }
+
+        .f-card { background:var(--bg-card); border-radius:24px; padding:28px; border:1px solid var(--border); box-shadow:0 10px 30px -5px rgba(15,110,86,.05); height:100%; }
+        .section-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-muted); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+
+        .amount-wrapper { position:relative; margin-bottom:24px; }
+        .amount-prefix { position:absolute; left:18px; top:50%; transform:translateY(-50%); font-size:1.4rem; font-weight:800; color:var(--primary); }
+        .amount-input { width:100%; padding:20px 20px 20px 44px; border:2px solid var(--border); border-radius:16px; font-size:1.6rem; font-weight:800; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text-main); background:var(--bg-input); outline:none; text-align:center; transition:border .2s,box-shadow .2s; }
+        .amount-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,110,86,.1); background:var(--bg-card); }
+
+        .quick-amounts { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
+        .quick-btn { padding:10px; border:1.5px solid var(--border); border-radius:12px; background:var(--bg-input); font-size:13px; font-weight:700; color:var(--text-muted); cursor:pointer; transition:all .2s; font-family:'Plus Jakarta Sans',sans-serif; }
+        .quick-btn:hover, .quick-btn.active { border-color:var(--primary); background:#f0fdf8; color:var(--primary); }
+
+        .form-label { font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:8px; display:block; }
+        .input-group-custom { position:relative; }
+        .input-group-custom .input-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:15px; }
+        .form-control { background:var(--bg-input); border:1.5px solid var(--border); border-radius:14px; padding:13px 16px 13px 42px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text-main); width:100%; outline:none; transition:border .2s,box-shadow .2s; }
+        .form-control.no-icon { padding-left:16px; }
+        .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,110,86,.1); background:var(--bg-card); }
+
+        .recipient-box { background:var(--bg-input); border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; display:none; align-items:center; gap:12px; margin-top:10px; }
+        .recipient-box.show { display:flex; }
+        .recipient-box.error { border-color:#fecaca; background:#fef2f2; }
+        .recipient-box.success { border-color:#bbf7d0; background:#f0fdf4; }
+        .recipient-avatar { width:40px; height:40px; border-radius:12px; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; flex-shrink:0; }
+        .recipient-name  { font-size:14px; font-weight:700; color:var(--text-main); }
+        .recipient-acct  { font-size:12px; color:var(--text-muted); }
+        .lookup-spinner { display:none; position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--primary); }
+
+        .btn-submit { background:var(--primary); color:#ffffff; border:none; border-radius:14px; padding:16px; font-size:15px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; width:100%; transition:background .2s,transform .15s; display:flex; align-items:center; justify-content:center; gap:10px; margin-top:8px; }
+        .btn-submit:hover { background:var(--accent); transform:translateY(-1px); }
+        .btn-submit:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+        .modal-card { border-radius:24px; border:none; }
+        .modal-header-custom { background:linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius:24px 24px 0 0; padding:24px 28px; color:white; border:none; }
+        .modal-header-custom h5 { font-weight:800; margin:0; }
+        .confirm-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); font-size:14px; }
+        .confirm-row:last-child { border-bottom:none; }
+        .confirm-row .label { color:var(--text-muted); font-weight:600; }
+        .confirm-row .value { font-weight:700; color:var(--text-main); }
+        .confirm-row .value.amount { font-size:1.2rem; color:var(--primary); }
+        .btn-confirm { background:var(--primary); color:white; border:none; border-radius:12px; padding:13px 28px; font-size:14px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:background .2s; }
+        .btn-confirm:hover { background:var(--accent); }
+        .btn-cancel { background:var(--bg-input); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; padding:13px 28px; font-size:14px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; }
+
+        .recent-item { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--bg-input); border-radius:14px; margin-bottom:8px; border:1px solid var(--border); transition:transform .15s; }
+        .recent-item:hover { transform:translateX(4px); }
+        .recent-item:last-child { margin-bottom:0; }
+        .recent-icon { width:40px; height:40px; border-radius:12px; background:#eff6ff; color:#3b82f6; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        .recent-info { flex:1; padding:0 12px; min-width:0; }
+        .recent-info strong { font-size:13px; font-weight:700; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-main); }
+        .recent-info span   { font-size:11px; color:var(--text-muted); }
+        .recent-amount { font-size:14px; font-weight:800; color:#ef4444; white-space:nowrap; }
+        .tx-status { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:700; }
+        .status-completed { background:#f0fdf4; color:#22c55e; }
+        .status-pending   { background:#fffbeb; color:#f59e0b; }
+        .status-failed    { background:#fef2f2; color:#ef4444; }
+
+        .how-step { display:flex; align-items:flex-start; gap:14px; margin-bottom:20px; }
+        .how-step:last-child { margin-bottom:0; }
+        .how-num { width:32px; height:32px; border-radius:50%; background:var(--primary); color:white; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .how-info strong { font-size:13px; font-weight:700; display:block; margin-bottom:2px; color:var(--text-main); }
+        .how-info span   { font-size:12px; color:var(--text-muted); }
+
+        .mobile-nav { position:fixed; bottom:0; left:0; width:100%; background:var(--nav-bg); backdrop-filter:blur(10px); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:10px 0 25px; z-index:1000; }
+        .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
+        .nav-item.active { color:var(--primary); }
+        .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+
+        @media(max-width:576px) { .quick-amounts{grid-template-columns:repeat(2,1fr);} .f-card{padding:20px;} .header-card{padding:22px 20px;} .amount-input{font-size:1.3rem;} }
+        @media(min-width:992px) { .main-content{padding:40px;} .mobile-nav{display:none;} body{padding-bottom:0;} }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success">
+            <i class="fas fa-circle-check"></i> <%= success_msg %>
+        </div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger">
+            <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+        </div>
+    <% } %>
+
+    <!-- Page Header -->
+    <div class="header-card">
+        <div>
+            <div class="mb-1">
+                <a href="/user/dashboard" class="text-white text-decoration-none opacity-75" style="font-size:13px;">
+                    <i class="fa-solid fa-chevron-left me-1"></i> Dashboard
+                </a>
+            </div>
+            <h1>Send Money</h1>
+            <p>Transfer funds instantly to any Finora account</p>
+            <div class="balance-pill">
+                <i class="fa-solid fa-wallet"></i>
+                Available:
+                <strong><%= _displayBalance %></strong>
+                &nbsp;·&nbsp;
+                <span style="opacity:0.8;">···· <%= _account?.account_number?.slice(-4) || '0000' %></span>
+            </div>
+        </div>
+        <div class="header-icon">
+            <i class="fa-solid fa-paper-plane"></i>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Transfer Form -->
+        <div class="col-12 col-lg-7">
+            <div class="f-card">
+
+                <div class="section-label">
+                    <i class="fa-solid fa-paper-plane me-2"></i> Transfer Details
+                </div>
+
+                <form action="/user/transfer" method="POST" id="transferForm">
+
+                    <!-- Recipient Account -->
+                    <div class="mb-3">
+                        <label class="form-label" for="recipient_account">Recipient Account Number</label>
+                        <div class="input-group-custom" style="position:relative;">
+                            <i class="input-icon fa-solid fa-hashtag"></i>
+                            <input type="text"
+                                   class="form-control"
+                                   id="recipient_account"
+                                   name="recipient_account"
+                                   placeholder="Enter account number"
+                                   autocomplete="off"
+                                   required
+                                   oninput="lookupAccount(this.value)">
+                            <i class="fa-solid fa-spinner fa-spin lookup-spinner" id="lookupSpinner"></i>
+                        </div>
+
+                        <!-- Recipient Preview -->
+                        <div class="recipient-box" id="recipientBox">
+                            <div class="recipient-avatar" id="recipientInitials">?</div>
+                            <div>
+                                <div class="recipient-name" id="recipientName">—</div>
+                                <div class="recipient-acct" id="recipientAcct">—</div>
+                            </div>
+                            <div class="ms-auto" id="recipientStatus"></div>
+                        </div>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="mb-2">
+                        <label class="form-label">Amount</label>
+                        <div class="amount-wrapper">
+                            <span class="amount-prefix"><%= _symbol %></span>
+                            <input type="number"
+                                   class="amount-input"
+                                   name="amount"
+                                   id="amountInput"
+                                   placeholder="0.00"
+                                   min="0.01"
+                                   step="0.01"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Quick Amounts -->
+                    <div class="quick-amounts mb-4">
+                        <button type="button" class="quick-btn" onclick="setAmount(50)"><%= _symbol %>50</button>
+                        <button type="button" class="quick-btn" onclick="setAmount(100)"><%= _symbol %>100</button>
+                        <button type="button" class="quick-btn" onclick="setAmount(500)"><%= _symbol %>500</button>
+                        <button type="button" class="quick-btn" onclick="setAmount(1000)"><%= _symbol %>1,000</button>
+                    </div>
+
+                    <!-- Note -->
+                    <div class="mb-4">
+                        <label class="form-label" for="description">Note (optional)</label>
+                        <div class="input-group-custom">
+                            <i class="input-icon fa-solid fa-pen-to-square"></i>
+                            <input type="text"
+                                   class="form-control"
+                                   id="description"
+                                   name="description"
+                                   placeholder="e.g. Rent, lunch split...">
+                        </div>
+                    </div>
+
+                    <!-- Submit triggers confirm modal -->
+                    <button type="button" class="btn-submit" id="reviewBtn" onclick="openConfirm()">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Review Transfer
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT: How it works + Recent -->
+        <div class="col-12 col-lg-5 d-flex flex-column gap-4">
+
+            <!-- How it works -->
+            <div class="f-card">
+                <div class="section-label">
+                    <i class="fa-solid fa-circle-info me-2"></i> How It Works
+                </div>
+
+                <div class="how-step">
+                    <div class="how-num">1</div>
+                    <div class="how-info">
+                        <strong>Enter recipient's account number</strong>
+                        <span>We'll look up the account holder automatically.</span>
+                    </div>
+                </div>
+                <div class="how-step">
+                    <div class="how-num">2</div>
+                    <div class="how-info">
+                        <strong>Enter amount & note</strong>
+                        <span>Choose a quick amount or type a custom value.</span>
+                    </div>
+                </div>
+                <div class="how-step">
+                    <div class="how-num">3</div>
+                    <div class="how-info">
+                        <strong>Confirm & send</strong>
+                        <span>Review the details and confirm. Funds are sent instantly.</span>
+                    </div>
+                </div>
+
+                <div style="background:#f0fdf8;border:1px solid #bbf7d0;border-radius:14px;padding:14px;margin-top:20px;">
+                    <div style="font-size:12px;color:#064e3b;display:flex;gap:8px;align-items:flex-start;">
+                        <i class="fa-solid fa-shield-halved" style="color:var(--primary);margin-top:2px;flex-shrink:0;"></i>
+                        <span>Transfers between Finora accounts are instant and free of charge.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transfers -->
+            <div class="f-card">
+                <div class="section-label">
+                    <i class="fa-solid fa-clock-rotate-left me-2"></i> Recent Transfers
+                </div>
+
+                <% if (typeof recentTransfers !== 'undefined' && recentTransfers && recentTransfers.length > 0) { %>
+                    <% recentTransfers.forEach(tx => { %>
+                        <div class="recent-item">
+                            <div class="recent-icon">
+                                <i class="fa-solid fa-exchange-alt"></i>
+                            </div>
+                            <div class="recent-info">
+                                <strong><%= tx.description || 'Transfer' %></strong>
+                                <span>
+                                    <%= new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                    &nbsp;·&nbsp;
+                                    <span class="tx-status <%= tx.status === 'completed' ? 'status-completed' : tx.status === 'pending' ? 'status-pending' : 'status-failed' %>">
+                                        <%= tx.status.charAt(0).toUpperCase() + tx.status.slice(1) %>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="recent-amount">
+                                -<%= tx.displayAmount || (_symbol + parseFloat(tx.amount||0).toLocaleString('en-US', {minimumFractionDigits: 2})) %>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="text-center py-4" style="color:var(--text-muted);">
+                        <i class="fa-solid fa-inbox fs-2 mb-2 d-block"></i>
+                        <span style="font-size:13px;">No transfers yet</span>
+                    </div>
+                <% } %>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-card">
+            <div class="modal-header-custom">
+                <h5><i class="fa-solid fa-paper-plane me-2"></i> Confirm Transfer</h5>
+            </div>
+            <div class="modal-body p-4">
+                <div class="confirm-row">
+                    <span class="label">To</span>
+                    <span class="value" id="confirmName">—</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="label">Account</span>
+                    <span class="value" id="confirmAccount">—</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="label">Amount</span>
+                    <span class="value amount" id="confirmAmount"><%= _symbol %>0.00</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="label">Note</span>
+                    <span class="value" id="confirmNote" style="color:var(--text-muted);font-weight:500;">—</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="label">Fee</span>
+                    <span class="value" style="color:#22c55e;">Free</span>
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 gap-2">
+                <button class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-confirm" id="confirmBtn" onclick="submitTransfer()">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Send Money
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../mobile_partier/nav') %>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const currencySymbol = '<%= _symbol %>';
+    let lookupTimer    = null;
+    let recipientValid = false;
+    let recipientData  = {};
+
+    // ── Account Lookup ───────────────────────────────────────────
+    function lookupAccount(value) {
+        const box     = document.getElementById('recipientBox');
+        const spinner = document.getElementById('lookupSpinner');
+
+        box.className = 'recipient-box';
+        clearTimeout(lookupTimer);
+
+        if (!value || value.length < 6) return;
+
+        spinner.style.display = 'block';
+
+        lookupTimer = setTimeout(async () => {
+            try {
+                const res  = await fetch(`/user/transfer/lookup?account_number=${encodeURIComponent(value)}`);
+                const data = await res.json();
+                spinner.style.display = 'none';
+
+                if (data.found) {
+                    recipientValid = true;
+                    recipientData  = data;
+
+                    const initials = data.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                    document.getElementById('recipientInitials').textContent = initials;
+                    document.getElementById('recipientName').textContent     = data.name;
+                    document.getElementById('recipientAcct').textContent     = data.account;
+                    document.getElementById('recipientStatus').innerHTML     =
+                        '<span style="background:#f0fdf4;color:#22c55e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;"><i class="fa-solid fa-circle-check me-1"></i>Verified</span>';
+
+                    box.classList.add('show', 'success');
+                } else {
+                    recipientValid = false;
+                    recipientData  = {};
+
+                    document.getElementById('recipientInitials').textContent = '!';
+                    document.getElementById('recipientInitials').style.background = '#ef4444';
+                    document.getElementById('recipientName').textContent     = 'Account not found';
+                    document.getElementById('recipientAcct').textContent     = 'Please check the account number';
+                    document.getElementById('recipientStatus').innerHTML     = '';
+                    box.classList.add('show', 'error');
+                }
+            } catch (e) {
+                spinner.style.display = 'none';
+            }
+        }, 600);
+    }
+
+    // ── Quick Amounts ────────────────────────────────────────────
+    function setAmount(val) {
+        document.getElementById('amountInput').value = val;
+        document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    document.getElementById('amountInput').addEventListener('input', () => {
+        document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    // ── Open Confirm Modal ───────────────────────────────────────
+    function openConfirm() {
+        const account = document.getElementById('recipient_account').value.trim();
+        const amount  = parseFloat(document.getElementById('amountInput').value);
+        const note    = document.getElementById('description').value.trim();
+
+        if (!account) {
+            alert('Please enter a recipient account number.');
+            return;
+        }
+
+        if (!recipientValid) {
+            alert('Please enter a valid recipient account number.');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid amount.');
+            return;
+        }
+
+        document.getElementById('confirmName').textContent    = recipientData.name || account;
+        document.getElementById('confirmAccount').textContent = account;
+        document.getElementById('confirmAmount').textContent  = currencySymbol + amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        document.getElementById('confirmNote').textContent    = note || '—';
+
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    }
+
+    // ── Submit After Confirm ─────────────────────────────────────
+    function submitTransfer() {
+        const btn = document.getElementById('confirmBtn');
+        btn.disabled   = true;
+        btn.innerHTML  = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Sending...';
+        document.getElementById('transferForm').submit();
+    }
+</script>
+
+</body>
+</html>

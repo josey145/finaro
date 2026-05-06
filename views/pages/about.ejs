@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>About Us | Finaro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230F6E56%22></rect><path d=%22M30 40 L50 60 L70 40%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/about.css"/>
+    <style>
+        .footer-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px; max-width: 1200px; margin: 0 auto 40px;
+        }
+        .footer-col h4 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-dark); }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 12px; }
+        .footer-col a { color: var(--text-light); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .footer-col a:hover { color: var(--primary); }
+        .footer-bottom {
+            border-top: 1px solid var(--border); padding-top: 30px;
+            text-align: center; color: var(--text-muted); font-size: 14px;
+            max-width: 1200px; margin: 0 auto;
+        }
+    </style>
+
+<base target="_blank">
+<base target="_blank">
+</head>
+<body>
+     <%- include('../partials/nav') %>
+
+    <section class="page-banner">
+        <h1 data-aos="fade-up" data-aos-duration="1000">The Finaro <span style="color: var(--accent);">Mission</span></h1>
+        <p data-aos="fade-up" data-aos-delay="200">We are a team of financiers and engineers building the future of digital banking.</p>
+    </section>
+
+    <section>
+        <div class="stats-grid" data-aos="fade-up">
+            <div class="stat-item" data-aos="zoom-in" data-aos-delay="100">
+                <h3>2026</h3>
+                <p>Founded</p>
+            </div>
+            <div class="stat-item" data-aos="zoom-in" data-aos-delay="200">
+                <h3>140+</h3>
+                <p>Target Markets</p>
+            </div>
+            <div class="stat-item" data-aos="zoom-in" data-aos-delay="300">
+                <h3>24/7</h3>
+                <p>Support Planned</p>
+            </div>
+            <div class="stat-item" data-aos="zoom-in" data-aos-delay="400">
+                <h3>4.5%</h3>
+                <p>Target APY</p>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Our Story</h2>
+            <p>From an idea to a platform in development.</p>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item" data-aos="fade-right">
+                <div class="timeline-dot"><i class="fas fa-lightbulb"></i></div>
+                <div class="timeline-content">
+                    <h4>2024 — The Idea</h4>
+                    <p>Finaro was conceived by a group of fintech professionals who saw a gap in accessible, transparent digital banking for underserved communities.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="100">
+                <div class="timeline-dot"><i class="fas fa-code"></i></div>
+                <div class="timeline-content">
+                    <h4>2025 — Development Begins</h4>
+                    <p>Our engineering team started building the core platform. Focus on security, compliance, and a seamless user experience from day one.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="200">
+                <div class="timeline-dot"><i class="fas fa-shield-halved"></i></div>
+                <div class="timeline-content">
+                    <h4>2025 — Security & Compliance</h4>
+                    <p>Implemented bank-grade encryption, fraud detection systems, and began working with regulatory bodies to ensure full compliance.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="300">
+                <div class="timeline-dot"><i class="fas fa-users"></i></div>
+                <div class="timeline-content">
+                    <h4>2026 — Team Growth</h4>
+                    <p>Expanded our team across engineering, compliance, and customer success. Built partnerships with payment processors and banking infrastructure providers.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="400">
+                <div class="timeline-dot"><i class="fas fa-rocket"></i></div>
+                <div class="timeline-content">
+                    <h4>2026 — Early Access Launch</h4>
+                    <p>Opening our doors to early adopters. Inviting users to join our beta program and help shape the future of Finaro.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="section-header" data-aos="fade-up">
+            <h2>Our Values</h2>
+            <p>The principles that guide everything we do.</p>
+        </div>
+        <div class="feature-list">
+            <div class="feature-item" data-aos="fade-up" data-aos-delay="100">
+                <i class="fas fa-handshake"></i>
+                <h4>Transparency</h4>
+                <p>No hidden fees, no surprises. We believe in complete honesty with our customers.</p>
+            </div>
+            <div class="feature-item" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-shield-halved"></i>
+                <h4>Security First</h4>
+                <p>Your financial data is protected with military-grade encryption and constant monitoring.</p>
+            </div>
+            <div class="feature-item" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-lightbulb"></i>
+                <h4>Innovation</h4>
+                <p>We constantly push boundaries to deliver cutting-edge financial solutions.</p>
+            </div>
+            <div class="feature-item" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-heart"></i>
+                <h4>Customer Obsessed</h4>
+                <p>Every feature we build starts with understanding what our users truly need.</p>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Leadership Team</h2>
+            <p>Meet the people driving our vision forward.</p>
+        </div>
+        <div class="feature-list">
+            <div class="feature-item" data-aos="fade-up" data-aos-delay="100">
+                <i class="fas fa-user-tie" style="font-size: 48px; color: var(--primary);"></i>
+                <h4>Sarah Chen</h4>
+                <p style="color: var(--accent); font-weight: 600;">CEO & Co-Founder</p>
+                <p style="font-size: 14px; margin-top: 10px;">Former fintech strategist with experience across digital banking and payment platforms.</p>
+            </div>
+            <div class="feature-item" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-user-gear" style="font-size: 48px; color: var(--primary);"></i>
+                <h4>Marcus Johnson</h4>
+                <p style="color: var(--accent); font-weight: 600;">CTO & Co-Founder</p>
+                <p style="font-size: 14px; margin-top: 10px;">Software architect with deep expertise in secure financial systems and cloud infrastructure.</p>
+            </div>
+            <div class="feature-item" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-user-shield" style="font-size: 48px; color: var(--primary);"></i>
+                <h4>Elena Rodriguez</h4>
+                <p style="color: var(--accent); font-weight: 600;">Chief Security Officer</p>
+                <p style="font-size: 14px; margin-top: 10px;">Cybersecurity specialist focused on building robust protection for financial data and transactions.</p>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../partials/footer') %>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true, offset: 100, easing: 'ease-out-cubic' });
+    </script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>System Status | Finaro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230F6E56%22></rect><path d=%22M30 40 L50 60 L70 40%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/index.css"/>
+
+    <style>
+        .page-banner {
+            padding: 140px 6% 80px;
+            text-align: center;
+            background: radial-gradient(circle at top, #F2FAF8 0%, var(--bg) 50%);
+        }
+        .page-banner h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+        .page-banner p {
+            color: var(--text-light);
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+        .status-badge.operational {
+            background: #DCFCE7;
+            color: #166534;
+        }
+        .status-badge.maintenance {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        .status-badge.incident {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .systems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            max-width: 1000px;
+            margin: 0 auto 60px;
+        }
+        .system-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--card-bg, white);
+        }
+        .system-item i {
+            font-size: 24px;
+            color: var(--primary);
+        }
+        .system-item .name {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+        .system-item .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .status-dot.operational { background: #22C55E; }
+        .status-dot.maintenance { background: #F59E0B; }
+        .status-dot.incident { background: #EF4444; }
+        .system-item .status-text {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .status-text.operational { color: #166534; }
+        .status-text.maintenance { color: #92400E; }
+        .status-text.incident { color: #991B1B; }
+
+        .incidents-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .incident-item {
+            padding: 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--card-bg, white);
+            margin-bottom: 16px;
+        }
+        .incident-item .date {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .incident-item h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .incident-item p {
+            color: var(--text-light);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .incident-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .incident-badge.resolved {
+            background: #DCFCE7;
+            color: #166534;
+        }
+        .incident-badge.investigating {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 60px;
+        }
+        .section-header h2 {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        [data-theme="dark"] .page-banner {
+            background: radial-gradient(circle at top, #0f2e24 0%, var(--bg) 60%);
+        }
+        [data-theme="dark"] .status-badge.operational { background: rgba(34,197,94,0.2); }
+        [data-theme="dark"] .status-badge.maintenance { background: rgba(245,158,11,0.2); }
+        [data-theme="dark"] .status-badge.incident { background: rgba(239,68,68,0.2); }
+        [data-theme="dark"] .incident-badge.resolved { background: rgba(34,197,94,0.2); }
+
+        @media (max-width: 768px) {
+            .page-banner { padding: 120px 20px 60px; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <%- include('../partials/nav') %>
+
+    <section class="page-banner">
+        <h1 data-aos="fade-up" data-aos-duration="1000">System <span style="color: var(--accent);">Status</span></h1>
+        <p data-aos="fade-up" data-aos-delay="200">Real-time status of Finaro services.</p>
+    </section>
+
+    <section>
+        <div style="text-align: center; margin-bottom: 40px;" data-aos="fade-up">
+            <div class="status-badge operational">
+                <div class="status-dot operational"></div>
+                All Systems Operational
+            </div>
+        </div>
+
+        <div class="section-header" data-aos="fade-up">
+            <h2>Service Status</h2>
+            <p>Current status of all Finaro services.</p>
+        </div>
+
+        <div class="systems-grid">
+            <div class="system-item" data-aos="fade-up" data-aos-delay="50">
+                <i class="fas fa-desktop"></i>
+                <span class="name">Web Platform</span>
+                <div class="status-dot operational"></div>
+                <span class="status-text operational">Operational</span>
+            </div>
+            <div class="system-item" data-aos="fade-up" data-aos-delay="100">
+                <i class="fab fa-apple"></i>
+                <span class="name">Mobile App (iOS)</span>
+                <div class="status-dot operational"></div>
+                <span class="status-text operational">Operational</span>
+            </div>
+            <div class="system-item" data-aos="fade-up" data-aos-delay="150">
+                <i class="fab fa-android"></i>
+                <span class="name">Mobile App (Android)</span>
+                <div class="status-dot operational"></div>
+                <span class="status-text operational">Operational</span>
+            </div>
+            <div class="system-item" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-credit-card"></i>
+                <span class="name">Card Processing</span>
+                <div class="status-dot operational"></div>
+                <span class="status-text operational">Operational</span>
+            </div>
+            <div class="system-item" data-aos="fade-up" data-aos-delay="250">
+                <i class="fas fa-paper-plane"></i>
+                <span class="name">Transfers</span>
+                <div class="status-dot operational"></div>
+                <span class="status-text operational">Operational</span>
+            </div>
+            <div class="system-item" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-id-card"></i>
+                <span class="name">KYC Verification</span>
+                <div class="status-dot operational"></div>
+                <span class="status-text operational">Operational</span>
+            </div>
+            <div class="system-item" data-aos="fade-up" data-aos-delay="350">
+                <i class="fas fa-bell"></i>
+                <span class="name">Notifications</span>
+                <div class="status-dot operational"></div>
+                <span class="status-text operational">Operational</span>
+            </div>
+            <div class="system-item" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-plug"></i>
+                <span class="name">API</span>
+                <div class="status-dot maintenance"></div>
+                <span class="status-text maintenance">Maintenance</span>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Recent Incidents</h2>
+            <p>History of resolved and ongoing issues.</p>
+        </div>
+        <div class="incidents-section">
+            <div class="incident-item" data-aos="fade-up" data-aos-delay="100">
+                <div class="date">April 28, 2026</div>
+                <h4>
+                    Scheduled Maintenance
+                    <span class="incident-badge resolved">Resolved</span>
+                </h4>
+                <p>Routine system updates completed successfully. All services restored within the planned window.</p>
+            </div>
+            <div class="incident-item" data-aos="fade-up" data-aos-delay="200">
+                <div class="date">April 15, 2026</div>
+                <h4>
+                    API Performance Degradation
+                    <span class="incident-badge resolved">Resolved</span>
+                </h4>
+                <p>Temporary slowdown in API response times. Issue identified and resolved within 30 minutes.</p>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark, #0f766e) 100%); color: white; text-align: center; padding: 80px 6%;">
+        <p data-aos="fade-up" style="font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto;">
+            <i class="fas fa-bell" style="margin-right: 8px;"></i>
+            Subscribe to status updates for real-time notifications.
+        </p>
+    </section>
+
+    <%- include('../partials/footer') %>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true, offset: 100, easing: 'ease-out-cubic' });
+    </script>
+</body>
+</html>

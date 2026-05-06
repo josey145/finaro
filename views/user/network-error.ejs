@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" data-theme="<%= theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Problem - Finora Bank</title>
+    <script>document.documentElement.setAttribute('data-theme','<%= theme %>');</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary:#0F6E56; --bg-body:#F4F8F7; --bg-card:#fff; --text-main:#0D1B16; --text-muted:#64748B; --border:#E8EFED; }
+        [data-theme="dark"] { --bg-body:#0f172a; --bg-card:#1e293b; --text-main:#f1f5f9; --text-muted:#94a3b8; --border:#334155; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg-body); color:var(--text-main); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .card { background:var(--bg-card); border-radius:28px; padding:48px 36px; max-width:440px; width:100%; text-align:center; border:1px solid var(--border); box-shadow:0 20px 60px rgba(0,0,0,.08); }
+        .icon-wrap { width:96px; height:96px; background:#fef2f2; border-radius:28px; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; }
+        .icon-wrap i { font-size:42px; color:#ef4444; }
+        h1 { font-size:1.5rem; font-weight:800; margin-bottom:10px; }
+        p  { font-size:14px; color:var(--text-muted); line-height:1.7; margin-bottom:6px; }
+        .tips { background:var(--bg-body); border-radius:16px; padding:16px 20px; margin:20px 0; text-align:left; }
+        .tip  { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--text-muted); margin-bottom:8px; }
+        .tip:last-child { margin-bottom:0; }
+        .tip i { color:var(--primary); margin-top:2px; flex-shrink:0; }
+        .btn-retry { display:block; background:#0F6E56; color:white; padding:14px; border-radius:14px; font-weight:800; font-size:15px; text-decoration:none; margin-bottom:10px; border:none; cursor:pointer; width:100%; }
+        .btn-home  { display:block; background:transparent; color:var(--text-muted); padding:12px; border-radius:14px; font-weight:700; font-size:14px; text-decoration:none; border:1.5px solid var(--border); width:100%; }
+        .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-right:6px; animation:pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+        .online .status-dot  { background:#22c55e; animation:none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="icon-wrap">
+        <i class="fa-solid fa-wifi"></i>
+    </div>
+
+    <div id="statusLine" style="font-size:12px; font-weight:700; color:#ef4444; margin-bottom:16px;">
+        <span class="status-dot"></span> No connection detected
+    </div>
+
+    <h1>Connection Problem</h1>
+    <p>We couldn't reach Finora Bank's servers.<br>Your data is safe — nothing was lost.</p>
+
+    <div class="tips">
+        <div class="tip"><i class="fa-solid fa-wifi"></i> Check your Wi-Fi or mobile data connection</div>
+        <div class="tip"><i class="fa-solid fa-rotate"></i> Try switching between Wi-Fi and mobile data</div>
+        <div class="tip"><i class="fa-solid fa-plane-slash"></i> Make sure airplane mode is turned off</div>
+        <div class="tip"><i class="fa-solid fa-shield-halved"></i> Your withdrawal progress has been saved and can be resumed</div>
+    </div>
+
+    <button class="btn-retry" onclick="retryConnection()">
+        <i class="fa-solid fa-rotate-right me-2"></i> Try Again
+    </button>
+    <a href="/user/dashboard" class="btn-home">
+        <i class="fa-solid fa-house me-1"></i> Go to Dashboard
+    </a>
+
+    <% if (typeof returnUrl !== 'undefined' && returnUrl && returnUrl !== '/user/dashboard') { %>
+    <p style="margin-top:14px; font-size:12px;">
+        Or <a href="<%= returnUrl %>" style="color:var(--primary); font-weight:700;">return to where you were</a>
+    </p>
+    <% } %>
+
+    <p style="margin-top:20px; font-size:11px; color:var(--text-muted);">
+        If the problem persists, <a href="mailto:support@finorabank.com" style="color:var(--primary);">contact support</a>
+    </p>
+</div>
+
+<script>
+    const returnUrl = '<%= returnUrl %>';
+
+    function retryConnection() {
+        const btn = document.querySelector('.btn-retry');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Checking...';
+        btn.disabled = true;
+
+        // Try to ping the server
+        fetch('/user/dashboard', { method: 'HEAD', cache: 'no-store' })
+            .then(() => {
+                // Back online — go to return URL or dashboard
+                window.location.href = returnUrl || '/user/dashboard';
+            })
+            .catch(() => {
+                btn.innerHTML = '<i class="fa-solid fa-rotate-right me-2"></i> Try Again';
+                btn.disabled = false;
+                document.getElementById('statusLine').innerHTML =
+                    '<span class="status-dot"></span> Still no connection — please check your network';
+            });
+    }
+
+    // Auto-detect when connection comes back
+    function checkOnlineStatus() {
+        const line = document.getElementById('statusLine');
+        if (navigator.onLine) {
+            line.className = 'online';
+            line.innerHTML = '<span class="status-dot"></span> Connection restored — click Try Again';
+        } else {
+            line.className = '';
+            line.innerHTML = '<span class="status-dot"></span> No connection detected';
+        }
+    }
+
+    window.addEventListener('online',  checkOnlineStatus);
+    window.addEventListener('offline', checkOnlineStatus);
+    checkOnlineStatus();
+
+    // Auto-retry every 10 seconds silently
+    setInterval(() => {
+        if (navigator.onLine) {
+            fetch('/user/dashboard', { method: 'HEAD', cache: 'no-store' })
+                .then(() => { window.location.href = returnUrl || '/user/dashboard'; })
+                .catch(() => {});
+        }
+    }, 10000);
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<%
+  const _t   = typeof t   !== 'undefined' ? t   : {};
+  const _nav = _t.nav || {};
+  const currentPath = typeof locals !== 'undefined' ? (locals.currentPath || '') : '';
+%>
+<nav class="mobile-nav">
+    <a href="/user/dashboard"    class="nav-item <%= currentPath === 'dashboard'    ? 'active' : '' %>">
+        <i class="fa-solid fa-house-chimney"></i>
+        <%= _nav.home || 'Home' %>
+    </a>
+    <a href="/user/transactions" class="nav-item <%= currentPath === 'transactions' ? 'active' : '' %>">
+        <i class="fa-solid fa-chart-column"></i>
+        <%= _nav.transactions || 'Activity' %>
+    </a>
+    <a href="/user/withdraw"     class="nav-item <%= currentPath === 'withdraw'     ? 'active' : '' %>">
+        <i class="fa-solid fa-money-bill-transfer"></i>
+        <%= _nav.withdraw || 'Transfer' %>
+    </a>
+    <a href="/user/notifications" class="nav-item <%= currentPath === 'notifications' ? 'active' : '' %>">
+        <i class="fa-solid fa-bell"></i>
+        Alerts
+    </a>
+    <a href="/user/profile"      class="nav-item <%= currentPath === 'profile'      ? 'active' : '' %>">
+        <i class="fa-solid fa-user-gear"></i>
+        <%= _nav.profile || 'Profile' %>
+    </a>
+</nav>

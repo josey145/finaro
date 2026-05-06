@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resend Verification - Finora Bank</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --primary-light: #ccfbf1;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light-gray: #f1f5f9;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --success: #22c55e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .resend-container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .resend-header {
+            background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .resend-header::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+        }
+
+        .resend-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .resend-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .resend-header p {
+            opacity: 0.9;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .resend-body {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: var(--white);
+            color: var(--dark);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .form-control.is-invalid {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .form-control:focus + .input-icon,
+        .input-wrapper:focus-within .input-icon {
+            color: var(--primary);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-submit .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: var(--white);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn-submit.loading .spinner {
+            display: block;
+        }
+
+        .btn-submit.loading .btn-text {
+            opacity: 0.7;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: #3b82f6;
+            border: 1px solid #bfdbfe;
+        }
+
+        .resend-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--light-gray);
+        }
+
+        .resend-footer p {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .resend-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .resend-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .countdown {
+            color: var(--gray);
+            font-size: 13px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .countdown span {
+            color: var(--primary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="resend-container">
+        <!-- Header -->
+        <div class="resend-header">
+            <div class="resend-icon">
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
+            <h1>Resend Verification Email</h1>
+            <p>Enter your email and we'll send a new verification link</p>
+        </div>
+
+        <!-- Body -->
+        <div class="resend-body">
+            
+            <!-- Messages -->
+            <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <%= error_msg %>
+                </div>
+            <% } %>
+
+            <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+                <div class="alert alert-success">
+                    <i class="fas fa-circle-check"></i>
+                    <%= success_msg %>
+                </div>
+            <% } %>
+
+            <% if (typeof info_msg !== 'undefined' && info_msg && info_msg.length > 0) { %>
+                <div class="alert alert-info">
+                    <i class="fas fa-circle-info"></i>
+                    <%= info_msg %>
+                </div>
+            <% } %>
+
+            <form action="/auth/resend-verification" method="POST" id="resendForm">
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" 
+                               name="email" 
+                               class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'email')) ? 'is-invalid' : '' %>" 
+                               placeholder="Enter your registered email"
+                               value="<%= (typeof formData !== 'undefined' && formData) ? formData.email : '' %>"
+                               required
+                               autofocus>
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                    <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'email')) { %>
+                        <div class="invalid-feedback" style="color: var(--danger); font-size: 13px; margin-top: 6px;">
+                            <i class="fas fa-circle-xmark"></i>
+                            <%= errors.find(e => e.param === 'email').msg %>
+                        </div>
+                    <% } %>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <span class="spinner"></span>
+                    <span class="btn-text">Resend Verification Email</span>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+
+            </form>
+
+            <div class="resend-footer">
+                <p>Remember your password? <a href="/auth/login">Back to Login</a></p>
+                <p style="margin-top: 8px;">Don't have an account? <a href="/auth/register">Create one</a></p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Loading state
+        document.getElementById('resendForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+        });
+
+        // Countdown timer for resend (optional enhancement)
+        let cooldown = 60;
+        const countdownEl = document.getElementById('countdown');
+        
+        function startCooldown() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            
+            const interval = setInterval(() => {
+                cooldown--;
+                if (cooldownEl) {
+                    countdownEl.innerHTML = `Resend available in <span>${cooldown}s</span>`;
+                }
+                
+                if (cooldown <= 0) {
+                    clearInterval(interval);
+                    btn.disabled = false;
+                    if (countdownEl) countdownEl.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        // Start cooldown if success message shown
+        <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+            startCooldown();
+        <% } %>
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Finora Bank</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0F6E56;
+      --accent:  #1D9E75;
+      --bg-body: #F4F8F7;
+      --white:   #FFFFFF;
+      --text-main:  #0D1B16;
+      --text-muted: #64748B;
+      --border:  #E8EFED;
+      --danger:  #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Plus Jakarta Sans',sans-serif;
+      background:var(--bg-body);
+      color:var(--text-main);
+      padding-bottom:90px;
+    }
+    .main-content { padding:20px; max-width:1200px; margin:0 auto; }
+
+    /* FLASH */
+    .flash-message {
+      padding:14px 18px; border-radius:12px; margin-bottom:20px;
+      font-size:14px; display:flex; align-items:center; gap:10px;
+    }
+    .flash-danger  { background:#fef2f2; color:var(--danger);  border:1px solid #fecaca; }
+    .flash-success { background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; }
+
+    /* HERO */
+    .balance-card {
+      background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+      border-radius:24px; padding:28px 32px; color:white;
+      margin-bottom:28px;
+      box-shadow:0 15px 35px rgba(15,110,86,.3);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    }
+    .balance-label { font-size:13px; opacity:.85; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
+    .balance-title { font-size:1.8rem; font-weight:800; letter-spacing:-.5px; }
+    .hero-icon {
+      width:56px; height:56px; border-radius:16px;
+      background:rgba(255,255,255,.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; color:white;
+    }
+
+    /* CARD */
+    .f-card {
+      background:var(--white); border-radius:24px; padding:28px;
+      border:1px solid var(--border);
+      box-shadow:0 10px 30px -5px rgba(15,110,86,.06);
+      margin-bottom:20px;
+    }
+    .f-card h6 {
+      font-size:15px; font-weight:700; margin-bottom:20px;
+      color:var(--text-main); display:flex; align-items:center; gap:10px;
+    }
+    .section-icon {
+      width:32px; height:32px; border-radius:10px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex; align-items:center; justify-content:center;
+      color:white; font-size:13px; flex-shrink:0;
+    }
+
+    /* FORM */
+    .form-group { margin-bottom:20px; }
+    .form-label {
+      font-size:13px; font-weight:600; color:var(--text-main);
+      margin-bottom:8px; display:flex; align-items:center; gap:6px;
+    }
+    .label-icon { color:var(--primary); font-size:12px; }
+    .form-hint  { font-size:11.5px; color:var(--text-muted); margin-top:6px; }
+
+    .f-input, .f-select {
+      width:100%; padding:13px 16px;
+      border:1.5px solid var(--border); border-radius:14px;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:14px; font-weight:500; color:var(--text-main);
+      background:var(--bg-body); transition:all .2s; outline:none;
+      -webkit-appearance:none;
+    }
+    .f-input:focus,.f-select:focus {
+      border-color:var(--accent); background:var(--white);
+      box-shadow:0 0 0 4px rgba(29,158,117,.1);
+    }
+
+    .input-group { display:flex; gap:12px; }
+    .input-group .form-group { flex:1; }
+
+    /* SAVE BTN */
+    .save-btn {
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      color:white; border:none; border-radius:16px;
+      padding:15px 32px;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:14px; font-weight:700;
+      cursor:pointer; transition:all .3s;
+      display:flex; align-items:center; gap:10px;
+      box-shadow:0 8px 20px rgba(15,110,86,.3);
+      width:100%; justify-content:center;
+    }
+    .save-btn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(15,110,86,.4); }
+    .save-btn:active { transform:translateY(0); }
+
+    /* QUICK LINK */
+    .quick-link {
+      display:flex; align-items:center; gap:12px;
+      padding:14px 16px; background:var(--bg-body);
+      border:1px solid var(--border); border-radius:16px;
+      text-decoration:none; margin-bottom:10px; transition:all .2s;
+    }
+    .quick-link:hover { border-color:var(--accent); background:white; }
+    .ql-icon { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:14px; flex-shrink:0; }
+    .ql-label { font-size:13px; font-weight:600; color:var(--text-main); }
+    .ql-sub   { font-size:11px; color:var(--text-muted); }
+    .ql-arrow { margin-left:auto; color:var(--text-muted); font-size:12px; }
+
+    /* MOBILE NAV */
+    .mobile-nav {
+      position:fixed; bottom:0; left:0; width:100%;
+      background:rgba(255,255,255,.95); backdrop-filter:blur(10px);
+      border-top:1px solid var(--border);
+      display:flex; justify-content:space-around;
+      padding:10px 0 25px; z-index:1000;
+    }
+    .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
+    .nav-item.active { color:var(--primary); }
+    .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+
+    /* GRID */
+    #main-grid { display:grid; grid-template-columns:1fr; gap:20px; }
+
+    @media(min-width:992px) {
+      .main-content { padding:40px; }
+      .mobile-nav { display:none; }
+      body { padding-bottom:0; }
+      #main-grid { grid-template-columns:1fr 360px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-content">
+
+  <!-- Flash Messages -->
+  <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+    <div class="flash-message flash-success">
+      <i class="fas fa-circle-check"></i> <%= success_msg %>
+    </div>
+  <% } %>
+  <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+    <div class="flash-message flash-danger">
+      <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+    </div>
+  <% } %>
+
+  <!-- Header -->
+  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Admin Panel</p>
+      <h1 style="font-size:1.2rem;font-weight:800;margin:0;display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i>
+        <%= title %>
+      </h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="/admin/settings" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
+        <i class="fa-solid fa-gear" style="color:var(--primary);"></i>
+      </a>
+      <a href="/auth/logout" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
+        <i class="fa-solid fa-right-from-bracket" style="color:var(--danger);"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO BANNER -->
+  <div class="balance-card">
+    <div>
+      <div class="balance-label">User Management</div>
+      <div class="balance-title">Create New User</div>
+    </div>
+    <div class="hero-icon"><i class="fa-solid fa-user-plus"></i></div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div id="main-grid">
+
+    <!-- ── LEFT: FORM ── -->
+    <div>
+      <form method="POST" action="/admin/users/create">
+
+        <!-- PERSONAL INFO -->
+        <div class="f-card">
+          <h6>
+            <span class="section-icon"><i class="fa-solid fa-user"></i></span>
+            Personal Information
+          </h6>
+
+          <div class="input-group">
+            <div class="form-group">
+              <label class="form-label" for="first_name">
+                <i class="fa-solid fa-signature label-icon"></i> First Name
+              </label>
+              <input type="text" class="f-input" id="first_name" name="first_name" placeholder="John" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="last_name">
+                <i class="fa-solid fa-signature label-icon"></i> Last Name
+              </label>
+              <input type="text" class="f-input" id="last_name" name="last_name" placeholder="Doe" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">
+              <i class="fa-solid fa-envelope label-icon"></i> Email Address
+            </label>
+            <input type="email" class="f-input" id="email" name="email" placeholder="john.doe@example.com" required>
+            <div class="form-hint">This will be used for login and notifications.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="phone">
+              <i class="fa-solid fa-phone label-icon"></i> Phone Number
+            </label>
+            <input type="tel" class="f-input" id="phone" name="phone" placeholder="+1 (555) 000-0000">
+          </div>
+        </div>
+
+        <!-- SECURITY -->
+        <div class="f-card">
+          <h6>
+            <span class="section-icon"><i class="fa-solid fa-lock"></i></span>
+            Security
+          </h6>
+
+          <div class="form-group">
+            <label class="form-label" for="password">
+              <i class="fa-solid fa-key label-icon"></i> Password
+            </label>
+            <input type="password" class="f-input" id="password" name="password" placeholder="••••••••" required>
+            <div class="form-hint">Min 8 characters. User can change this later.</div>
+          </div>
+        </div>
+
+        <!-- ACCOUNT SETUP -->
+        <div class="f-card">
+          <h6>
+            <span class="section-icon"><i class="fa-solid fa-wallet"></i></span>
+            Account Setup
+          </h6>
+
+          <div class="form-group">
+            <label class="form-label" for="initial_balance">
+              <i class="fa-solid fa-money-bill label-icon"></i> Initial Balance
+            </label>
+            <input type="number" class="f-input" id="initial_balance" name="initial_balance" placeholder="0.00" step="0.01" min="0" value="0">
+            <div class="form-hint">Starting account balance. Defaults to $0.00.</div>
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <button type="submit" class="save-btn">
+          <i class="fa-solid fa-user-plus"></i>
+          Create User
+        </button>
+
+      </form>
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div>
+
+      <!-- Instructions -->
+      <div class="f-card">
+        <h6>
+          <span class="section-icon"><i class="fa-solid fa-circle-info"></i></span>
+          Quick Tips
+        </h6>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-body);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-check" style="color:var(--success);font-size:12px;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:2px;">Auto-verified</div>
+              <div style="font-size:12px;color:var(--text-muted);">Email and KYC are automatically approved for admin-created accounts.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-body);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-hashtag" style="color:var(--primary);font-size:12px;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:2px;">Account Number</div>
+              <div style="font-size:12px;color:var(--text-muted);">Generated automatically using your system's helper function.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:8px;background:var(--bg-body);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-shield-halved" style="color:var(--warning);font-size:12px;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:2px;">Admin Privileges</div>
+              <div style="font-size:12px;color:var(--text-muted);">Users created here are standard users, not admins.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Nav -->
+      <div class="f-card">
+        <h6>
+          <span class="section-icon"><i class="fa-solid fa-bolt"></i></span>
+          Quick Navigation
+        </h6>
+        <a href="/admin/users" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,var(--primary),var(--accent));"><i class="fa-solid fa-users"></i></div>
+          <div><div class="ql-label">All Users</div><div class="ql-sub">Manage existing accounts</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+        <a href="/admin/kyc" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><i class="fa-solid fa-id-card-clip"></i></div>
+          <div><div class="ql-label">Review KYC</div><div class="ql-sub">Check pending approvals</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+        <a href="/admin/transactions" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a);"><i class="fa-solid fa-money-bill-transfer"></i></div>
+          <div><div class="ql-label">Transactions</div><div class="ql-sub">View all activity</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+        <a href="/admin/dashboard" class="quick-link">
+          <div class="ql-icon" style="background:linear-gradient(135deg,#64748b,#475569);"><i class="fa-solid fa-house-chimney"></i></div>
+          <div><div class="ql-label">Dashboard</div><div class="ql-sub">Back to overview</div></div>
+          <i class="fa-solid fa-chevron-right ql-arrow"></i>
+        </a>
+      </div>
+
+    </div>
+  </div><!-- /main-grid -->
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+  <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house-chimney"></i>Home</a>
+  <a href="/admin/users"     class="nav-item active"><i class="fa-solid fa-users"></i>Users</a>
+  <a href="/admin/kyc"       class="nav-item"><i class="fa-solid fa-id-card"></i>KYC</a>
+  <a href="/admin/settings"  class="nav-item"><i class="fa-solid fa-gear"></i>Settings</a>
+</nav>
+
+</body>
+</html>

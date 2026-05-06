@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Solutions | Finaro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230F6E56%22></rect><path d=%22M30 40 L50 60 L70 40%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/solution.css"/>
+    <style>
+        .footer-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px; max-width: 1200px; margin: 0 auto 40px;
+        }
+        .footer-col h4 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-dark); }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 12px; }
+        .footer-col a { color: var(--text-light); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .footer-col a:hover { color: var(--primary); }
+        .footer-bottom {
+            border-top: 1px solid var(--border); padding-top: 30px;
+            text-align: center; color: var(--text-muted); font-size: 14px;
+            max-width: 1200px; margin: 0 auto;
+        }
+    </style>
+
+<base target="_blank">
+<base target="_blank">
+</head>
+<body>
+     <%- include('../partials/nav') %>
+
+    <section class="page-banner">
+        <h1 data-aos="fade-up" data-aos-duration="1000">Solutions for <span style="color: var(--accent);">Every</span> Business</h1>
+        <p data-aos="fade-up" data-aos-delay="200">Powerful financial tools designed to help your business grow, scale, and succeed globally.</p>
+    </section>
+
+    <section id="solutions">
+        <div class="solution-split">
+            <div class="solution-content" data-aos="fade-right" data-aos-duration="1000">
+                <h2>Solutions for Entrepreneurs</h2>
+                <p>Manage your business finances from one dashboard. Integrate with your favorite accounting software and automate your tax filings.</p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Automated Invoicing</li>
+                    <li><i class="fas fa-check-circle"></i> Bulk Payroll Processing</li>
+                    <li><i class="fas fa-check-circle"></i> Multi-currency Business Accounts</li>
+                    <li><i class="fas fa-check-circle"></i> Real-time Analytics</li>
+                </ul>
+                <a href="/auth/register" class="btn-nav" style="margin-top: 20px; text-decoration: none; display: inline-block;">Explore Business</a>
+            </div>
+            <div class="solution-img" data-aos="fade-left" data-aos-duration="1000">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+        </div>
+
+        <div class="solution-split" style="flex-direction: row-reverse;">
+            <div class="solution-content" data-aos="fade-left" data-aos-duration="1000">
+                <h2>Enterprise Treasury</h2>
+                <p>Advanced treasury management for large organizations. Optimize cash flow, manage risk, and streamline global operations.</p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Cash Flow Forecasting</li>
+                    <li><i class="fas fa-check-circle"></i> FX Risk Management</li>
+                    <li><i class="fas fa-check-circle"></i> API Integration</li>
+                    <li><i class="fas fa-check-circle"></i> Custom Reporting</li>
+                </ul>
+                <a href="/contact" class="btn-nav" style="margin-top: 20px; text-decoration: none; display: inline-block;">Contact Sales</a>
+            </div>
+            <div class="solution-img" data-aos="fade-right" data-aos-duration="1000">
+                <i class="fas fa-building-columns"></i>
+            </div>
+        </div>
+
+        <div class="solution-split">
+            <div class="solution-content" data-aos="fade-right" data-aos-duration="1000">
+                <h2>Freelancer Suite</h2>
+                <p>Designed for independent professionals who need simple, powerful financial tools without the complexity of traditional banking.</p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Smart Invoicing</li>
+                    <li><i class="fas fa-check-circle"></i> Tax Estimation</li>
+                    <li><i class="fas fa-check-circle"></i> Client Management</li>
+                    <li><i class="fas fa-check-circle"></i> Instant Payouts</li>
+                </ul>
+                <a href="/auth/register" class="btn-nav" style="margin-top: 20px; text-decoration: none; display: inline-block;">Start Free</a>
+            </div>
+            <div class="solution-img" data-aos="fade-left" data-aos-duration="1000">
+                <i class="fas fa-briefcase"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Personal Banking Solutions -->
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Personal Banking Solutions</h2>
+            <p>Banking designed around your life, not the other way around.</p>
+        </div>
+
+        <div class="solution-split">
+            <div class="solution-content" data-aos="fade-right" data-aos-duration="1000">
+                <h2>Everyday Banking</h2>
+                <p>Fee-free checking with a Finaro Debit Card, instant notifications, and seamless mobile payments. No hidden fees, no minimum balance requirements.</p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Fee-Free Demand Accounts</li>
+                    <li><i class="fas fa-check-circle"></i> Vault Debit Card with Tap-to-Pay</li>
+                    <li><i class="fas fa-check-circle"></i> Instant Account Notifications</li>
+                    <li><i class="fas fa-check-circle"></i> Apple Pay & Google Wallet</li>
+                </ul>
+                <a href="/auth/register" class="btn-nav" style="margin-top: 20px; text-decoration: none; display: inline-block;">Open Account</a>
+            </div>
+            <div class="solution-img" data-aos="fade-left" data-aos-duration="1000">
+                <i class="fas fa-wallet"></i>
+            </div>
+        </div>
+
+        <div class="solution-split" style="flex-direction: row-reverse;">
+            <div class="solution-content" data-aos="fade-left" data-aos-duration="1000">
+                <h2>Family Banking</h2>
+                <p>Manage finances together with dedicated family accounts. Joint accounts, minor accounts managed by parents, and shared savings goals.</p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Joint Accounts</li>
+                    <li><i class="fas fa-check-circle"></i> Minor Accounts with Parent Controls</li>
+                    <li><i class="fas fa-check-circle"></i> Shared Savings Goals</li>
+                    <li><i class="fas fa-check-circle"></i> Family Spending Insights</li>
+                </ul>
+                <a href="/auth/register" class="btn-nav" style="margin-top: 20px; text-decoration: none; display: inline-block;">Get Started</a>
+            </div>
+            <div class="solution-img" data-aos="fade-right" data-aos-duration="1000">
+                <i class="fas fa-house-user"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Solutions -->
+    <section>
+        <div class="section-header" data-aos="fade-up">
+            <h2>Security & Compliance</h2>
+            <p>Your data security is our #1 priority. Built with bank-grade protection from day one.</p>
+        </div>
+
+        <div class="feature-list">
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="100">
+                <i class="fas fa-shield-halved"></i>
+                <h4>Multi-Factor Authentication</h4>
+                <p>Enforced across all accounts and transfers for maximum protection.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="200">
+                <i class="fas fa-fingerprint"></i>
+                <h4>Biometric Login</h4>
+                <p>Face ID and fingerprint authentication for quick, secure access.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="300">
+                <i class="fas fa-eye"></i>
+                <h4>Fraud Monitoring</h4>
+                <p>State-of-the-art tools to detect and halt suspicious activities in real-time.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="400">
+                <i class="fas fa-lock"></i>
+                <h4>AES-256 Encryption</h4>
+                <p>Industry-standard encryption ensuring the safety of your data.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="500">
+                <i class="fas fa-id-card"></i>
+                <h4>Digital KYC</h4>
+                <p>Streamlined identity verification with passport, driver's license, and national ID support.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="600">
+                <i class="fas fa-file-shield"></i>
+                <h4>Regulatory Compliance</h4>
+                <p>Full compliance with banking regulations and data protection standards.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integration Ecosystem -->
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Integration Ecosystem</h2>
+            <p>Connect Finaro with the tools you already use.</p>
+        </div>
+        <div class="feature-list">
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="100">
+                <i class="fab fa-slack"></i>
+                <h4>Slack</h4>
+                <p>Get instant notifications for transactions and alerts.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="200">
+                <i class="fab fa-stripe"></i>
+                <h4>Stripe</h4>
+                <p>Seamless payment processing and reconciliation.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="300">
+                <i class="fab fa-xero"></i>
+                <h4>Xero</h4>
+                <p>Automatic sync with your accounting software.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="400">
+                <i class="fab fa-salesforce"></i>
+                <h4>Salesforce</h4>
+                <p>CRM integration for customer financial data.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="500">
+                <i class="fab fa-shopify"></i>
+                <h4>Shopify</h4>
+                <p>E-commerce payment processing made simple.</p>
+            </div>
+            <div class="feature-item" data-aos="flip-up" data-aos-delay="600">
+                <i class="fab fa-aws"></i>
+                <h4>AWS</h4>
+                <p>Cloud infrastructure billing and cost management.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark, #0f766e) 100%); color: white; text-align: center; padding: 100px 6%;">
+        <h2 data-aos="fade-up" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin-bottom: 16px;">Ready to transform your banking?</h2>
+        <p data-aos="fade-up" data-aos-delay="100" style="font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto 40px;">Join our early access program and be among the first to experience Finaro's powerful financial solutions.</p>
+        <div data-aos="fade-up" data-aos-delay="200">
+            <a href="/auth/register" class="btn-nav" style="padding: 18px 40px; font-size: 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;">
+                <i class="fas fa-rocket"></i> Join Early Access
+            </a>
+        </div>
+    </section>
+
+   <%- include('../partials/footer') %>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true, offset: 100, easing: 'ease-out-cubic' });
+    </script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<%
+  /* ── Safe defaults if middleware hasn't run ── */
+  const _lang     = typeof lang     !== 'undefined' ? lang     : 'en';
+  const _theme    = typeof theme    !== 'undefined' ? theme    : 'light';
+  const _currency = typeof currency !== 'undefined' ? currency : 'USD';
+  const _symbol   = typeof currencySymbol !== 'undefined' ? currencySymbol : (typeof symbol !== 'undefined' ? symbol : '$');
+  const _t        = typeof t        !== 'undefined' ? t        : {};
+
+  // Sync formatter — NEVER call async formatMoney/formatCurrency in template
+  const _fmt = (n) => _symbol + parseFloat(n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  const _account = typeof account !== 'undefined' ? account : null;
+  const _displayBalance = _account?.displayBalance || _fmt(_account?.balance || 0);
+%>
+<!DOCTYPE html>
+
+<html lang="<%= _lang %>" data-theme="<%= _theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Finora Bank' %> - Finora Bank</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ══════════════════════════════════════════════════
+           LIGHT THEME (default)
+        ══════════════════════════════════════════════════ */
+        :root {
+            --primary:    #0F6E56;
+            --accent:     #1D9E75;
+            --bg-body:    #F4F8F7;
+            --bg-card:    #FFFFFF;
+            --bg-input:   #F4F8F7;
+            --text-main:  #0D1B16;
+            --text-muted: #64748B;
+            --border:     #E8EFED;
+            --danger:     #ef4444;
+            --success:    #22c55e;
+            --warning:    #f59e0b;
+            --nav-bg:     rgba(255,255,255,0.95);
+        }
+
+        /* ══════════════════════════════════════════════════
+           DARK THEME
+        ══════════════════════════════════════════════════ */
+        [data-theme="dark"] {
+            --bg-body:    #0f172a;
+            --bg-card:    #1e293b;
+            --bg-input:   #0f172a;
+            --text-main:  #f1f5f9;
+            --text-muted: #94a3b8;
+            --border:     #334155;
+            --nav-bg:     rgba(15,23,42,0.97);
+        }
+
+        /* ══════════════════════════════════════════════════
+           AUTO THEME (follows OS)
+        ══════════════════════════════════════════════════ */
+        @media (prefers-color-scheme: dark) {
+            [data-theme="auto"] {
+                --bg-body:    #0f172a;
+                --bg-card:    #1e293b;
+                --bg-input:   #0f172a;
+                --text-main:  #f1f5f9;
+                --text-muted: #94a3b8;
+                --border:     #334155;
+                --nav-bg:     rgba(15,23,42,0.97);
+            }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 90px;
+        }
+        .main-content { padding: 20px; max-width: 860px; margin: 0 auto; }
+        .balance-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 24px; padding: 32px; color: white;
+            margin-bottom: 20px; box-shadow: 0 15px 35px rgba(15, 110, 86, 0.3);
+        }
+        .balance-label { font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .balance-amount { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+        .f-card {
+            background: var(--bg-card); border-radius: 24px; padding: 24px;
+            border: 1px solid var(--border); box-shadow: 0 10px 30px -5px rgba(15, 110, 86, 0.05);
+            margin-bottom: 16px;
+        }
+        .transaction-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px; background: var(--bg-card); border-radius: 16px;
+            margin-bottom: 10px; border: 1px solid var(--border);
+        }
+        .transaction-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .tx-deposit { background: #f0fdf4; color: var(--success); }
+        .tx-withdrawal { background: #fef2f2; color: var(--danger); }
+        .tx-transfer { background: #eff6ff; color: #3b82f6; }
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--nav-bg); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border); display: flex;
+            justify-content: space-around; padding: 10px 0 25px 0; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav { display: none; }
+            body { padding-bottom: 0; }
+        }
+    </style>
+    <script>
+    window.__FINORA__ = {
+        lang:     "<%- _lang %>",
+        theme:    "<%- _theme %>",
+        currency: "<%- _currency %>",
+        symbol:   "<%- JSON.stringify(_symbol) %>"
+    };
+</script>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="small text-muted mb-0">
+                <a href="/user/dashboard" class="text-decoration-none" style="color:var(--primary);">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+                </a>
+            </p>
+            <h1 class="h4 fw-bold mb-0"><%= title %></h1>
+        </div>
+        <a href="/auth/logout" class="bg-white p-2 rounded-3 border text-decoration-none">
+            <i class="fa-solid fa-right-from-bracket text-danger"></i>
+        </a>
+    </header>
+
+    <!-- Balance -->
+    <div class="balance-card">
+        <div class="balance-label">Available Balance</div>
+        <div class="balance-amount">
+            <%= _displayBalance %>
+        </div>
+        <div style="opacity:0.85; font-size:14px;">
+            •••• <%= _account?.account_number?.slice(-4) || '0000' %> | <%= (_account?.account_type || 'account').toUpperCase() %>
+        </div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="f-card">
+        <h6 class="fw-bold mb-3">Account Details</h6>
+        <div class="row g-3">
+            <div class="col-6">
+                <div class="small text-muted">Account Number</div>
+                <div class="fw-bold"><%= _account?.account_number || 'N/A' %></div>
+            </div>
+            <div class="col-6">
+                <div class="small text-muted">Account Type</div>
+                <div class="fw-bold text-capitalize"><%= (_account?.account_type || 'account').replace('_', ' ') %></div>
+            </div>
+            <div class="col-6">
+                <div class="small text-muted">Status</div>
+                <div class="fw-bold text-success text-capitalize"><%= _account?.status || 'active' %></div>
+            </div>
+            <div class="col-6">
+                <div class="small text-muted">Opened</div>
+                <div class="fw-bold"><%= _account?.created_at ? new Date(_account.created_at).toLocaleDateString() : 'N/A' %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="f-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h6 class="fw-bold mb-0">Recent Transactions</h6>
+            <a href="/user/transactions" class="small text-decoration-none" style="color: var(--primary);">View All</a>
+        </div>
+
+        <% if (typeof transactions !== 'undefined' && transactions && transactions.length > 0) { %>
+            <% transactions.forEach(tx => { %>
+                <div class="transaction-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="transaction-icon <%= tx.type === 'deposit' || tx.type === 'admin_credit' ? 'tx-deposit' : (tx.type === 'withdrawal' || tx.type === 'admin_debit' ? 'tx-withdrawal' : 'tx-transfer') %>">
+                            <i class="fa-solid <%= tx.type === 'deposit' || tx.type === 'admin_credit' ? 'fa-arrow-down' : (tx.type === 'withdrawal' || tx.type === 'admin_debit' ? 'fa-arrow-up' : 'fa-exchange-alt') %>"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold"><%= tx.description || tx.type.replace('_', ' ').toUpperCase() %></div>
+                            <div class="small text-muted"><%= new Date(tx.created_at).toLocaleDateString() %></div>
+                        </div>
+                    </div>
+                    <div class="fw-bold <%= tx.type === 'deposit' || tx.type === 'admin_credit' ? 'text-success' : (tx.type === 'withdrawal' || tx.type === 'admin_debit' ? 'text-danger' : '') %>">
+                        <%= tx.type === 'deposit' || tx.type === 'admin_credit' ? '+' : (tx.type === 'withdrawal' || tx.type === 'admin_debit' ? '-' : '') %>
+                        <%= tx.displayAmount || _symbol + parseFloat(tx.amount||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-receipt fs-1 mb-3"></i>
+                <p>No transactions yet</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Mobile Nav -->
+<%- include('../mobile_partier/nav') %>
+
+
+</body>
+</html>

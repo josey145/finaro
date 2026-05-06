@@ -1,0 +1,597 @@
+<%
+  // ── SAFE LOCALS ──────────────────────────────────────────────────────────
+  const _symbol   = typeof currencySymbol !== 'undefined' ? currencySymbol
+                  : (typeof res !== 'undefined' && res.locals?._symbol) ? res.locals._symbol
+                  : '$';
+  const _theme    = typeof theme !== 'undefined' ? theme : 'light';
+  const _currency = typeof currency !== 'undefined' ? currency : 'USD';
+  const _fmt      = typeof formatMoney === 'function'
+                  ? formatMoney
+                  : (n) => _symbol + parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const _user = (typeof user !== 'undefined' && user) ? user : {};
+
+  // KYC status resolved once, used throughout
+  const kycStatus = _user.kyc_status || 'not_submitted';
+
+  // Member since
+  const joinedDate = _user.created_at
+      ? new Date(_user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '---';
+
+  // Initials for avatar
+  const initials = (_user.first_name && _user.last_name)
+      ? (_user.first_name[0] + _user.last_name[0]).toUpperCase()
+      : 'U';
+
+  const fullName  = (_user.first_name && _user.last_name)
+      ? _user.first_name + ' ' + _user.last_name
+      : 'User';
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Profile' %> - Finora Bank</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0F6E56;
+            --accent: #1D9E75;
+            --bg-body: #F4F8F7;
+            --bg-card: #FFFFFF;
+            --text-main: #0D1B16;
+            --text-muted: #64748B;
+            --border: #E8EFED;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --nav-bg: rgba(255,255,255,0.95);
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --nav-bg: rgba(15,23,42,0.97);
+        }
+        @media(prefers-color-scheme:dark) {
+            [data-theme="auto"] {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border: #334155;
+                --nav-bg: rgba(15,23,42,0.97);
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 90px;
+            transition: background .3s, color .3s;
+        }
+
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+        /* FLASH MESSAGES */
+        .flash-message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .flash-danger  { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .flash-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+
+        /* CARDS */
+        .f-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px -5px rgba(15, 110, 86, 0.05);
+            height: 100%;
+        }
+
+        /* PROFILE HEADER */
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 24px;
+            padding: 32px;
+            color: white;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            border: 3px solid rgba(255,255,255,0.3);
+            flex-shrink: 0;
+        }
+
+        .profile-name  { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+        .profile-email { opacity: 0.9; font-size: 14px; }
+
+        .profile-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .profile-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .profile-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        /* FORM STYLES */
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(15, 110, 86, 0.1);
+        }
+
+        .form-control:disabled {
+            background: var(--bg-body);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-weight: 600;
+            font-size: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(15, 110, 86, 0.4);
+            color: white;
+        }
+
+        /* INFO ITEMS */
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .info-item:last-child { border-bottom: none; }
+
+        .info-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .info-value { font-weight: 600; font-size: 14px; }
+
+        /* BADGES */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-verified   { background: #f0fdf4; color: #15803d; }
+        .badge-pending    { background: #fffbeb; color: #b45309; }
+        .badge-unverified { background: #fef2f2; color: #b91c1c; }
+
+        /* CURRENCY DISPLAY */
+        .currency-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* KYC SECTION */
+        .kyc-section {
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .kyc-verified  { background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0; }
+        .kyc-pending   { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a; }
+        .kyc-unverified{ background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fecaca; }
+
+        /* MOBILE NAV */
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--nav-bg); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border); display: flex;
+            justify-content: space-around; padding: 10px 0 25px; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+
+        @media (max-width: 576px) {
+            .profile-header { flex-direction: column; align-items: flex-start; }
+        }
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav { display: none; }
+            body { padding-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success">
+            <i class="fas fa-circle-check"></i> <%= success_msg %>
+        </div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger">
+            <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+        </div>
+    <% } %>
+
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/user/dashboard" class="text-muted text-decoration-none small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back
+            </a>
+            <h1 class="h4 fw-bold mb-0 mt-1">My Profile</h1>
+        </div>
+    </header>
+
+    <!-- Profile Header Card -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <%= initials %>
+        </div>
+        <div>
+            <div class="profile-name"><%= fullName %></div>
+            <div class="profile-email"><%= _user.email || 'email@example.com' %></div>
+
+            <div class="profile-meta">
+                <div class="profile-status">
+                    <i class="fa-solid fa-circle" style="font-size:8px;"></i>
+                    Active Account
+                </div>
+                <!-- ✅ Dynamic currency from user preferences -->
+                <div class="currency-tag">
+                    <i class="fa-solid fa-coins" style="font-size:11px;"></i>
+                    <%= _currency %> (<%= _symbol %>)
+                </div>
+                <% if (_user.city || _user.country) { %>
+                <div class="profile-status">
+                    <i class="fa-solid fa-location-dot" style="font-size:10px;"></i>
+                    <%= [_user.city, _user.country].filter(Boolean).join(', ') %>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ── Left Column: Edit Form + Security ────────────────────────── -->
+        <div class="col-12 col-lg-8">
+            <div class="f-card">
+                <h5 class="fw-bold mb-4">
+                    <i class="fa-solid fa-user-pen me-2" style="color:var(--primary);"></i>Edit Profile
+                </h5>
+
+                <form method="POST" action="/user/profile/update">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="first_name"
+                                   name="first_name"
+                                   value="<%= _user.first_name || '' %>"
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="last_name"
+                                   name="last_name"
+                                   value="<%= _user.last_name || '' %>"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email"
+                               class="form-control"
+                               id="email"
+                               value="<%= _user.email || '' %>"
+                               disabled>
+                        <div class="form-text">Email cannot be changed</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel"
+                               class="form-control"
+                               id="phone"
+                               name="phone"
+                               value="<%= _user.phone || '' %>"
+                               placeholder="+1 (555) 000-0000">
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="city"
+                                   name="city"
+                                   value="<%= _user.city || '' %>">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="country" class="form-label">Country</label>
+                            <select class="form-select" id="country" name="country">
+                                <option value="">Select Country</option>
+                                <% const countries = [
+                                    ['US','United States'], ['CA','Canada'], ['GB','United Kingdom'],
+                                    ['DE','Germany'], ['FR','France'], ['AU','Australia'],
+                                    ['JP','Japan'], ['SG','Singapore'], ['AE','UAE'],
+                                    ['NG','Nigeria'], ['ZA','South Africa'], ['BR','Brazil'],
+                                    ['IN','India'], ['MY','Malaysia'], ['KR','South Korea'],
+                                    ['CN','China'], ['CH','Switzerland'], ['SE','Sweden'],
+                                    ['NO','Norway'], ['HK','Hong Kong'], ['OTHER','Other']
+                                ]; %>
+                                <% countries.forEach(([code, name]) => { %>
+                                    <option value="<%= code %>" <%= _user.country === code ? 'selected' : '' %>>
+                                        <%= name %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control"
+                                  id="address"
+                                  name="address"
+                                  rows="2"
+                                  placeholder="Your street address"><%= _user.address || '' %></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary-custom">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- Security Section -->
+            <div class="f-card mt-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="fa-solid fa-shield-halved me-2" style="color:var(--primary);"></i>Security
+                </h5>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="/auth/set-pin" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-lock me-2"></i> Change PIN
+                    </a>
+                    <a href="/auth/change-password" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-key me-2"></i> Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Right Column: Account Status + KYC + Links ───────────────── -->
+        <div class="col-12 col-lg-4">
+
+            <!-- Account Status -->
+            <div class="f-card mb-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="fa-solid fa-circle-info me-2" style="color:var(--primary);"></i>Account Status
+                </h6>
+
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fa-solid fa-envelope"></i> Email Verified
+                    </span>
+                    <span class="info-value">
+                        <% if (_user.email_verified) { %>
+                            <span class="status-badge badge-verified"><i class="fa-solid fa-check"></i> Yes</span>
+                        <% } else { %>
+                            <span class="status-badge badge-unverified"><i class="fa-solid fa-xmark"></i> No</span>
+                        <% } %>
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fa-solid fa-shield-halved"></i> KYC Status
+                    </span>
+                    <span class="info-value">
+                        <% if (kycStatus === 'approved') { %>
+                            <span class="status-badge badge-verified"><i class="fa-solid fa-check"></i> Verified</span>
+                        <% } else if (kycStatus === 'pending') { %>
+                            <span class="status-badge badge-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+                        <% } else { %>
+                            <span class="status-badge badge-unverified"><i class="fa-solid fa-xmark"></i> Required</span>
+                        <% } %>
+                    </span>
+                </div>
+
+                <!-- ✅ Dynamic currency preference -->
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fa-solid fa-coins"></i> Currency
+                    </span>
+                    <span class="info-value"><%= _currency %> (<%= _symbol %>)</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fa-solid fa-user-tag"></i> User ID
+                    </span>
+                    <span class="info-value text-muted">#<%= _user.id || '---' %></span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fa-solid fa-calendar"></i> Joined
+                    </span>
+                    <!-- ✅ Formatted join date -->
+                    <span class="info-value text-muted"><%= joinedDate %></span>
+                </div>
+
+                <% if (_user.phone) { %>
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fa-solid fa-phone"></i> Phone
+                    </span>
+                    <span class="info-value text-muted"><%= _user.phone %></span>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- KYC Action Banner -->
+            <% if (kycStatus !== 'approved') { %>
+                <div class="kyc-section <%= kycStatus === 'pending' ? 'kyc-pending' : 'kyc-unverified' %> mb-4">
+                    <div class="d-flex align-items-start gap-3 mb-2">
+                        <i class="fa-solid <%= kycStatus === 'pending' ? 'fa-clock' : 'fa-circle-exclamation' %> fs-4 mt-1"></i>
+                        <div>
+                            <strong><%= kycStatus === 'pending' ? 'KYC Under Review' : 'Verification Required' %></strong>
+                            <p class="small mb-0 mt-1">
+                                <%= kycStatus === 'pending'
+                                    ? 'Your documents are being reviewed. We\'ll notify you soon.'
+                                    : 'Complete KYC to unlock all features and higher limits.' %>
+                            </p>
+                        </div>
+                    </div>
+                    <% if (kycStatus !== 'pending') { %>
+                        <a href="/user/kyc-submit" class="btn-primary-custom w-100 mt-2 justify-content-center">
+                            <i class="fa-solid fa-upload"></i> Submit KYC
+                        </a>
+                    <% } %>
+                </div>
+            <% } %>
+
+            <!-- Quick Links -->
+            <div class="f-card">
+                <h6 class="fw-bold mb-3">
+                    <i class="fa-solid fa-bolt me-2" style="color:var(--primary);"></i>Quick Links
+                </h6>
+                <div class="d-flex flex-column gap-2">
+                    <a href="/user/dashboard" class="btn btn-outline-secondary text-start">
+                        <i class="fa-solid fa-house me-2"></i> Dashboard
+                    </a>
+                    <a href="/user/withdraw" class="btn btn-outline-secondary text-start">
+                        <i class="fa-solid fa-money-bill-transfer me-2"></i> Withdraw
+                    </a>
+                    <a href="/user/transactions" class="btn btn-outline-secondary text-start">
+                        <i class="fa-solid fa-list me-2"></i> Transactions
+                    </a>
+                    <a href="/auth/logout" class="btn btn-outline-danger text-start">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<%- include('../mobile_partier/nav') %>
+
+<script>
+    window.__FINORA__ = {
+        theme   : '<%= _theme %>',
+        symbol  : '<%= _symbol %>',
+        currency: '<%= _currency %>'
+    };
+</script>
+
+<%- include('../mobile_partier/footer') %>
+
+

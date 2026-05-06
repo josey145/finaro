@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Finora Bank</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230d9488%22></rect><path d=%22M30 40 L50 60 L70 40%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/index.css"/>
+
+    <style>
+        /* ── Auth Page Specific Styles ───────────────────────────────────── */
+         [data-theme="dark"] .auth-page {
+    background: linear-gradient(135deg, #1e293b 0%, #172032 100%);
+        }
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 140px 20px 60px;
+            background: linear-gradient(135deg, var(--surface) 0%, var(--bg-input) 100%);
+            transition: background 0.3s;
+        }
+
+       
+
+
+        .register-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--bg);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px var(--shadow);
+            overflow: hidden;
+            display: flex;
+            min-height: 700px;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        /* ── Brand Side ──────────────────────────────────────────────────── */
+        .brand-side {
+            background: linear-gradient(160deg, #0d9488 0%, #0f766e 100%);
+            color: #ffffff;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 40%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-side::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .brand-content { position: relative; z-index: 1; }
+
+        .brand-logo {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .brand-logo-icon {
+            width: 48px; height: 48px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .brand-logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .brand-headline {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .brand-subtext {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+
+        .brand-features {
+            list-style: none;
+            margin-top: 40px;
+            padding: 0;
+        }
+
+        .brand-features li {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #ffffff;
+        }
+
+        .brand-features i {
+            width: 32px; height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            color: #ffffff;
+            flex-shrink: 0;
+        }
+
+        .brand-footer {
+            position: relative; z-index: 1;
+            font-size: 13px;
+            opacity: 0.8;
+            color: #ffffff;
+        }
+
+        /* ── Form Side ─────────────────────────────────────────────────────── */
+        .form-side {
+            flex: 1;
+            padding: 50px 60px;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        .form-header { margin-bottom: 35px; }
+
+        .form-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .form-header p {
+            color: var(--text-light);
+            font-size: 15px;
+        }
+
+        .form-header a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-header a:hover { text-decoration: underline; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .form-label span { color: var(--accent); }
+
+        .input-wrapper { position: relative; }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: var(--bg);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(15, 110, 86, 0.1);
+        }
+
+        .form-control.is-invalid {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 16px;
+            transition: color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .form-control:focus + .input-icon,
+        .input-wrapper:focus-within .input-icon {
+            color: var(--primary);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+        }
+
+        .password-toggle:hover { color: var(--text-dark); }
+
+        .invalid-feedback {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 6px;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        select.form-control {
+            padding-left: 44px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        input[type="date"].form-control { padding-left: 44px; }
+
+        /* ── Terms ───────────────────────────────────────────────────────── */
+        .terms-group {
+            display: flex; align-items: flex-start; gap: 12px;
+            margin: 25px 0;
+        }
+
+        .custom-checkbox {
+            width: 22px; height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .custom-checkbox.checked {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .custom-checkbox i {
+            color: #ffffff;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .custom-checkbox.checked i { opacity: 1; }
+
+        .terms-text {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .terms-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* ── Submit Button ───────────────────────────────────────────────── */
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.4);
+        }
+
+        .btn-submit:active { transform: translateY(0); }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-submit .spinner {
+            display: none;
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn-submit.loading .spinner { display: block; }
+        .btn-submit.loading .btn-text { opacity: 0.7; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ── Alerts ──────────────────────────────────────────────────────── */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        /* ── Password Strength ─────────────────────────────────────────── */
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .password-strength.show { display: block; }
+
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-weak { width: 33%; background: #ef4444; }
+        .strength-medium { width: 66%; background: #f59e0b; }
+        .strength-strong { width: 100%; background: #22c55e; }
+
+        .strength-text {
+            font-size: 12px;
+            margin-top: 4px;
+            color: var(--text-light);
+        }
+
+        /* ── Dark Mode Overrides ─────────────────────────────────────────── */
+        [data-theme="dark"] .auth-page {
+            background: linear-gradient(135deg, #1e293b 0%, #172032 100%);
+        }
+
+        /* ── Responsive ──────────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .register-container {
+                flex-direction: column;
+                max-width: 100%;
+            }
+            .brand-side {
+                width: 100%;
+                padding: 40px 30px;
+                min-height: auto;
+            }
+            .brand-headline { font-size: 24px; }
+            .form-side { padding: 40px 30px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        .form-side::-webkit-scrollbar { width: 6px; }
+        .form-side::-webkit-scrollbar-track { background: transparent; }
+        .form-side::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <%- include('../partials/nav') %>
+
+    <div class="auth-page">
+        <div class="register-container">
+            <!-- Brand Side -->
+            <div class="brand-side">
+                <div class="brand-content">
+                    <div class="brand-logo">
+                        <div class="brand-logo-icon">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <h1>FINORA</h1>
+                    </div>
+
+                    <h2 class="brand-headline">Financial infrastructure built to grow your revenue</h2>
+                    <p class="brand-subtext">From payments to financial tools, Finora helps businesses operate faster, earn more, and build profitable, future-ready revenue systems.</p>
+
+                    <ul class="brand-features">
+                        <li><i class="fas fa-check"></i><span>Bank-grade security & encryption</span></li>
+                        <li><i class="fas fa-check"></i><span>Instant global transfers</span></li>
+                        <li><i class="fas fa-check"></i><span>Multi-currency accounts</span></li>
+                        <li><i class="fas fa-check"></i><span>24/7 fraud monitoring</span></li>
+                    </ul>
+                </div>
+
+                <div class="brand-footer">
+                    <p>© 2026 Finora Bank. All rights reserved.</p>
+                </div>
+            </div>
+
+            <!-- Form Side -->
+            <div class="form-side">
+                <div class="form-header">
+                    <h2>Create your account</h2>
+                    <p>Already have an account? <a href="/auth/login">Sign in</a></p>
+                </div>
+
+                <!-- Flash Messages -->
+                <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <%= error_msg %>
+                    </div>
+                <% } %>
+
+                <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+                    <div class="alert alert-success">
+                        <i class="fas fa-circle-check"></i>
+                        <%= success_msg %>
+                    </div>
+                <% } %>
+
+                <!-- Validation Errors -->
+                <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <div>
+                            <% errors.forEach(error => { %>
+                                <div><%= error.msg %></div>
+                            <% }) %>
+                        </div>
+                    </div>
+                <% } %>
+
+                <form action="/auth/register" method="POST" id="registerForm" novalidate>
+
+                    <!-- Name Row -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name <span>*</span></label>
+                            <div class="input-wrapper">
+                                <input type="text" 
+                                    name="first_name" 
+                                    class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'first_name')) ? 'is-invalid' : '' %>" 
+                                    placeholder="John"
+                                    value="<%= (typeof formData !== 'undefined' && formData) ? formData.first_name : '' %>"
+                                    required>
+                                <i class="fas fa-user input-icon"></i>
+                            </div>
+                            <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'first_name')) { %>
+                                <div class="invalid-feedback">
+                                    <i class="fas fa-circle-xmark"></i>
+                                    <%= errors.find(e => e.param === 'first_name').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Last Name <span>*</span></label>
+                            <div class="input-wrapper">
+                                <input type="text" 
+                                    name="last_name" 
+                                    class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'last_name')) ? 'is-invalid' : '' %>" 
+                                    placeholder="Doe"
+                                    value="<%= (typeof formData !== 'undefined' && formData) ? formData.last_name : '' %>"
+                                    required>
+                                <i class="fas fa-user input-icon"></i>
+                            </div>
+                            <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'last_name')) { %>
+                                <div class="invalid-feedback">
+                                    <i class="fas fa-circle-xmark"></i>
+                                    <%= errors.find(e => e.param === 'last_name').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label class="form-label">Email Address <span>*</span></label>
+                        <div class="input-wrapper">
+                            <input type="email" 
+                                name="email" 
+                                class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'email')) ? 'is-invalid' : '' %>" 
+                                placeholder="john.doe@example.com"
+                                value="<%= (typeof formData !== 'undefined' && formData) ? formData.email : '' %>"
+                                required>
+                            <i class="fas fa-envelope input-icon"></i>
+                        </div>
+                        <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'email')) { %>
+                            <div class="invalid-feedback">
+                                <i class="fas fa-circle-xmark"></i>
+                                <%= errors.find(e => e.param === 'email').msg %>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Phone & DOB Row -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number <span>*</span></label>
+                            <div class="input-wrapper">
+                                <input type="tel" 
+                                    name="phone" 
+                                    class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'phone')) ? 'is-invalid' : '' %>" 
+                                    placeholder="+1 (555) 000-0000"
+                                    value="<%= (typeof formData !== 'undefined' && formData) ? formData.phone : '' %>"
+                                    required>
+                                <i class="fas fa-phone input-icon"></i>
+                            </div>
+                            <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'phone')) { %>
+                                <div class="invalid-feedback">
+                                    <i class="fas fa-circle-xmark"></i>
+                                    <%= errors.find(e => e.param === 'phone').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth <span>*</span></label>
+                            <div class="input-wrapper">
+                                <input type="date" 
+                                    name="date_of_birth" 
+                                    class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'date_of_birth')) ? 'is-invalid' : '' %>"
+                                    value="<%= (typeof formData !== 'undefined' && formData) ? formData.date_of_birth : '' %>"
+                                    required>
+                                <i class="fas fa-calendar input-icon"></i>
+                            </div>
+                            <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'date_of_birth')) { %>
+                                <div class="invalid-feedback">
+                                    <i class="fas fa-circle-xmark"></i>
+                                    <%= errors.find(e => e.param === 'date_of_birth').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="form-group">
+                        <label class="form-label">Address <span>*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" 
+                                name="address" 
+                                class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'address')) ? 'is-invalid' : '' %>" 
+                                placeholder="123 Main Street, Apt 4B"
+                                value="<%= (typeof formData !== 'undefined' && formData) ? formData.address : '' %>"
+                                required>
+                            <i class="fas fa-location-dot input-icon"></i>
+                        </div>
+                        <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'address')) { %>
+                            <div class="invalid-feedback">
+                                <i class="fas fa-circle-xmark"></i>
+                                <%= errors.find(e => e.param === 'address').msg %>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- City & Country Row -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">City <span>*</span></label>
+                            <div class="input-wrapper">
+                                <input type="text" 
+                                    name="city" 
+                                    class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'city')) ? 'is-invalid' : '' %>" 
+                                    placeholder="New York"
+                                    value="<%= (typeof formData !== 'undefined' && formData) ? formData.city : '' %>"
+                                    required>
+                                <i class="fas fa-city input-icon"></i>
+                            </div>
+                            <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'city')) { %>
+                                <div class="invalid-feedback">
+                                    <i class="fas fa-circle-xmark"></i>
+                                    <%= errors.find(e => e.param === 'city').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Country <span>*</span></label>
+                            <div class="input-wrapper">
+                                <select name="country" 
+                                    class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'country')) ? 'is-invalid' : '' %>"
+                                    required>
+                                    <option value="">Select Country</option>
+                                    <option value="US" <%= (typeof formData !== 'undefined' && formData && formData.country === 'US') ? 'selected' : '' %>>United States</option>
+                                    <option value="CA" <%= (typeof formData !== 'undefined' && formData && formData.country === 'CA') ? 'selected' : '' %>>Canada</option>
+                                    <option value="GB" <%= (typeof formData !== 'undefined' && formData && formData.country === 'GB') ? 'selected' : '' %>>United Kingdom</option>
+                                    <option value="DE" <%= (typeof formData !== 'undefined' && formData && formData.country === 'DE') ? 'selected' : '' %>>Germany</option>
+                                    <option value="FR" <%= (typeof formData !== 'undefined' && formData && formData.country === 'FR') ? 'selected' : '' %>>France</option>
+                                    <option value="AU" <%= (typeof formData !== 'undefined' && formData && formData.country === 'AU') ? 'selected' : '' %>>Australia</option>
+                                    <option value="JP" <%= (typeof formData !== 'undefined' && formData && formData.country === 'JP') ? 'selected' : '' %>>Japan</option>
+                                    <option value="SG" <%= (typeof formData !== 'undefined' && formData && formData.country === 'SG') ? 'selected' : '' %>>Singapore</option>
+                                    <option value="AE" <%= (typeof formData !== 'undefined' && formData && formData.country === 'AE') ? 'selected' : '' %>>UAE</option>
+                                    <option value="NG" <%= (typeof formData !== 'undefined' && formData && formData.country === 'NG') ? 'selected' : '' %>>Nigeria</option>
+                                    <option value="ZA" <%= (typeof formData !== 'undefined' && formData && formData.country === 'ZA') ? 'selected' : '' %>>South Africa</option>
+                                    <option value="BR" <%= (typeof formData !== 'undefined' && formData && formData.country === 'BR') ? 'selected' : '' %>>Brazil</option>
+                                    <option value="IN" <%= (typeof formData !== 'undefined' && formData && formData.country === 'IN') ? 'selected' : '' %>>India</option>
+                                    <option value="OTHER" <%= (typeof formData !== 'undefined' && formData && formData.country === 'OTHER') ? 'selected' : '' %>>Other</option>
+                                </select>
+                                <i class="fas fa-globe input-icon"></i>
+                            </div>
+                            <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'country')) { %>
+                                <div class="invalid-feedback">
+                                    <i class="fas fa-circle-xmark"></i>
+                                    <%= errors.find(e => e.param === 'country').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label class="form-label">Password <span>*</span></label>
+                        <div class="input-wrapper">
+                            <input type="password" 
+                                name="password" 
+                                id="password"
+                                class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'password')) ? 'is-invalid' : '' %>" 
+                                placeholder="Min. 6 characters"
+                                required>
+                            <i class="fas fa-lock input-icon"></i>
+                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="strengthBar">
+                            <div class="strength-bar" id="strengthIndicator"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText"></div>
+                        <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'password')) { %>
+                            <div class="invalid-feedback">
+                                <i class="fas fa-circle-xmark"></i>
+                                <%= errors.find(e => e.param === 'password').msg %>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password <span>*</span></label>
+                        <div class="input-wrapper">
+                            <input type="password" 
+                                name="confirm_password" 
+                                id="confirm_password"
+                                class="form-control <%= (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'confirm_password')) ? 'is-invalid' : '' %>" 
+                                placeholder="Repeat your password"
+                                required>
+                            <i class="fas fa-lock input-icon"></i>
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirm_password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <% if (typeof errors !== 'undefined' && errors && errors.find(e => e.param === 'confirm_password')) { %>
+                            <div class="invalid-feedback">
+                                <i class="fas fa-circle-xmark"></i>
+                                <%= errors.find(e => e.param === 'confirm_password').msg %>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Terms -->
+                    <div class="terms-group">
+                        <div class="custom-checkbox" id="termsCheckbox" onclick="toggleTerms()">
+                            <input type="checkbox" name="terms" id="termsInput" style="display: none;" required>
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <label class="terms-text" style="cursor: pointer;" onclick="toggleTerms()">
+                            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I confirm that I am at least 18 years old and all information provided is accurate.
+                        </label>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <span class="spinner"></span>
+                        <span class="btn-text">Create Account</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function toggleTerms() {
+            const checkbox = document.getElementById('termsCheckbox');
+            const input = document.getElementById('termsInput');
+
+            checkbox.classList.toggle('checked');
+            input.checked = checkbox.classList.contains('checked');
+        }
+
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthIndicator = document.getElementById('strengthIndicator');
+        const strengthText = document.getElementById('strengthText');
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+
+            if (password.length === 0) {
+                strengthBar.classList.remove('show');
+                return;
+            }
+
+            strengthBar.classList.add('show');
+
+            let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 10) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            strengthIndicator.className = 'strength-bar';
+
+            if (strength <= 2) {
+                strengthIndicator.classList.add('strength-weak');
+                strengthText.textContent = 'Weak password';
+                strengthText.style.color = '#ef4444';
+            } else if (strength <= 4) {
+                strengthIndicator.classList.add('strength-medium');
+                strengthText.textContent = 'Medium strength';
+                strengthText.style.color = '#f59e0b';
+            } else {
+                strengthIndicator.classList.add('strength-strong');
+                strengthText.textContent = 'Strong password';
+                strengthText.style.color = '#22c55e';
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('submitBtn');
+            const termsChecked = document.getElementById('termsInput').checked;
+
+            if (!termsChecked) {
+                e.preventDefault();
+                alert('Please agree to the Terms of Service and Privacy Policy.');
+                return;
+            }
+
+            btn.classList.add('loading');
+            btn.disabled = true;
+        });
+
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

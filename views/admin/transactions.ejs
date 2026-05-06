@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions - Finora Bank</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0F6E56;
+      --accent:  #1D9E75;
+      --bg-body: #F4F8F7;
+      --white:   #FFFFFF;
+      --text-main:  #0D1B16;
+      --text-muted: #64748B;
+      --border:  #E8EFED;
+      --danger:  #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --info:    #3b82f6;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Plus Jakarta Sans',sans-serif;
+      background:var(--bg-body);
+      color:var(--text-main);
+      padding-bottom:90px;
+    }
+    .main-content { padding:20px; max-width:1200px; margin:0 auto; }
+
+    .flash-message {
+      padding:14px 18px; border-radius:12px; margin-bottom:20px;
+      font-size:14px; display:flex; align-items:center; gap:10px;
+    }
+    .flash-danger  { background:#fef2f2; color:var(--danger);  border:1px solid #fecaca; }
+    .flash-success { background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; }
+
+    .balance-card {
+      background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+      border-radius:24px; padding:28px 32px; color:white;
+      margin-bottom:28px;
+      box-shadow:0 15px 35px rgba(15,110,86,.3);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    }
+    .balance-label { font-size:13px; opacity:.85; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
+    .balance-title { font-size:1.8rem; font-weight:800; letter-spacing:-.5px; }
+    .balance-sub   { font-size:13px; opacity:.8; margin-top:4px; }
+    .hero-icon {
+      width:56px; height:56px; border-radius:16px;
+      background:rgba(255,255,255,.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; color:white;
+    }
+
+    .stat-row { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:20px; }
+    @media(min-width:768px) { .stat-row { grid-template-columns:repeat(4,1fr); } }
+
+    .stat-card {
+      background:var(--white); border-radius:20px; padding:20px;
+      border:1px solid var(--border);
+      box-shadow:0 6px 20px -4px rgba(15,110,86,.07);
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .stat-label { font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.6px; }
+    .stat-value { font-size:1.6rem; font-weight:800; color:var(--text-main); letter-spacing:-1px; }
+    .stat-badge {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; width:fit-content;
+    }
+    .badge-success { background:#f0fdf4; color:var(--success); }
+    .badge-warning { background:#fffbeb; color:var(--warning); }
+    .badge-danger  { background:#fef2f2; color:var(--danger);  }
+    .badge-info    { background:#eff6ff; color:var(--info);    }
+    .badge-primary { background:#f0fdf4; color:var(--primary); }
+
+    .f-card {
+      background:var(--white); border-radius:24px; padding:24px;
+      border:1px solid var(--border);
+      box-shadow:0 10px 30px -5px rgba(15,110,86,.06);
+      margin-bottom:20px;
+    }
+
+    .filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+    .search-wrap { position:relative; flex:1; min-width:200px; }
+    .search-wrap i {
+      position:absolute; left:14px; top:50%; transform:translateY(-50%);
+      color:var(--text-muted); font-size:13px; pointer-events:none;
+    }
+    .f-search {
+      width:100%; padding:11px 14px 11px 38px;
+      border:1.5px solid var(--border); border-radius:14px;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:13px; color:var(--text-main);
+      background:var(--bg-body); outline:none; transition:all .2s;
+    }
+    .f-search:focus { border-color:var(--accent); background:white; box-shadow:0 0 0 4px rgba(29,158,117,.1); }
+
+    .f-select-sm {
+      padding:11px 36px 11px 14px;
+      border:1.5px solid var(--border); border-radius:14px;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:13px; font-weight:500; color:var(--text-main);
+      background:var(--bg-body); outline:none; cursor:pointer;
+      -webkit-appearance:none; transition:all .2s;
+    }
+    .f-select-sm:focus { border-color:var(--accent); background:white; box-shadow:0 0 0 4px rgba(29,158,117,.1); }
+    .select-sm-wrap { position:relative; }
+    .select-sm-wrap::after {
+      content:'\f107'; font-family:'Font Awesome 6 Free'; font-weight:900;
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      color:var(--text-muted); pointer-events:none; font-size:12px;
+    }
+
+    .tx-table { width:100%; border-collapse:collapse; }
+    .tx-table thead th {
+      font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.7px; color:var(--text-muted);
+      padding:0 16px 14px; border-bottom:1.5px solid var(--border);
+      white-space:nowrap;
+    }
+    .tx-table thead th:first-child { padding-left:0; }
+    .tx-table thead th:last-child  { padding-right:0; text-align:right; }
+
+    .tx-row { transition:background .15s; }
+    .tx-row:hover td { background:var(--bg-body); }
+    .tx-row td {
+      padding:14px 16px; border-bottom:1px solid var(--border);
+      font-size:13px; vertical-align:middle; transition:background .15s;
+    }
+    .tx-row td:first-child { padding-left:0; }
+    .tx-row td:last-child  { padding-right:0; text-align:right; }
+    .tx-row:last-child td  { border-bottom:none; }
+
+    .user-cell { display:flex; align-items:center; gap:10px; }
+    .user-avatar { width:36px; height:36px; border-radius:10px; object-fit:cover; flex-shrink:0; }
+    .user-name  { font-size:13px; font-weight:600; color:var(--text-main); }
+    .user-email { font-size:11px; color:var(--text-muted); }
+
+    .ref-code {
+      font-size:12px; font-weight:700; font-family:monospace;
+      background:var(--bg-body); border:1px solid var(--border);
+      border-radius:8px; padding:4px 9px; color:var(--primary);
+    }
+
+    .type-pill {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 11px; border-radius:20px; font-size:12px; font-weight:600;
+    }
+    .type-credit     { background:#f0fdf4; color:var(--success); }
+    .type-debit      { background:#fef2f2; color:var(--danger);  }
+    .type-transfer   { background:#eff6ff; color:var(--info);    }
+    .type-deposit    { background:#f0fdf4; color:var(--primary); }
+    .type-withdrawal { background:#fffbeb; color:var(--warning); }
+    .type-admin      { background:#fdf4ff; color:#a855f7; }
+
+    .amount-pos { font-weight:700; color:var(--success); font-size:14px; }
+    .amount-neg { font-weight:700; color:var(--danger);  font-size:14px; }
+    .amount-neu { font-weight:700; color:var(--text-main); font-size:14px; }
+
+    .status-badge {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 11px; border-radius:20px; font-size:12px; font-weight:600;
+    }
+
+    .date-text  { font-size:12px; color:var(--text-muted); font-weight:500; }
+
+    /* ── EDIT BUTTON ── */
+    .btn-edit {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:6px 12px; border-radius:10px;
+      background:#f0fdf8; color:var(--primary);
+      border:1px solid #a7f3d0;
+      font-size:12px; font-weight:700;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      text-decoration:none; transition:all .2s; white-space:nowrap;
+    }
+    .btn-edit:hover {
+      background:var(--primary); color:white;
+      border-color:var(--primary);
+      transform:translateY(-1px);
+      box-shadow:0 4px 12px rgba(15,110,86,.25);
+    }
+
+    .empty-state {
+      text-align:center; padding:60px 20px; color:var(--text-muted);
+    }
+    .empty-state .empty-icon {
+      width:72px; height:72px; border-radius:20px;
+      background:var(--bg-body); border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-size:28px; margin:0 auto 16px;
+    }
+    .empty-state h6 { font-size:15px; font-weight:700; color:var(--text-main); margin-bottom:6px; }
+    .empty-state p  { font-size:13px; }
+
+    .pagination-bar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding-top:20px; flex-wrap:wrap; gap:12px;
+    }
+    .pagination-info { font-size:13px; color:var(--text-muted); }
+
+    .mobile-nav {
+      position:fixed; bottom:0; left:0; width:100%;
+      background:rgba(255,255,255,.95); backdrop-filter:blur(10px);
+      border-top:1px solid var(--border);
+      display:flex; justify-content:space-around;
+      padding:10px 0 25px; z-index:1000;
+    }
+    .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
+    .nav-item.active { color:var(--primary); }
+    .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+
+    @media(max-width:767px) {
+      .hide-mobile { display:none; }
+      .tx-table thead th:last-child,
+      .tx-table td:last-child { text-align:left; }
+    }
+    @media(min-width:992px) {
+      .main-content { padding:40px; }
+      .mobile-nav { display:none; }
+      body { padding-bottom:0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-content">
+
+  <!-- Flash Messages -->
+  <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+    <div class="flash-message flash-success">
+      <i class="fas fa-circle-check"></i> <%= success_msg %>
+    </div>
+  <% } %>
+  <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+    <div class="flash-message flash-danger">
+      <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+    </div>
+  <% } %>
+
+  <!-- Header -->
+  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Logged in as</p>
+      <h1 style="font-size:1.2rem;font-weight:800;margin:0;display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i>
+        Admin Panel
+      </h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="/admin/notifications" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
+        <i class="fa-solid fa-bell" style="color:var(--primary);"></i>
+      </a>
+      <a href="/admin/settings" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
+        <i class="fa-solid fa-gear" style="color:var(--text-muted);"></i>
+      </a>
+      <a href="/auth/logout" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
+        <i class="fa-solid fa-right-from-bracket" style="color:var(--danger);"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="balance-card">
+    <div>
+      <div class="balance-label">Overview</div>
+      <div class="balance-title">All Transactions</div>
+      <div class="balance-sub">
+        <%= typeof transactions !== 'undefined' ? transactions.length : 0 %> total records
+      </div>
+    </div>
+    <div class="hero-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">Total</div>
+      <div class="stat-value" id="statTotal">0</div>
+      <span class="stat-badge badge-primary"><i class="fa-solid fa-list"></i> All time</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Credits</div>
+      <div class="stat-value" id="statCredits" style="color:var(--success);">0</div>
+      <span class="stat-badge badge-success"><i class="fa-solid fa-arrow-down"></i> Incoming</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Debits</div>
+      <div class="stat-value" id="statDebits" style="color:var(--danger);">0</div>
+      <span class="stat-badge badge-danger"><i class="fa-solid fa-arrow-up"></i> Outgoing</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pending</div>
+      <div class="stat-value" id="statPending" style="color:var(--warning);">0</div>
+      <span class="stat-badge badge-warning"><i class="fa-solid fa-clock"></i> Awaiting</span>
+    </div>
+  </div>
+
+  <!-- TABLE CARD -->
+  <div class="f-card">
+
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" class="f-search" id="searchInput"
+               placeholder="Search reference, name, email…" oninput="filterTable()">
+      </div>
+      <div class="select-sm-wrap">
+        <select class="f-select-sm" id="typeFilter" onchange="filterTable()">
+          <option value="">All Types</option>
+          <option value="credit">Credit</option>
+          <option value="debit">Debit</option>
+          <option value="transfer">Transfer</option>
+          <option value="deposit">Deposit</option>
+          <option value="withdrawal">Withdrawal</option>
+          <option value="admin_credit">Admin Credit</option>
+          <option value="admin_debit">Admin Debit</option>
+        </select>
+      </div>
+      <div class="select-sm-wrap">
+        <select class="f-select-sm" id="statusFilter" onchange="filterTable()">
+          <option value="">All Statuses</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="tx-table" id="txTable">
+        <thead>
+          <tr>
+            <th>Reference / ID</th>
+            <th>User</th>
+            <th class="hide-mobile">Type</th>
+            <th>Amount</th>
+            <th class="hide-mobile">Status</th>
+            <th class="hide-mobile">Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="txBody">
+          <% if (typeof transactions !== 'undefined' && transactions && transactions.length > 0) { %>
+            <% transactions.forEach(tx => { %>
+              <tr class="tx-row"
+                  data-ref="<%= tx.id %>"
+                  data-name="<%= tx.first_name %> <%= tx.last_name %>"
+                  data-email="<%= tx.email %>"
+                  data-type="<%= tx.type ? tx.type.toLowerCase() : '' %>"
+                  data-status="<%= tx.status ? tx.status.toLowerCase() : '' %>">
+
+                <!-- ID -->
+                <td><span class="ref-code">#<%= tx.id %></span></td>
+
+                <!-- User -->
+                <td>
+                  <div class="user-cell">
+                    <img src="https://ui-avatars.com/api/?name=<%= tx.first_name %>+<%= tx.last_name %>&background=0F6E56&color=fff"
+                         class="user-avatar" alt="<%= tx.first_name %>">
+                    <div>
+                      <div class="user-name"><%= tx.first_name %> <%= tx.last_name %></div>
+                      <div class="user-email"><%= tx.email %></div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Type -->
+                <td class="hide-mobile">
+                  <%
+                    const t = (tx.type || '').toLowerCase();
+                    let typeClass = 'type-credit'; let typeIcon = 'fa-arrow-down';
+                    if      (t === 'debit'      || t === 'admin_debit')   { typeClass='type-debit';      typeIcon='fa-arrow-up'; }
+                    else if (t === 'transfer')                             { typeClass='type-transfer';   typeIcon='fa-arrow-right-arrow-left'; }
+                    else if (t === 'deposit'    || t === 'admin_credit')  { typeClass='type-deposit';    typeIcon='fa-wallet'; }
+                    else if (t === 'withdrawal')                           { typeClass='type-withdrawal'; typeIcon='fa-money-bill-wave'; }
+                    else if (t.startsWith('admin'))                        { typeClass='type-admin';      typeIcon='fa-shield-halved'; }
+                  %>
+                  <span class="type-pill <%= typeClass %>">
+                    <i class="fa-solid <%= typeIcon %>"></i>
+                    <%= tx.type.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) %>
+                  </span>
+                </td>
+
+                <!-- Amount -->
+                <td>
+                  <%
+                    const isPositive = ['credit','deposit','admin_credit'].includes((tx.type||'').toLowerCase());
+                    const isNegative = ['debit','withdrawal','admin_debit'].includes((tx.type||'').toLowerCase());
+                    const amtClass   = isPositive ? 'amount-pos' : isNegative ? 'amount-neg' : 'amount-neu';
+                    const amtPrefix  = isPositive ? '+' : isNegative ? '-' : '';
+                  %>
+                  <span class="<%= amtClass %>">
+                    <%= amtPrefix %>$<%= parseFloat(tx.amount).toLocaleString(undefined,{minimumFractionDigits:2}) %>
+                  </span>
+                </td>
+
+                <!-- Status -->
+                <td class="hide-mobile">
+                  <%
+                    const s = (tx.status || '').toLowerCase();
+                    let sBadge = 'badge-success'; let sIcon = 'fa-circle-check';
+                    if      (s === 'pending') { sBadge='badge-warning'; sIcon='fa-clock'; }
+                    else if (s === 'failed')  { sBadge='badge-danger';  sIcon='fa-circle-xmark'; }
+                  %>
+                  <span class="status-badge <%= sBadge %>">
+                    <i class="fa-solid <%= sIcon %>" style="font-size:9px;"></i>
+                    <%= tx.status.charAt(0).toUpperCase() + tx.status.slice(1) %>
+                  </span>
+                </td>
+
+                <!-- Date -->
+                <td class="hide-mobile">
+                  <div class="date-text">
+                    <%= new Date(tx.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                    <%= new Date(tx.created_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) %>
+                  </div>
+                </td>
+
+                <!-- ✏️ EDIT BUTTON -->
+                <td>
+                  <a href="/admin/transactions/<%= tx.id %>/edit" class="btn-edit">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span class="hide-mobile">Edit</span>
+                  </a>
+                </td>
+
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr id="emptyFromServer">
+              <td colspan="7">
+                <div class="empty-state">
+                  <div class="empty-icon"><i class="fa-solid fa-money-bill-transfer" style="color:var(--text-muted);"></i></div>
+                  <h6>No transactions yet</h6>
+                  <p>Transactions will appear here once users start transacting.</p>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+
+          <tr id="emptySearch" style="display:none;">
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-muted);"></i></div>
+                <h6>No results found</h6>
+                <p>Try adjusting your search or filters.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-bar">
+      <div class="pagination-info" id="pageInfo">Showing all results</div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+  <a href="/admin/dashboard"    class="nav-item"><i class="fa-solid fa-house-chimney"></i>Home</a>
+  <a href="/admin/users"        class="nav-item"><i class="fa-solid fa-users"></i>Users</a>
+  <a href="/admin/kyc"          class="nav-item"><i class="fa-solid fa-id-card"></i>KYC</a>
+  <a href="/admin/transactions" class="nav-item active"><i class="fa-solid fa-money-bill-transfer"></i>Txns</a>
+  <a href="/admin/notifications" class="nav-item"><i class="fa-solid fa-bell"></i>Notify</a>
+</nav>
+
+<script>
+  const rows = Array.from(document.querySelectorAll('.tx-row'));
+
+  document.getElementById('statTotal').textContent   = rows.length;
+  document.getElementById('statCredits').textContent = rows.filter(r => ['credit','deposit','admin_credit'].includes(r.dataset.type)).length;
+  document.getElementById('statDebits').textContent  = rows.filter(r => ['debit','withdrawal','admin_debit'].includes(r.dataset.type)).length;
+  document.getElementById('statPending').textContent = rows.filter(r => r.dataset.status === 'pending').length;
+
+  function filterTable() {
+    const q      = document.getElementById('searchInput').value.toLowerCase();
+    const type   = document.getElementById('typeFilter').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value.toLowerCase();
+
+    let visible = 0;
+    rows.forEach(row => {
+      const matchSearch = !q || [row.dataset.ref, row.dataset.name, row.dataset.email].some(v => v.toLowerCase().includes(q));
+      const matchType   = !type   || row.dataset.type   === type;
+      const matchStatus = !status || row.dataset.status === status;
+      const show = matchSearch && matchType && matchStatus;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('emptySearch').style.display = (visible === 0 && rows.length > 0) ? '' : 'none';
+    document.getElementById('pageInfo').textContent = `Showing ${visible} of ${rows.length} transactions`;
+  }
+
+  document.getElementById('pageInfo').textContent = `Showing ${rows.length} of ${rows.length} transactions`;
+</script>
+</body>
+</html>

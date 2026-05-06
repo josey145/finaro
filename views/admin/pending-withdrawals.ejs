@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Withdrawals - Finora Bank Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F6E56;
+            --accent: #1D9E75;
+            --bg-body: #F4F8F7;
+            --white: #FFFFFF;
+            --text-main: #0D1B16;
+            --text-muted: #64748B;
+            --border: #E8EFED;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 90px;
+        }
+        .main-content { padding: 20px; max-width: 1100px; margin: 0 auto; }
+
+        .tx-card {
+            background: var(--white); border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(15,110,86,0.06);
+            margin-bottom: 20px; overflow: hidden;
+        }
+        .tx-header {
+            padding: 18px 20px; display: flex;
+            justify-content: space-between; align-items: flex-start;
+            gap: 12px; cursor: pointer;
+        }
+        .tx-header:hover { background: #f8fdfb; }
+        .tx-body { border-top: 1px solid var(--border); padding: 20px; display: none; }
+        .tx-body.open { display: block; }
+
+        .amount-pill {
+            font-size: 1.05rem; font-weight: 800; color: var(--primary);
+            background: #f0fdf8; border: 1px solid #a7f3d0;
+            padding: 6px 16px; border-radius: 30px;
+        }
+
+        .step-box {
+            background: var(--bg-body); border-radius: 14px;
+            padding: 16px; margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+        .step-box.otp-needed { border-color: #bfdbfe; background: #eff6ff; }
+
+        .otp-input {
+            width: 140px; border: 2px solid #bfdbfe; border-radius: 10px;
+            padding: 10px; font-size: 1.3rem; font-weight: 800;
+            letter-spacing: 8px; text-align: center;
+        }
+        .btn-set-otp {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff; border: none; border-radius: 10px;
+            padding: 10px 18px; font-size: 13px; font-weight: 700;
+        }
+        .btn-approve {
+            background: var(--success); color: #fff;
+            border: none; border-radius: 12px;
+            padding: 14px 28px; font-size: 15px; font-weight: 700;
+        }
+        .btn-reject {
+            background: var(--danger); color: #fff;
+            border: none; border-radius: 12px;
+            padding: 14px 28px; font-size: 15px; font-weight: 700;
+        }
+
+        .flash { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; }
+        .flash-ok  { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+        .flash-err { background: #fef2f2; color: var(--danger);  border: 1px solid #fecaca; }
+
+        .chevron { transition: transform 0.25s; color: var(--text-muted); }
+        .chevron.open { transform: rotate(180deg); }
+
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around;
+            padding: 10px 0 25px; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+        .nav-item.active { color: var(--primary); }
+
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav { display: none; }
+            body { padding-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash flash-ok"><i class="fas fa-circle-check me-2"></i> <%= success_msg %></div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash flash-err"><i class="fas fa-circle-exclamation me-2"></i> <%= error_msg %></div>
+    <% } %>
+
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="small text-muted mb-0">Withdrawal Management</p>
+            <h1 class="h4 fw-bold mb-0">
+                <i class="fa-solid fa-money-bill-transfer me-2" style="color:var(--primary);"></i>
+                Pending Withdrawals
+            </h1>
+        </div>
+        <a href="/admin/dashboard" class="bg-white p-2 rounded-3 border text-decoration-none">
+            <i class="fa-solid fa-arrow-left text-muted"></i>
+        </a>
+    </header>
+
+    <!-- List -->
+    <% if (typeof pendingWithdrawals !== 'undefined' && pendingWithdrawals.length > 0) { %>
+        <% pendingWithdrawals.forEach(function(tx) { %>
+        <div class="tx-card" id="tx-<%= tx.id %>">
+
+            <!-- Clickable Header -->
+            <div class="tx-header" onclick="toggleTx(<%= tx.id %>)">
+                <div style="flex:1;">
+                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                        <strong style="font-size:15px;"><%= tx.first_name %> <%= tx.last_name %></strong>
+                        <span style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;">Pending</span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted);">
+                        TX #<%= tx.id %> • Step <%= tx.withdrawal_step || 1 %> of <%= tx.total_steps || 1 %>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="amount-pill">$<%= parseFloat(tx.amount).toLocaleString('en-US', {minimumFractionDigits:2}) %></span>
+                    <i class="fa-solid fa-chevron-down chevron" id="chev-<%= tx.id %>"></i>
+                </div>
+            </div>
+
+            <!-- Expanded Body -->
+            <div class="tx-body" id="body-<%= tx.id %>">
+
+                <!-- Steps -->
+                <h6 class="fw-bold mb-3" style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">Verification Steps</h6>
+
+                <% if (tx.steps && tx.steps.length > 0) { %>
+                    <% tx.steps.forEach(function(step) { %>
+                    <div class="step-box <%= step.requires_otp && step.status !== 'completed' ? 'otp-needed' : '' %>">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-bold" style="font-size:14px;"><%= step.step_name || step.step_code %></div>
+                                <code style="font-size:11px; color:var(--text-muted);"><%= step.step_code %></code>
+                                <div style="font-size:12px; margin-top:4px;">
+                                    <% if (step.status === 'completed') { %>
+                                        <span style="color:var(--success);"><i class="fa-solid fa-check-circle"></i> Completed</span>
+                                    <% } else if (step.requires_otp) { %>
+                                        <span style="color:#1e40af;">
+                                            <i class="fa-solid fa-shield-halved"></i>
+                                            <% if (step.otp_is_set) { %>
+                                                Code set • <%= step.otp_consumed_bool ? 'Used by user' : 'Waiting for user' %>
+                                            <% } else { %>
+                                                <span style="color:var(--danger);">No code set yet — ADMIN ACTION NEEDED</span>
+                                            <% } %>
+                                        </span>
+                                    <% } else { %>
+                                        <span style="color:var(--warning);"><i class="fa-solid fa-clock"></i> Pending</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OTP INPUT AREA -->
+                        <% if (step.requires_otp && step.status !== 'completed') { %>
+                        <div style="margin-top:14px; padding-top:14px; border-top:1px dashed #bfdbfe;">
+                            <div style="font-size:12px; font-weight:700; color:#1e3a8a; margin-bottom:10px;">
+                                <i class="fa-solid fa-key me-1"></i> Set Verification Code for User
+                            </div>
+
+                            <% if (step.otp_is_set) { %>
+                                <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px 14px; margin-bottom:10px; font-size:12px; color:#166534;">
+                                    <i class="fa-solid fa-check-circle"></i> Code already set
+                                    <button onclick="clearOtp(<%= tx.id %>, <%= step.step_number %>)" style="float:right; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer;">
+                                        <i class="fa-solid fa-trash"></i> Clear
+                                    </button>
+                                    <div style="clear:both;"></div>
+                                </div>
+                            <% } %>
+
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" class="otp-input" id="otp-<%= tx.id %>-<%= step.step_number %>" maxlength="6" placeholder="000000" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
+                                <button class="btn-set-otp" onclick="setOtp(<%= tx.id %>, <%= step.step_number %>)">
+                                    <i class="fa-solid fa-key"></i> <%= step.otp_is_set ? 'Update' : 'Set Code' %>
+                                </button>
+                            </div>
+                            <div style="font-size:11px; color:#3b82b6; margin-top:8px;">
+                                <i class="fa-solid fa-circle-info"></i> Share this 6-digit code with the customer. They enter it on their withdrawal page.
+                            </div>
+                        </div>
+                        <% } %>
+                    </div>
+                    <% }) %>
+                <% } else { %>
+                    <p style="font-size:13px; color:var(--text-muted);">No steps found.</p>
+                <% } %>
+
+                <!-- BIG APPROVE / REJECT BUTTONS -->
+                <div style="display:flex; gap:12px; margin-top:20px; padding-top:20px; border-top:2px solid var(--border);">
+                    <button class="btn-approve flex-fill" onclick="approveTx(<%= tx.id %>)">
+                        <i class="fa-solid fa-check me-2"></i> APPROVE & SEND MONEY
+                    </button>
+                    <button class="btn-reject flex-fill" onclick="rejectTx(<%= tx.id %>)">
+                        <i class="fa-solid fa-xmark me-2"></i> REJECT
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        <% }) %>
+
+    <% } else { %>
+    <div style="text-align:center; padding:60px; color:var(--text-muted);">
+        <i class="fa-solid fa-inbox" style="font-size:3rem; margin-bottom:16px; opacity:0.3;"></i>
+        <p class="fw-bold">No pending withdrawals</p>
+    </div>
+    <% } %>
+
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+    <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house-chimney"></i> Home</a>
+    <a href="/admin/users" class="nav-item"><i class="fa-solid fa-users"></i> Users</a>
+    <a href="/admin/kyc" class="nav-item"><i class="fa-solid fa-id-card"></i> KYC</a>
+    <a href="/admin/notifications" class="nav-item"><i class="fa-solid fa-bell"></i> Notify</a>
+    <a href="/admin/settings" class="nav-item"><i class="fa-solid fa-gear"></i> Settings</a>
+</nav>
+
+<script>
+function toggleTx(id) {
+    document.getElementById('body-' + id).classList.toggle('open');
+    document.getElementById('chev-' + id).classList.toggle('open');
+}
+
+// Auto-open if only one
+if (document.querySelectorAll('.tx-card').length === 1) {
+    toggleTx(document.querySelector('.tx-card').id.replace('tx-', ''));
+}
+
+async function setOtp(txId, stepNum) {
+    const otp = document.getElementById(`otp-${txId}-${stepNum}`).value.trim();
+    if (!/^\d{6}$/.test(otp)) { alert('Enter exactly 6 digits'); return; }
+
+    try {
+        const res = await fetch(`/admin/transactions/${txId}/steps/${stepNum}/set-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ otp })
+        });
+        const data = await res.json();
+        if (data.success) { alert('✅ Code set! Tell the user: ' + otp); location.reload(); }
+        else alert('❌ ' + (data.message || 'Failed'));
+    } catch (e) { alert('Network error'); }
+}
+
+async function clearOtp(txId, stepNum) {
+    if (!confirm('Clear this code?')) return;
+    try {
+        const res = await fetch(`/admin/transactions/${txId}/steps/${stepNum}/clear-otp`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else alert('❌ ' + (data.message || 'Failed'));
+    } catch (e) { alert('Network error'); }
+}
+
+async function approveTx(txId) {
+    if (!confirm('🟢 APPROVE this withdrawal?\n\nThe user will receive the money immediately.')) return;
+    try {
+        const res = await fetch(`/admin/transactions/${txId}/approve`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) { alert('✅ Withdrawal approved!'); location.reload(); }
+        else alert('❌ ' + (data.message || 'Failed'));
+    } catch (e) { alert('Network error'); }
+}
+
+async function rejectTx(txId) {
+    const reason = prompt('Why are you rejecting this? (optional)');
+    if (reason === null) return;
+    try {
+        const res = await fetch(`/admin/transactions/${txId}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        const data = await res.json();
+        if (data.success) { alert('❌ Withdrawal rejected'); location.reload(); }
+        else alert('❌ ' + (data.message || 'Failed'));
+    } catch (e) { alert('Network error'); }
+}
+</script>
+</body>
+</html>

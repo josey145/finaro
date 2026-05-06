@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Home | Finaro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230F6E56%22></rect><path d=%22M30 40 L50 60 L70 40%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/index.css"/>
+
+    <style>
+        /* Hero Section */
+        .hero {
+            padding: 140px 6% 100px;
+            display: flex; flex-direction: column;
+            align-items: center; text-align: center;
+            background: radial-gradient(circle at top, #F2FAF8 0%, var(--bg) 50%);
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--primary-light, #E1F5EE);
+            color: var(--primary);
+            padding: 8px 20px; border-radius: 50px;
+            font-size: 14px; font-weight: 600; margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 6vw, 72px);
+            line-height: 1.1; letter-spacing: -2px;
+            max-width: 900px; margin-bottom: 24px;
+            color: var(--text-dark);
+        }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: var(--text-light);
+            font-size: 20px; max-width: 600px; margin-bottom: 32px;
+        }
+        .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+        .hero-stats {
+            display: flex; gap: 48px; margin-top: 60px;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .stat-item { text-align: center; }
+        .stat-number {
+            font-family: 'Sora', sans-serif; font-size: 2.5rem;
+            font-weight: 700; color: var(--primary);
+        }
+        .stat-label { font-size: 14px; color: var(--text-light); margin-top: 4px; }
+
+        /* Section Labels */
+        .section-label {
+            display: inline-block; background: var(--primary-light, #E1F5EE);
+            color: var(--primary); padding: 6px 16px; border-radius: 50px;
+            font-size: 13px; font-weight: 600; margin-bottom: 16px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Feature Tags on Cards */
+        .feature-tags {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px;
+        }
+        .feature-tag {
+            background: var(--primary-light, #E1F5EE); color: var(--primary);
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 500;
+        }
+
+        /* Auth Cards */
+        .auth-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px; max-width: 1200px; margin: 0 auto;
+        }
+        .auth-card {
+            padding: 32px; border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--card-bg, var(--surface));
+            display: flex; align-items: flex-start; gap: 20px;
+            transition: 0.3s;
+        }
+        .auth-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px var(--shadow);
+            border-color: var(--accent);
+        }
+        .auth-icon {
+            width: 48px; height: 48px; min-width: 48px;
+            border-radius: 12px; background: var(--primary-light, #E1F5EE);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary); font-size: 20px;
+        }
+        .auth-card h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; color: var(--text-dark); }
+        .auth-card p { font-size: 14px; color: var(--text-light); line-height: 1.5; }
+
+        /* Compliance Section */
+        .compliance-section { background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); }
+        .compliance-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px; max-width: 1000px; margin: 0 auto;
+        }
+        .compliance-card {
+            padding: 32px; border-radius: var(--radius);
+            background: var(--card-bg, #FFFFFF);
+            display: flex; align-items: flex-start; gap: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+        .compliance-icon {
+            width: 48px; height: 48px; min-width: 48px;
+            border-radius: 12px; background: #F59E0B;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 20px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 6%; text-align: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark, #0f766e) 100%);
+            color: white; position: relative; overflow: hidden;
+        }
+        .cta-section::before {
+            content: ''; position: absolute; top: -50%; left: -20%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .cta-section h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin-bottom: 16px; position: relative; z-index: 1; }
+        .cta-section p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto 40px; position: relative; z-index: 1; }
+
+        /* Footer */
+        .footer-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px; max-width: 1200px; margin: 0 auto 40px;
+        }
+        .footer-col h4 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-dark); }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 12px; }
+        .footer-col a { color: var(--text-light); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .footer-col a:hover { color: var(--primary); }
+        .footer-bottom {
+            border-top: 1px solid var(--border); padding-top: 30px;
+            text-align: center; color: var(--text-muted); font-size: 14px;
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        /* Dark mode overrides */
+        [data-theme="dark"] .hero { background: radial-gradient(circle at top, #0f2e24 0%, var(--bg) 60%); }
+        [data-theme="dark"] .compliance-section { background: linear-gradient(135deg, #451a03 0%, #78350f 100%); }
+        [data-theme="dark"] .compliance-card { background: var(--card-bg); }
+
+        @media (max-width: 768px) {
+            .hero { padding: 120px 20px 60px; }
+            .hero-stats { gap: 24px; }
+            .auth-grid, .compliance-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <%- include('../partials/nav') %>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-badge" data-aos="fade-down">
+            <i class="fas fa-rocket"></i> Now Open for Early Access
+        </div>
+
+        <h1 data-aos="fade-up" data-aos-duration="1000">
+            Digital banking for the <span class="highlight">modern</span> economy.
+        </h1>
+
+        <p data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000">
+            A unified platform for payments, savings, and global treasury. Built for people who value time as much as money. Open your account in under 5 minutes with digital KYC verification.
+        </p>
+
+        <div class="hero-buttons" data-aos="fade-up" data-aos-delay="400" data-aos-duration="1000">
+            <a href="/auth/register" class="btn-nav" style="padding: 16px 32px; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-rocket"></i> Join Early Access
+            </a>
+            <a href="/demo" class="btn-outline" style="padding: 16px 32px; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-play-circle"></i> View Demo
+            </a>
+        </div>
+
+        <div class="hero-stats" data-aos="fade-up" data-aos-delay="600">
+            <div class="stat-item">
+                <div class="stat-number">4.5%</div>
+                <div class="stat-label">APY Savings</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">140+</div>
+                <div class="stat-label">Countries</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">30+</div>
+                <div class="stat-label">Currencies</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Support</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-label">Financial Products</span>
+            <h2>Our Financial Products</h2>
+            <p>Smart tools designed to help you scale your personal and business wealth. From everyday banking to global transfers, we have you covered.</p>
+        </div>
+
+        <div class="product-grid">
+            <div class="product-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="icon-circle"><i class="fas fa-credit-card"></i></div>
+                <h3>Smart Debit</h3>
+                <p>Virtual and physical cards with zero FX fees, instant spend notifications, and tap-to-pay technology with Apple Pay & Google Wallet.</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">Zero FX Fees</span>
+                    <span class="feature-tag">Instant Notifications</span>
+                    <span class="feature-tag">Tap-to-Pay</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="icon-circle"><i class="fas fa-chart-line"></i></div>
+                <h3>Vault Savings</h3>
+                <p>High-yield interest accounts with 4.5% APY and no lock-in periods. Significantly higher than the national average with personalized savings tools.</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">4.5% APY</span>
+                    <span class="feature-tag">No Lock-in</span>
+                    <span class="feature-tag">Interest Calculator</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="icon-circle"><i class="fas fa-globe"></i></div>
+                <h3>Global Transfer</h3>
+                <p>Send money to 140+ countries at the real exchange rate in seconds. ACH transfers with iron-clad security.</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">140+ Countries</span>
+                    <span class="feature-tag">Real Exchange Rate</span>
+                    <span class="feature-tag">Instant</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="icon-circle"><i class="fas fa-wallet"></i></div>
+                <h3>Multi-Currency Wallet</h3>
+                <p>Hold, exchange, and spend in 30+ currencies with real-time rates. Perfect for travelers, freelancers, and global businesses.</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">30+ Currencies</span>
+                    <span class="feature-tag">Real-time Rates</span>
+                    <span class="feature-tag">Instant Exchange</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="icon-circle"><i class="fas fa-piggy-bank"></i></div>
+                <h3>Vault Goals</h3>
+                <p>Set savings targets with automated round-ups and milestone rewards. Track your progress and celebrate every achievement.</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">Auto Round-ups</span>
+                    <span class="feature-tag">Milestone Rewards</span>
+                    <span class="feature-tag">Goal Tracking</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="icon-circle"><i class="fas fa-hand-holding-dollar"></i></div>
+                <h3>Instant Loans</h3>
+                <p>Get approved in minutes with flexible repayment and no hidden fees. Competitive rates tailored to your financial profile.</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">Minutes Approval</span>
+                    <span class="feature-tag">Flexible Terms</span>
+                    <span class="feature-tag">No Hidden Fees</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Account Management Section -->
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-label">Account Management</span>
+            <h2>Your Account, Your Control</h2>
+            <p>Manage everything from our platform. Complete visibility and control over your finances.</p>
+        </div>
+
+        <div class="product-grid">
+            <div class="product-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="icon-circle"><i class="fas fa-gauge-high"></i></div>
+                <h3>Dashboard</h3>
+                <p>Get a complete overview of all your accounts, balances, and recent transactions in one unified dashboard.</p>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="icon-circle"><i class="fas fa-user-circle"></i></div>
+                <h3>Profile Management</h3>
+                <p>View and edit your personal information, update preferences, and manage account settings with ease.</p>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="icon-circle"><i class="fas fa-circle-plus"></i></div>
+                <h3>Open New Account</h3>
+                <p>Create new bank accounts in minutes. Choose from savings, checking, joint accounts, and more.</p>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="icon-circle"><i class="fas fa-file-invoice"></i></div>
+                <h3>Account Details</h3>
+                <p>View detailed information for each account including statements, transaction history, and analytics.</p>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="icon-circle"><i class="fas fa-sliders"></i></div>
+                <h3>Settings</h3>
+                <p>Configure user preferences, notification settings, security options, and language preferences.</p>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="icon-circle"><i class="fas fa-bell"></i></div>
+                <h3>Notifications</h3>
+                <p>Real-time transaction alerts and account updates via SMS, email, and push notifications.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Section -->
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-label">Why Finaro</span>
+            <h2>Why Choose Finaro?</h2>
+            <p>Experience banking that actually works for you. Built with security, speed, and simplicity at its core.</p>
+        </div>
+
+        <div class="feature-list">
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="100">
+                <i class="fas fa-bolt"></i>
+                <h4>Instant Setup</h4>
+                <p>Open your account in under 5 minutes with digital KYC verification. No paperwork, no branch visits.</p>
+            </div>
+
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="200">
+                <i class="fas fa-lock"></i>
+                <h4>Bank-Grade Security</h4>
+                <p>AES-256 encryption with biometric authentication, PIN protection, and 24/7 fraud monitoring.</p>
+            </div>
+
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="300">
+                <i class="fas fa-mobile-screen"></i>
+                <h4>Mobile First</h4>
+                <p>Manage everything from our iOS and Android apps. Banking at your fingertips.</p>
+            </div>
+
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="400">
+                <i class="fas fa-headset"></i>
+                <h4>24/7 Support</h4>
+                <p>Real humans available around the clock via chat, email, and phone. We're here when you need us.</p>
+            </div>
+
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="100">
+                <i class="fas fa-language"></i>
+                <h4>Multi-Language</h4>
+                <p>Support for English, Spanish, French, and more. Banking in the language you're most comfortable with.</p>
+            </div>
+
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="200">
+                <i class="fas fa-exchange-alt"></i>
+                <h4>Currency Converter</h4>
+                <p>Real-time exchange rates for 30+ currencies. Convert and transfer with complete transparency.</p>
+            </div>
+
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="300">
+                <i class="fas fa-users"></i>
+                <h4>Joint Accounts</h4>
+                <p>Open accounts with a spouse or partner and easily share finances with full transparency.</p>
+            </div>
+
+            <div class="feature-item" data-aos="zoom-in" data-aos-delay="400">
+                <i class="fas fa-gem"></i>
+                <h4>Luxury Credit Cards</h4>
+                <p>Metal credit cards with cash back, designed to meet all your financial needs with style.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication & Security Section -->
+    <section>
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-label">Security</span>
+            <h2>Authentication & Security</h2>
+            <p>Your security is our top priority. Multiple layers of protection to keep your money and data safe.</p>
+        </div>
+
+        <div class="auth-grid">
+            <div class="auth-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="auth-icon"><i class="fas fa-user-plus"></i></div>
+                <div>
+                    <h4>User Registration</h4>
+                    <p>Sign up with email verification to create your secure Finaro account.</p>
+                </div>
+            </div>
+
+            <div class="auth-card" data-aos="fade-up" data-aos-delay="150">
+                <div class="auth-icon"><i class="fas fa-right-to-bracket"></i></div>
+                <div>
+                    <h4>Secure Login/Logout</h4>
+                    <p>Session-based authentication with secure token management and automatic timeout.</p>
+                </div>
+            </div>
+
+            <div class="auth-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="auth-icon"><i class="fas fa-key"></i></div>
+                <div>
+                    <h4>Password Management</h4>
+                    <p>Forgot password and reset functionality with secure email verification links.</p>
+                </div>
+            </div>
+
+            <div class="auth-card" data-aos="fade-up" data-aos-delay="250">
+                <div class="auth-icon"><i class="fas fa-shield-halved"></i></div>
+                <div>
+                    <h4>PIN Authentication</h4>
+                    <p>Additional security layer for transactions with customizable PIN protection.</p>
+                </div>
+            </div>
+
+            <div class="auth-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="auth-icon"><i class="fas fa-envelope-circle-check"></i></div>
+                <div>
+                    <h4>Email Verification</h4>
+                    <p>Account activation via secure verification link to ensure your identity.</p>
+                </div>
+            </div>
+
+            <div class="auth-card" data-aos="fade-up" data-aos-delay="350">
+                <div class="auth-icon"><i class="fas fa-fingerprint"></i></div>
+                <div>
+                    <h4>Biometric Authentication</h4>
+                    <p>Face ID and fingerprint login support for quick and secure access.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compliance Section -->
+    <section class="compliance-section">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-label" style="background: #FEF3C7; color: #92400E;">Compliance</span>
+            <h2>Compliance & Verification</h2>
+            <p>Stay compliant with regulatory requirements through our streamlined verification process.</p>
+        </div>
+
+        <div class="compliance-grid">
+            <div class="compliance-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="compliance-icon"><i class="fas fa-id-card"></i></div>
+                <div>
+                    <h4>KYC Submission</h4>
+                    <p>Submit identity verification documents securely through our encrypted portal. Support for passports, driver's licenses, and national IDs.</p>
+                </div>
+            </div>
+
+            <div class="compliance-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="compliance-icon"><i class="fas fa-chart-pie"></i></div>
+                <div>
+                    <h4>KYC Status Tracking</h4>
+                    <p>Monitor your verification progress in real-time. Get notified instantly when your account is verified and ready to use.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Transactions Section -->
+    <section>
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-label">Transactions</span>
+            <h2>Move Your Money</h2>
+            <p>Seamless money movement with iron-clad security. Transfer, deposit, and withdraw with confidence.</p>
+        </div>
+
+        <div class="product-grid">
+            <div class="product-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="icon-circle"><i class="fas fa-arrow-down"></i></div>
+                <h3>Deposits</h3>
+                <p>Add funds to your account instantly via bank transfer, card, or mobile payment methods.</p>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="icon-circle"><i class="fas fa-arrow-up"></i></div>
+                <h3>Withdrawals</h3>
+                <p>Withdraw money to external accounts quickly and securely with full tracking.</p>
+            </div>
+
+            <div class="product-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="icon-circle"><i class="fas fa-people-arrows"></i></div>
+                <h3>Internal Transfers</h3>
+                <p>Send money to other Finaro users instantly with account number name verification.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2 data-aos="fade-up">Ready to bank smarter?</h2>
+        <p data-aos="fade-up" data-aos-delay="100">Be among the first to experience the future of digital banking. Join our early access program and help shape the platform.</p>
+        <div data-aos="fade-up" data-aos-delay="200">
+            <a href="/auth/register" class="btn-nav" style="padding: 18px 40px; font-size: 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;">
+                <i class="fas fa-rocket"></i> Join Early Access
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+ <%- include('../partials/footer') %>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true, offset: 100, easing: 'ease-out-cubic' });
+    </script>
+</body>
+</html>

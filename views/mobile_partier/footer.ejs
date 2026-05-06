@@ -1,0 +1,29 @@
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // ── Apply theme immediately to avoid flash ──────────────────────────────
+    (function() {
+        const theme = window.__FINORA__?.theme || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+    })();
+
+    // ── Currency formatter available globally ───────────────────────────────
+    window.formatMoney = function(amount) {
+        const symbol = window.__FINORA__?.symbol || '$';
+        const num    = parseFloat(amount || 0);
+        return symbol + num.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
+    // ── Replace all [data-money] elements with formatted currency ───────────
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[data-money]').forEach(el => {
+            const raw = el.getAttribute('data-money');
+            el.textContent = window.formatMoney(raw);
+        });
+    });
+    </script>
+</body>
+</html>

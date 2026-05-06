@@ -1,0 +1,286 @@
+<%
+  const _footerTheme = typeof theme !== 'undefined' ? theme : 'light';
+%>
+
+<style>
+/* ── FOOTER VARIABLES ── */
+.fnav-footer {
+    --footer-bg:      var(--bg-card,    #ffffff);
+    --footer-border:  var(--border,     #E8EFED);
+    --footer-heading: var(--text-main,  #0D1B16);
+    --footer-text:    var(--text-muted, #64748B);
+    --footer-link:    var(--text-muted, #64748B);
+    --footer-hover:   #0F6E56;
+    --footer-bottom:  var(--bg-input,   #F4F8F7);
+}
+
+[data-theme="dark"] .fnav-footer,
+[data-theme="dark"] {
+    --footer-bg:      #1e293b;
+    --footer-border:  #334155;
+    --footer-heading: #f1f5f9;
+    --footer-text:    #94a3b8;
+    --footer-link:    #94a3b8;
+    --footer-bottom:  #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+    [data-theme="auto"] .fnav-footer,
+    [data-theme="auto"] {
+        --footer-bg:      #1e293b;
+        --footer-border:  #334155;
+        --footer-heading: #f1f5f9;
+        --footer-text:    #94a3b8;
+        --footer-link:    #94a3b8;
+        --footer-bottom:  #0f172a;
+    }
+}
+
+/* ── FOOTER BASE ── */
+.fnav-footer {
+    background: var(--footer-bg);
+    border-top: 1px solid var(--footer-border);
+    transition: background 0.3s, border-color 0.3s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.fnav-footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 40px 0;
+}
+
+/* ── FOOTER GRID ── */
+.fnav-footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--footer-border);
+}
+
+/* ── BRAND COLUMN ── */
+.fnav-footer-brand .fnav-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #0F6E56;
+    font-weight: 800;
+    font-size: 18px;
+    margin-bottom: 16px;
+}
+.fnav-footer-brand .fnav-logo-box {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #0F6E56, #1D9E75);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.fnav-footer-tagline {
+    font-size: 14px;
+    color: var(--footer-text);
+    line-height: 1.65;
+    margin-bottom: 20px;
+    max-width: 240px;
+}
+
+/* Social icons */
+.fnav-footer-socials {
+    display: flex;
+    gap: 10px;
+}
+.fnav-social-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1.5px solid var(--footer-border);
+    background: var(--footer-bottom);
+    color: var(--footer-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.fnav-social-icon:hover {
+    border-color: #0F6E56;
+    color: #0F6E56;
+    background: rgba(15,110,86,0.08);
+}
+
+/* ── LINK COLUMNS ── */
+.fnav-footer-col h4 {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--footer-heading);
+    margin-bottom: 18px;
+}
+.fnav-footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.fnav-footer-col li {
+    margin-bottom: 10px;
+}
+.fnav-footer-col a {
+    font-size: 14px;
+    color: var(--footer-link);
+    text-decoration: none;
+    transition: color 0.2s;
+    line-height: 1.4;
+}
+.fnav-footer-col a:hover {
+    color: var(--footer-hover);
+}
+
+/* ── FOOTER BOTTOM BAR ── */
+.fnav-footer-bottom {
+    background: var(--footer-bottom);
+    border-top: 1px solid var(--footer-border);
+    transition: background 0.3s;
+}
+.fnav-footer-bottom-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.fnav-footer-copy {
+    font-size: 13px;
+    color: var(--footer-text);
+}
+.fnav-footer-legal {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.fnav-footer-legal a {
+    font-size: 13px;
+    color: var(--footer-text);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.fnav-footer-legal a:hover { color: var(--footer-hover); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .fnav-footer-inner { padding: 48px 24px 0; }
+    .fnav-footer-grid  {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+    }
+    .fnav-footer-brand { grid-column: 1 / -1; }
+    .fnav-footer-tagline { max-width: 100%; }
+    .fnav-footer-bottom-inner { padding: 16px 24px; flex-direction: column; text-align: center; }
+    .fnav-footer-legal { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .fnav-footer-grid { grid-template-columns: 1fr; }
+    .fnav-footer-inner { padding: 40px 20px 0; }
+    .fnav-footer-bottom-inner { padding: 16px 20px; }
+}
+</style>
+
+<footer class="fnav-footer">
+    <div class="fnav-footer-inner">
+        <div class="fnav-footer-grid">
+
+            <!-- Brand Column -->
+            <div class="fnav-footer-brand">
+                <a href="/" class="fnav-logo">
+                    <div class="fnav-logo-box"><i class="fas fa-shield-halved"></i></div>
+                    Finora Bank
+                </a>
+                <p class="fnav-footer-tagline">
+                    Secure, modern banking built for individuals and businesses worldwide.
+                    Open an account in minutes.
+                </p>
+                <div class="fnav-footer-socials">
+                    <a href="#" class="fnav-social-icon" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+                    <a href="#" class="fnav-social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="fnav-social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="fnav-social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="fnav-footer-col">
+                <h4>Products</h4>
+                <ul>
+                    <li><a href="/products#smart-debit">Smart Debit</a></li>
+                    <li><a href="/products#vault-savings">Vault Savings</a></li>
+                    <li><a href="/products#global-transfer">Global Transfer</a></li>
+                    <li><a href="/products#instant-loans">Instant Loans</a></li>
+                    <li><a href="/products#multi-currency">Multi-Currency Wallet</a></li>
+                </ul>
+            </div>
+
+            <!-- Company -->
+            <div class="fnav-footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="/solutions">Solutions</a></li>
+                    <li><a href="/pricing">Pricing</a></li>
+                    <li><a href="/privacy-policy">Privacy Policy</a></li>
+                    <li><a href="/terms">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <!-- Support -->
+            <div class="fnav-footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="/help">Help Center</a></li>
+                    <li><a href="/contact">Contact Us</a></li>
+                    <li><a href="/security">Security</a></li>
+                    <li><a href="/kyc-verification">KYC Verification</a></li>
+                    <li><a href="/status">Status Page</a></li>
+                </ul>
+            </div>
+
+            <!-- Connect -->
+            <div class="fnav-footer-col">
+                <h4>Connect</h4>
+                <ul>
+                    <li><a href="https://twitter.com"   target="_blank" rel="noopener"><i class="fab fa-x-twitter me-2"></i>Twitter</a></li>
+                    <li><a href="https://linkedin.com"  target="_blank" rel="noopener"><i class="fab fa-linkedin-in me-2"></i>LinkedIn</a></li>
+                    <li><a href="https://instagram.com" target="_blank" rel="noopener"><i class="fab fa-instagram me-2"></i>Instagram</a></li>
+                    <li><a href="https://facebook.com"  target="_blank" rel="noopener"><i class="fab fa-facebook-f me-2"></i>Facebook</a></li>
+                    <li><a href="https://github.com"    target="_blank" rel="noopener"><i class="fab fa-github me-2"></i>GitHub</a></li>
+                </ul>
+            </div>
+
+        </div><!-- /grid -->
+    </div><!-- /inner -->
+
+    <!-- Bottom bar -->
+    <div class="fnav-footer-bottom">
+        <div class="fnav-footer-bottom-inner">
+            <p class="fnav-footer-copy">
+                &copy; <%= new Date().getFullYear() %> Finora Bank. All rights reserved.
+            </p>
+            <nav class="fnav-footer-legal" aria-label="Legal links">
+                <a href="/privacy-policy">Privacy</a>
+                <a href="/terms">Terms</a>
+                <a href="/cookie-policy">Cookies</a>
+                <a href="/security">Security</a>
+            </nav>
+        </div>
+    </div>
+</footer>

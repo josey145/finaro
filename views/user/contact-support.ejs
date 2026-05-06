@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" data-theme="<%= theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Support - Finora Bank</title>
+    <script>document.documentElement.setAttribute('data-theme','<%= theme %>');</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary:#0F6E56; --accent:#1D9E75;
+            --bg-body:#F4F8F7; --bg-card:#fff; --bg-input:#F4F8F7;
+            --text-main:#0D1B16; --text-muted:#64748B; --border:#E8EFED;
+            --danger:#ef4444; --success:#22c55e; --warning:#f59e0b;
+        }
+        [data-theme="dark"] {
+            --bg-body:#0f172a; --bg-card:#1e293b; --bg-input:#172032;
+            --text-main:#f1f5f9; --text-muted:#94a3b8; --border:#334155;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg-body); color:var(--text-main); padding-bottom:90px; }
+        .main-content { padding:20px; max-width:680px; margin:0 auto; }
+
+        .header-card {
+            background:linear-gradient(135deg,#0F6E56,#1D9E75);
+            border-radius:24px; padding:28px 32px; color:white;
+            margin-bottom:20px; box-shadow:0 15px 35px rgba(15,110,86,.3);
+        }
+        .header-card h1 { font-size:1.5rem; font-weight:800; margin:0; }
+        .header-card p  { font-size:13px; opacity:.85; margin-top:4px; }
+
+        .flash-message { padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; display:flex; align-items:center; gap:10px; }
+        .flash-success { background:#f0fdf4; color:#22c55e; border:1px solid #bbf7d0; }
+        .flash-danger  { background:#fef2f2; color:#ef4444; border:1px solid #fecaca; }
+
+        .f-card { background:var(--bg-card); border-radius:20px; padding:24px; border:1px solid var(--border); margin-bottom:16px; box-shadow:0 4px 20px rgba(15,110,86,.05); }
+
+        /* OTP request highlight box */
+        .otp-highlight {
+            background:linear-gradient(135deg,#fffbeb,#fef3c7);
+            border:2px solid #f59e0b; border-radius:16px;
+            padding:20px 24px; margin-bottom:20px;
+            display:flex; align-items:flex-start; gap:16px;
+        }
+        .otp-highlight-icon {
+            width:48px; height:48px; background:#f59e0b; border-radius:14px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:20px; color:white; flex-shrink:0;
+        }
+        .otp-highlight h3 { font-size:15px; font-weight:800; color:#92400e; margin-bottom:4px; }
+        .otp-highlight p  { font-size:13px; color:#b45309; margin:0; line-height:1.5; }
+
+        /* Transaction reference card */
+        .tx-ref-card {
+            background:var(--bg-input); border-radius:14px;
+            padding:14px 18px; margin-bottom:20px;
+            border:1px solid var(--border);
+            display:flex; align-items:center; justify-content:space-between;
+            flex-wrap:wrap; gap:8px;
+        }
+        .tx-ref-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:2px; }
+        .tx-ref-value { font-size:14px; font-weight:800; color:var(--text-main); }
+        .tx-ref-badge { background:#0F6E56; color:white; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+
+        /* Form */
+        .form-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:8px; display:block; }
+        .form-control {
+            width:100%; padding:14px 16px; border-radius:14px;
+            border:1.5px solid var(--border); background:var(--bg-input);
+            font-family:'Plus Jakarta Sans',sans-serif; font-size:14px;
+            color:var(--text-main); outline:none; transition:border .2s;
+        }
+        .form-control:focus { border-color:var(--primary); }
+        textarea.form-control { resize:vertical; min-height:130px; }
+        select.form-control { cursor:pointer; }
+
+        .btn-submit {
+            width:100%; padding:16px; border-radius:14px; border:none;
+            background:linear-gradient(135deg,#0F6E56,#1D9E75);
+            color:white; font-family:'Plus Jakarta Sans',sans-serif;
+            font-size:15px; font-weight:800; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            transition:opacity .2s;
+        }
+        .btn-submit:hover { opacity:.9; }
+        .btn-submit:disabled { opacity:.6; cursor:not-allowed; }
+
+        /* Channel options */
+        .channel-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+        .channel-card {
+            border:2px solid var(--border); border-radius:14px; padding:16px;
+            text-align:center; cursor:default; background:var(--bg-input);
+        }
+        .channel-card i   { font-size:24px; color:var(--primary); margin-bottom:8px; display:block; }
+        .channel-card div { font-size:12px; font-weight:700; color:var(--text-main); }
+        .channel-card small { font-size:11px; color:var(--text-muted); }
+
+        /* FAQ accordion */
+        .faq-item { border-bottom:1px solid var(--border); padding:14px 0; cursor:pointer; }
+        .faq-item:last-child { border-bottom:none; }
+        .faq-q { font-size:13px; font-weight:700; display:flex; justify-content:space-between; align-items:center; }
+        .faq-a { font-size:13px; color:var(--text-muted); line-height:1.6; margin-top:8px; display:none; }
+        .faq-item.open .faq-a { display:block; }
+        .faq-item.open .faq-chevron { transform:rotate(180deg); }
+        .faq-chevron { transition:transform .2s; color:var(--text-muted); }
+
+        .mobile-nav { position:fixed; bottom:0; left:0; width:100%; background:rgba(255,255,255,.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:10px 0 25px; z-index:1000; }
+        .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
+        .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+        @media(min-width:992px){ .mobile-nav{display:none;} body{padding-bottom:0;} .main-content{padding:40px;} }
+        @media(max-width:480px){ .channel-grid{grid-template-columns:1fr 1fr;} }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+    <div class="flash-message flash-success">
+        <i class="fa-solid fa-circle-check"></i> <%= success_msg %>
+    </div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+    <div class="flash-message flash-danger">
+        <i class="fa-solid fa-circle-exclamation"></i> <%= error_msg %>
+    </div>
+    <% } %>
+
+    <!-- Header -->
+    <div class="header-card">
+        <div class="mb-1">
+            <a href="<%= typeof transaction !== 'undefined' && transaction ? '/user/pending-withdrawals' : '/user/dashboard' %>"
+               class="text-white text-decoration-none opacity-75" style="font-size:13px;">
+                <i class="fa-solid fa-chevron-left me-1"></i> Back
+            </a>
+        </div>
+        <h1><i class="fa-solid fa-headset me-2"></i>Contact Support</h1>
+        <p>Our team usually responds within a few hours</p>
+    </div>
+
+    <!-- OTP highlight if coming from withdrawal step -->
+    <% if (typeof reason !== 'undefined' && reason === 'otp') { %>
+    <div class="otp-highlight">
+        <div class="otp-highlight-icon">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+            <h3>Verification Code Request</h3>
+            <p>
+                Your withdrawal requires a verification code from our team.
+                Fill in the form below and we'll send your code to your registered
+                email and phone number as quickly as possible.
+            </p>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- Transaction reference (pre-filled if coming from a withdrawal) -->
+    <% if (typeof transaction !== 'undefined' && transaction) { %>
+    <div class="tx-ref-card">
+        <div>
+            <div class="tx-ref-label">Linked Withdrawal</div>
+            <div class="tx-ref-value">
+                #<%= transaction.id %> &mdash; <%= transaction.displayAmount %>
+                <% if (transaction.step_name) { %>
+                &bull; Step: <strong><%= transaction.step_name %></strong>
+                <% } %>
+            </div>
+        </div>
+        <span class="tx-ref-badge"><i class="fa-solid fa-link me-1"></i> Auto-linked</span>
+    </div>
+    <% } %>
+
+    <!-- Contact Channels -->
+    <div class="f-card">
+        <div style="font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px;">
+            Other Ways to Reach Us
+        </div>
+        <div class="channel-grid">
+            <div class="channel-card">
+                <i class="fa-solid fa-envelope"></i>
+                <div>Email Support</div>
+                <small>support@finorabank.com</small>
+            </div>
+            <div class="channel-card">
+                <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i>
+                <div>WhatsApp</div>
+                <small>Available 8am – 8pm</small>
+            </div>
+            <div class="channel-card">
+                <i class="fa-solid fa-phone"></i>
+                <div>Phone</div>
+                <small>+1 800 FINORA</small>
+            </div>
+            <div class="channel-card">
+                <i class="fa-solid fa-comment-dots"></i>
+                <div>Live Chat</div>
+                <small>On website</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Form -->
+    <div class="f-card">
+        <div style="font-size:15px; font-weight:800; margin-bottom:20px;">
+            <i class="fa-solid fa-paper-plane me-2" style="color:var(--primary);"></i>
+            Send a Message
+        </div>
+
+        <form action="/user/contact-support" method="POST" id="supportForm">
+
+            <!-- Hidden fields -->
+            <% if (typeof transaction !== 'undefined' && transaction) { %>
+            <input type="hidden" name="transaction_id" value="<%= transaction.id %>">
+            <% } %>
+            <input type="hidden" name="reason" value="<%= typeof reason !== 'undefined' ? reason : 'general' %>">
+
+            <!-- Subject -->
+            <div class="mb-4">
+                <label class="form-label">Subject</label>
+                <select class="form-control" name="subject" id="subjectSelect">
+                    <% if (typeof reason !== 'undefined' && reason === 'otp') { %>
+                    <option value="Request Withdrawal Verification Code" selected>
+                        Request Withdrawal Verification Code
+                    </option>
+                    <% } %>
+                    <option value="Request Withdrawal Verification Code" <%= (typeof reason !== 'undefined' && reason === 'otp') ? 'style=display:none' : '' %>>
+                        Request Withdrawal Verification Code
+                    </option>
+                    <option value="Withdrawal Issue">Withdrawal Issue</option>
+                    <option value="Account Access Problem">Account Access Problem</option>
+                    <option value="Transaction Dispute">Transaction Dispute</option>
+                    <option value="KYC / Verification Help">KYC / Verification Help</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <!-- Name (pre-filled, read-only) -->
+            <div class="mb-4">
+                <label class="form-label">Your Name</label>
+                <input type="text" class="form-control"
+                       value="<%= user.first_name %> <%= user.last_name %>" readonly
+                       style="opacity:.7; cursor:not-allowed;">
+            </div>
+
+            <!-- Email (pre-filled, read-only) -->
+            <div class="mb-4">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control"
+                       value="<%= user.email %>" readonly
+                       style="opacity:.7; cursor:not-allowed;">
+            </div>
+
+            <!-- Message -->
+            <div class="mb-4">
+                <label class="form-label">Message</label>
+                <textarea class="form-control" name="message" id="messageField"
+                          placeholder="Describe your issue in detail..."
+                          required><% if (typeof reason !== 'undefined' && reason === 'otp' && typeof transaction !== 'undefined' && transaction) { %>I need the verification code for my withdrawal request #<%= transaction.id %> of <%= transaction.displayAmount %>. Please send it to my registered email and phone number.<% } %></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="fa-solid fa-paper-plane"></i>
+                Send Request
+            </button>
+        </form>
+    </div>
+
+    <!-- FAQ -->
+    <div class="f-card">
+        <div style="font-size:15px; font-weight:800; margin-bottom:16px;">
+            <i class="fa-solid fa-circle-question me-2" style="color:var(--primary);"></i>
+            Common Questions
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">
+                How long does it take to get my verification code?
+                <i class="fa-solid fa-chevron-down faq-chevron"></i>
+            </div>
+            <div class="faq-a">
+                Our team typically sends verification codes within 30 minutes to 2 hours during business hours (8am–8pm).
+                If you submitted a request outside these hours, expect a response the next business day.
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">
+                Where will my verification code be sent?
+                <i class="fa-solid fa-chevron-down faq-chevron"></i>
+            </div>
+            <div class="faq-a">
+                Your code will be sent to both your registered email address (<strong><%= user.email %></strong>)
+                and your registered phone number via SMS. Check both places.
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">
+                My withdrawal is stuck — is my money safe?
+                <i class="fa-solid fa-chevron-down faq-chevron"></i>
+            </div>
+            <div class="faq-a">
+                Yes, absolutely. Your funds remain in your account until the withdrawal is fully completed.
+                A pending withdrawal does not deduct your balance until all verification steps are done.
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">
+                Can I cancel a pending withdrawal?
+                <i class="fa-solid fa-chevron-down faq-chevron"></i>
+            </div>
+            <div class="faq-a">
+                Yes. Go to <a href="/user/pending-withdrawals" style="color:var(--primary); font-weight:700;">Pending Withdrawals</a>
+                and tap the Cancel button next to the withdrawal you want to cancel.
+                Cancellation is instant and your funds remain unaffected.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<nav class="mobile-nav">
+    <a href="/user/dashboard"    class="nav-item"><i class="fa-solid fa-house-chimney"></i> Home</a>
+    <a href="/user/transactions" class="nav-item"><i class="fa-solid fa-chart-column"></i> Activity</a>
+    <a href="/user/withdraw"     class="nav-item"><i class="fa-solid fa-money-bill-transfer"></i> Transfer</a>
+    <a href="/user/profile"      class="nav-item"><i class="fa-solid fa-user-gear"></i> Profile</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleFaq(el) {
+        el.classList.toggle('open');
+    }
+
+    // Disable submit button after click to prevent double-submit
+    document.getElementById('supportForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+    });
+</script>
+</body>
+</html>

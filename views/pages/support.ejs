@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Help Center | VaultBank</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230F6E56%22></rect><path d=%22M30 40 L50 60 L70 40%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/index.css"/>
+
+    <style>
+        .page-banner {
+            padding: 140px 6% 80px;
+            text-align: center;
+            background: radial-gradient(circle at top, #F2FAF8 0%, var(--bg) 50%);
+        }
+        .page-banner h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+        .page-banner p {
+            color: var(--text-light);
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto 60px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 16px 24px 16px 50px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--card-bg, white);
+            color: var(--text-dark);
+            font-size: 16px;
+            font-family: inherit;
+        }
+        .search-box i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 18px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .category-card {
+            padding: 32px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--card-bg, white);
+            transition: all 0.3s;
+        }
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow);
+            border-color: var(--accent);
+        }
+        .category-card i {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+        .category-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+        .category-card ul {
+            list-style: none;
+        }
+        .category-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-light);
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .category-card li:hover {
+            color: var(--primary);
+        }
+        .category-card li:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 60px;
+        }
+        .section-header h2 {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        [data-theme="dark"] .page-banner {
+            background: radial-gradient(circle at top, #0f2e24 0%, var(--bg) 60%);
+        }
+
+        @media (max-width: 768px) {
+            .page-banner { padding: 120px 20px 60px; }
+        }
+
+        
+        .footer-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px; max-width: 1200px; margin: 0 auto 40px;
+        }
+        .footer-col h4 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-dark); }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 12px; }
+        .footer-col a { color: var(--text-light); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .footer-col a:hover { color: var(--primary); }
+        .footer-bottom {
+            border-top: 1px solid var(--border); padding-top: 30px;
+            text-align: center; color: var(--text-muted); font-size: 14px;
+            max-width: 1200px; margin: 0 auto;
+        }
+    
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <%- include('../partials/nav') %>
+
+    <section class="page-banner">
+        <h1 data-aos="fade-up" data-aos-duration="1000">Help <span style="color: var(--accent);">Center</span></h1>
+        <p data-aos="fade-up" data-aos-delay="200">Find answers to common questions and learn how to use VaultBank.</p>
+    </section>
+
+    <section>
+        <div class="search-box" data-aos="fade-up">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search for help articles...">
+        </div>
+
+        <div class="section-header" data-aos="fade-up">
+            <h2>Browse by Category</h2>
+            <p>Select a topic to find relevant articles.</p>
+        </div>
+
+        <div class="category-grid">
+            <div class="category-card" data-aos="fade-up" data-aos-delay="100">
+                <i class="fas fa-user-plus"></i>
+                <h3>Getting Started</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> How to create an account</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> KYC verification guide</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Setting up security</li>
+                </ul>
+            </div>
+            <div class="category-card" data-aos="fade-up" data-aos-delay="150">
+                <i class="fas fa-credit-card"></i>
+                <h3>Cards & Payments</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Ordering your debit card</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Managing card settings</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Dispute a transaction</li>
+                </ul>
+            </div>
+            <div class="category-card" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-chart-line"></i>
+                <h3>Savings & Goals</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Creating a savings vault</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Setting up round-ups</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Understanding APY</li>
+                </ul>
+            </div>
+            <div class="category-card" data-aos="fade-up" data-aos-delay="250">
+                <i class="fas fa-globe"></i>
+                <h3>Transfers</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Sending money internationally</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Transfer fees explained</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Tracking your transfer</li>
+                </ul>
+            </div>
+            <div class="category-card" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-shield-halved"></i>
+                <h3>Security</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Reset your password</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Enable biometric login</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Report suspicious activity</li>
+                </ul>
+            </div>
+            <div class="category-card" data-aos="fade-up" data-aos-delay="350">
+                <i class="fas fa-sliders"></i>
+                <h3>Account Settings</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Update personal info</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Change language</li>
+                    <li><i class="fas fa-chevron-right" style="font-size: 10px; margin-right: 8px;"></i> Close your account</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--surface);">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Still need help?</h2>
+            <p>Can't find what you're looking for? Reach out to our team.</p>
+        </div>
+        <div style="text-align: center;" data-aos="fade-up" data-aos-delay="200">
+            <a href="/contact" class="btn-nav" style="padding: 16px 32px; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-envelope"></i> Contact Support
+            </a>
+        </div>
+    </section>
+
+    <%- include('../partials/footer') %>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true, offset: 100, easing: 'ease-out-cubic' });
+    </script>
+</body>
+</html>

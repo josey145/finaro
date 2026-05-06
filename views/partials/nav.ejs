@@ -1,0 +1,755 @@
+<%
+  const _navTheme = typeof theme !== 'undefined' ? theme
+                  : typeof _theme !== 'undefined' ? _theme
+                  : 'light';
+  const _navLang  = typeof lang !== 'undefined' ? lang
+                  : typeof _lang !== 'undefined' ? _lang
+                  : 'en';
+  const _navPage  = typeof page !== 'undefined' ? page : '';
+
+  const _navItems = (typeof navItems !== 'undefined' && navItems) ? navItems : [
+      { id: 'products',  label: 'Products',  href: '/'          },
+      { id: 'solutions', label: 'Solutions', href: '/solutions'  },
+      { id: 'about',     label: 'About Us',  href: '/about'      },
+      { id: 'pricing',   label: 'Pricing',   href: '/pricing'    },
+      { id: 'policy',    label: 'Policy',    href: '/policy'     },
+  ];
+
+  const languages = [
+      { code: 'en',    label: 'EN', flag: '🇺🇸', name: 'English'   },
+      { code: 'fr',    label: 'FR', flag: '🇫🇷', name: 'Français'  },
+      { code: 'de',    label: 'DE', flag: '🇩🇪', name: 'Deutsch'   },
+      { code: 'es',    label: 'ES', flag: '🇪🇸', name: 'Español'   },
+      { code: 'zh-CN', label: 'ZH', flag: '🇨🇳', name: '中文'      },
+      { code: 'ar',    label: 'AR', flag: '🇸🇦', name: 'العربية'   },
+      { code: 'ja',    label: 'JA', flag: '🇯🇵', name: '日本語'    },
+      { code: 'pt',    label: 'PT', flag: '🇧🇷', name: 'Português' },
+  ];
+
+  const currentLang = languages.find(l => l.code === _navLang) || languages[0];
+%>
+
+<!-- FinoraConfig: must be defined before navbar JS runs -->
+<script>
+    window.FinoraConfig = {
+        navLang:    '<%= _navLang %>',
+        navTheme:   '<%= _navTheme %>',
+        isLoggedIn: <%= (typeof user !== 'undefined' && user && user.id) ? 'true' : 'false' %>
+    };
+</script>
+
+<!-- Google Translate hidden element -->
+<div id="google_translate_element" style="display:none;"></div>
+
+<style>
+/* ── Hide Google Translate toolbar ── */
+.goog-te-banner-frame,
+.skiptranslate { display: none !important; }
+body { top: 0 !important; position: static !important; }
+#google_translate_element * { display: none; }
+
+/* ── CSS VARIABLES ── */
+nav {
+    --nav-bg:      var(--bg-card, rgba(255,255,255,0.97));
+    --nav-border:  var(--border, rgba(15,110,86,0.08));
+    --nav-text:    var(--text-muted, #64748B);
+    --toggle-bg:   var(--bg-input, #F4F8F7);
+    --dropdown-bg: var(--bg-card, #ffffff);
+}
+[data-theme="dark"] nav,
+[data-theme="dark"] {
+    --nav-bg:      rgba(15,23,42,0.97);
+    --nav-border:  #334155;
+    --nav-text:    #94a3b8;
+    --toggle-bg:   #1e293b;
+    --dropdown-bg: #1e293b;
+}
+@media (prefers-color-scheme: dark) {
+    [data-theme="auto"] nav,
+    [data-theme="auto"] {
+        --nav-bg:      rgba(15,23,42,0.97);
+        --nav-border:  #334155;
+        --nav-text:    #94a3b8;
+        --toggle-bg:   #1e293b;
+        --dropdown-bg: #1e293b;
+    }
+}
+
+/* ── NAV BASE ── */
+.fnav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 68px;
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--nav-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: background 0.3s;
+}
+
+/* ── LOGO ── */
+.fnav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #0F6E56;
+    font-weight: 800;
+    font-size: 18px;
+    font-family: 'Plus Jakarta Sans', 'Sora', sans-serif;
+    flex-shrink: 0;
+    letter-spacing: -0.3px;
+}
+.fnav-logo-box {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #0F6E56, #1D9E75);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+/* ── DESKTOP NAV LINKS ── */
+.fnav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.fnav-links li a {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nav-text);
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.fnav-links li a:hover,
+.fnav-links li a.active {
+    color: #0F6E56;
+    background: rgba(15,110,86,0.08);
+}
+
+/* ── NAV ACTIONS ── */
+.fnav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* ── THEME TOGGLE ── */
+.fnav-theme-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1.5px solid var(--nav-border);
+    background: var(--toggle-bg);
+    color: var(--nav-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.fnav-theme-btn:hover {
+    border-color: #0F6E56;
+    color: #0F6E56;
+    background: rgba(15,110,86,0.08);
+}
+
+/* ── LANGUAGE DROPDOWN ── */
+.fnav-lang-dd { position: relative; flex-shrink: 0; }
+
+.fnav-lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1.5px solid var(--nav-border);
+    background: var(--toggle-bg);
+    color: var(--nav-text);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    white-space: nowrap;
+}
+.fnav-lang-btn:hover {
+    border-color: #0F6E56;
+    color: #0F6E56;
+    background: rgba(15,110,86,0.08);
+}
+.fnav-lang-btn .fnav-chevron {
+    font-size: 10px;
+    transition: transform 0.2s;
+    margin-left: 2px;
+}
+.fnav-lang-btn.open .fnav-chevron { transform: rotate(180deg); }
+
+.fnav-lang-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--dropdown-bg);
+    border: 1px solid var(--nav-border);
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    min-width: 165px;
+    z-index: 2000;
+}
+.fnav-lang-menu.open { display: block; }
+
+.fnav-lang-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nav-text);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.fnav-lang-opt:hover  { background: rgba(15,110,86,0.08); color: #0F6E56; }
+.fnav-lang-opt.active { background: #0F6E56; color: white; }
+.fnav-lang-opt .opt-flag { font-size: 17px; }
+.fnav-lang-opt .opt-name { flex: 1; }
+.fnav-lang-opt .opt-code { font-size: 11px; opacity: 0.7; }
+
+/* ── OPEN ACCOUNT BUTTON ── */
+.fnav-cta {
+    padding: 0 18px;
+    height: 38px;
+    background: linear-gradient(135deg, #0F6E56, #1D9E75);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+.fnav-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(15,110,86,0.3);
+    color: white;
+}
+
+/* ── HAMBURGER ── */
+.fnav-hamburger {
+    display: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1.5px solid var(--nav-border);
+    background: var(--toggle-bg);
+    color: var(--nav-text);
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.fnav-hamburger:hover {
+    border-color: #0F6E56;
+    color: #0F6E56;
+}
+
+/* ── MOBILE DRAWER OVERLAY ── */
+.fnav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1998;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.fnav-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
+/* ── MOBILE DRAWER ── */
+.fnav-drawer {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 300px;
+    max-width: 85vw;
+    height: 100vh;
+    background: var(--dropdown-bg);
+    border-left: 1px solid var(--nav-border);
+    z-index: 1999;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px;
+    box-shadow: -10px 0 40px rgba(0,0,0,0.12);
+    transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+}
+.fnav-drawer.open { right: 0; }
+
+.fnav-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    flex-shrink: 0;
+}
+.fnav-drawer-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1.5px solid var(--nav-border);
+    background: var(--toggle-bg);
+    color: var(--nav-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.fnav-drawer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+    flex-shrink: 0;
+}
+.fnav-drawer-links li { margin-bottom: 4px; }
+.fnav-drawer-links li a {
+    display: block;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--nav-text);
+    text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.fnav-drawer-links li a:hover,
+.fnav-drawer-links li a.active {
+    color: #0F6E56;
+    background: rgba(15,110,86,0.08);
+}
+
+.fnav-drawer-divider {
+    border: none;
+    border-top: 1px solid var(--nav-border);
+    margin: 12px 0;
+    flex-shrink: 0;
+}
+
+.fnav-drawer-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-bottom: 16px;
+}
+.fnav-drawer-controls .fnav-theme-btn { flex: 0 0 42px; width: 42px; height: 42px; }
+.fnav-drawer-controls .fnav-lang-dd   { flex: 1; }
+.fnav-drawer-controls .fnav-lang-btn  { width: 100%; justify-content: center; }
+.fnav-drawer-controls .fnav-lang-menu {
+    right: auto;
+    left: 0;
+}
+
+.fnav-drawer-cta { flex-shrink: 0; }
+.fnav-drawer-cta .fnav-cta {
+    width: 100%;
+    justify-content: center;
+    height: 44px;
+    font-size: 14px;
+    border-radius: 12px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .fnav { padding: 0 20px; }
+    .fnav-links  { display: none; }
+    .fnav-actions .fnav-theme-btn,
+    .fnav-actions .fnav-lang-dd,
+    .fnav-actions .fnav-cta { display: none; }
+    .fnav-hamburger { display: flex; }
+}
+
+/* ── RTL ── */
+[dir="rtl"] .fnav          { direction: rtl; }
+[dir="rtl"] .fnav-lang-menu { right: auto; left: 0; }
+[dir="rtl"] .fnav-drawer   { right: auto; left: -320px; border-left: none; border-right: 1px solid var(--nav-border); }
+[dir="rtl"] .fnav-drawer.open { left: 0; }
+</style>
+
+<!-- ════════════ NAV HTML ════════════ -->
+<nav class="fnav" role="navigation" aria-label="Main navigation">
+
+    <!-- Logo -->
+    <a href="/" class="fnav-logo">
+        <div class="fnav-logo-box"><i class="fas fa-shield-halved"></i></div>
+        Finaro
+    </a>
+
+    <!-- Desktop Links -->
+    <ul class="fnav-links" id="fnav-desktop-links">
+        <% _navItems.forEach(item => { %>
+        <li>
+            <a href="<%= item.href %>"
+               class="<%= _navPage === item.id ? 'active' : '' %>">
+               <%= item.label %>
+            </a>
+        </li>
+        <% }) %>
+    </ul>
+
+    <!-- Desktop Actions -->
+    <div class="fnav-actions">
+        <button class="fnav-theme-btn" id="fnav-theme-desktop" title="Toggle theme" aria-label="Toggle theme">
+            <i class="fas fa-moon" id="fnav-theme-icon-desktop"></i>
+        </button>
+
+        <div class="fnav-lang-dd" id="fnav-lang-dd-desktop">
+            <button class="fnav-lang-btn" id="fnav-lang-btn-desktop" aria-haspopup="true" aria-expanded="false">
+                <span id="fnav-lang-flag-desktop"><%= currentLang.flag %></span>
+                <span id="fnav-lang-label-desktop"><%= currentLang.label %></span>
+                <i class="fas fa-chevron-down fnav-chevron"></i>
+            </button>
+            <div class="fnav-lang-menu" id="fnav-lang-menu-desktop" role="menu">
+                <% languages.forEach(l => { %>
+                <button class="fnav-lang-opt <%= l.code === _navLang ? 'active' : '' %>"
+                        data-lang="<%= l.code %>"
+                        role="menuitem">
+                    <span class="opt-flag"><%= l.flag %></span>
+                    <span class="opt-name"><%= l.name %></span>
+                    <span class="opt-code"><%= l.label %></span>
+                </button>
+                <% }) %>
+            </div>
+        </div>
+
+        <a href="/auth/register" class="fnav-cta">Open Account</a>
+
+        <button class="fnav-hamburger" id="fnav-open" aria-label="Open menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+</nav>
+
+<!-- Overlay -->
+<div class="fnav-overlay" id="fnav-overlay"></div>
+
+<!-- Mobile Drawer -->
+<div class="fnav-drawer" id="fnav-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
+
+    <div class="fnav-drawer-header">
+        <a href="/" class="fnav-logo" style="font-size:16px;">
+            <div class="fnav-logo-box" style="width:30px;height:30px;font-size:14px;">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            VaultBank
+        </a>
+        <button class="fnav-drawer-close" id="fnav-close" aria-label="Close menu">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <ul class="fnav-drawer-links">
+        <% _navItems.forEach(item => { %>
+        <li>
+            <a href="<%= item.href %>"
+               class="<%= _navPage === item.id ? 'active' : '' %>">
+               <%= item.label %>
+            </a>
+        </li>
+        <% }) %>
+    </ul>
+
+    <hr class="fnav-drawer-divider">
+
+    <div class="fnav-drawer-controls">
+        <button class="fnav-theme-btn" id="fnav-theme-mobile" title="Toggle theme" aria-label="Toggle theme">
+            <i class="fas fa-moon" id="fnav-theme-icon-mobile"></i>
+        </button>
+        <div class="fnav-lang-dd" id="fnav-lang-dd-mobile">
+            <button class="fnav-lang-btn" id="fnav-lang-btn-mobile" aria-haspopup="true">
+                <span id="fnav-lang-flag-mobile"><%= currentLang.flag %></span>
+                <span id="fnav-lang-label-mobile"><%= currentLang.label %></span>
+                <i class="fas fa-chevron-down fnav-chevron"></i>
+            </button>
+            <div class="fnav-lang-menu" id="fnav-lang-menu-mobile" role="menu">
+                <% languages.forEach(l => { %>
+                <button class="fnav-lang-opt <%= l.code === _navLang ? 'active' : '' %>"
+                        data-lang="<%= l.code %>"
+                        role="menuitem">
+                    <span class="opt-flag"><%= l.flag %></span>
+                    <span class="opt-name"><%= l.name %></span>
+                    <span class="opt-code"><%= l.label %></span>
+                </button>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+
+    <hr class="fnav-drawer-divider">
+
+    <div class="fnav-drawer-cta">
+        <a href="/auth/register" class="fnav-cta">
+            <i class="fas fa-user-plus" style="margin-right:8px;"></i> Open Account
+        </a>
+    </div>
+</div>
+
+<!-- Google Translate -->
+<script>
+function googleTranslateElementInit() {
+    new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'google_translate_element');
+}
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ── Safety guard: ensure FinoraConfig always exists ── */
+    if (!window.FinoraConfig) {
+        window.FinoraConfig = { navLang: 'en', navTheme: 'light', isLoggedIn: false };
+    }
+
+    var LANG_KEY  = 'finora_lang';
+    var THEME_KEY = 'finora_theme';
+
+    /* ── GOOGLE TRANSLATE ── */
+    function googleTranslateTo(code) {
+        if (code === 'en') {
+            ['', window.location.hostname].forEach(function (domain) {
+                var d = new Date(); d.setTime(d.getTime() - 86400000);
+                var base = 'googtrans=; expires=' + d.toUTCString() + '; path=/';
+                document.cookie = domain ? base + '; domain=' + domain : base;
+            });
+            location.reload();
+            return;
+        }
+        var val = '/en/' + code;
+        document.cookie = 'googtrans=' + val + '; path=/';
+        document.cookie = 'googtrans=' + val + '; domain=' + window.location.hostname + '; path=/';
+        (function trySelect() {
+            var sel = document.querySelector('.goog-te-combo');
+            if (sel) { sel.value = code; sel.dispatchEvent(new Event('change')); }
+            else      { setTimeout(trySelect, 350); }
+        })();
+    }
+
+    /* ── LANGUAGE META ── */
+    var langMeta = {
+        'en':    { flag: '🇺🇸', label: 'EN' },
+        'fr':    { flag: '🇫🇷', label: 'FR' },
+        'de':    { flag: '🇩🇪', label: 'DE' },
+        'es':    { flag: '🇪🇸', label: 'ES' },
+        'zh-CN': { flag: '🇨🇳', label: 'ZH' },
+        'ar':    { flag: '🇸🇦', label: 'AR' },
+        'ja':    { flag: '🇯🇵', label: 'JA' },
+        'pt':    { flag: '🇧🇷', label: 'PT' },
+    };
+
+    /* ── SET LANGUAGE ── */
+    window.fnavSetLang = function (code, flag, label) {
+        localStorage.setItem(LANG_KEY, code);
+
+        ['desktop', 'mobile'].forEach(function (side) {
+            var f = document.getElementById('fnav-lang-flag-'  + side);
+            var l = document.getElementById('fnav-lang-label-' + side);
+            if (f) f.textContent = flag;
+            if (l) l.textContent = label;
+        });
+
+        document.querySelectorAll('.fnav-lang-opt').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-lang') === code);
+        });
+
+        document.documentElement.setAttribute('dir', code === 'ar' ? 'rtl' : 'ltr');
+        fnavCloseLangMenus();
+        googleTranslateTo(code);
+
+        if (window.FinoraConfig.isLoggedIn) {
+            fetch('/user/settings/language', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lang: code })
+            }).catch(function () {});
+        }
+    };
+
+    /* ── ATTACH CLICK TO ALL LANG OPTIONS ── */
+    document.querySelectorAll('.fnav-lang-opt').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var code = btn.getAttribute('data-lang');
+            var meta = langMeta[code] || { flag: '🌐', label: code.toUpperCase() };
+            window.fnavSetLang(code, meta.flag, meta.label);
+        });
+    });
+
+    /* ── GET SAVED LANG ── */
+    function getSavedLang() {
+        try {
+            var cookie = document.cookie.split(';').find(function (c) {
+                return c.trim().startsWith('googtrans=');
+            });
+            if (cookie) {
+                var p = cookie.trim().split('/');
+                if (p.length === 3 && p[2]) return p[2];
+            }
+        } catch (e) {}
+        return localStorage.getItem(LANG_KEY) || (window.FinoraConfig && window.FinoraConfig.navLang) || 'en';
+    }
+
+    /* ── INIT LANGUAGE UI ── */
+    var initLang = getSavedLang();
+    if (initLang && initLang !== 'en') {
+        var m = langMeta[initLang];
+        if (m) {
+            ['desktop', 'mobile'].forEach(function (side) {
+                var f = document.getElementById('fnav-lang-flag-'  + side);
+                var l = document.getElementById('fnav-lang-label-' + side);
+                if (f) f.textContent = m.flag;
+                if (l) l.textContent = m.label;
+            });
+            document.querySelectorAll('.fnav-lang-opt').forEach(function (b) {
+                b.classList.toggle('active', b.getAttribute('data-lang') === initLang);
+            });
+            if (initLang === 'ar') document.documentElement.setAttribute('dir', 'rtl');
+        }
+    }
+
+    /* ── THEME ── */
+    var savedTheme  = localStorage.getItem(THEME_KEY) || (window.FinoraConfig && window.FinoraConfig.navTheme) || 'light';
+    var activeTheme = document.documentElement.getAttribute('data-theme') || savedTheme;
+
+    function applyTheme(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem(THEME_KEY, t);
+        var icon = t === 'dark' ? 'fa-sun' : 'fa-moon';
+        ['desktop', 'mobile'].forEach(function (side) {
+            var el = document.getElementById('fnav-theme-icon-' + side);
+            if (el) el.className = 'fas ' + icon;
+        });
+    }
+
+    applyTheme(activeTheme);
+
+    function toggleTheme() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        if (window.FinoraConfig && window.FinoraConfig.isLoggedIn) {
+            fetch('/user/settings/theme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ theme: next })
+            }).catch(function () {});
+        }
+    }
+
+    var td = document.getElementById('fnav-theme-desktop');
+    var tm = document.getElementById('fnav-theme-mobile');
+    if (td) td.addEventListener('click', toggleTheme);
+    if (tm) tm.addEventListener('click', toggleTheme);
+
+    /* ── LANGUAGE DROPDOWNS ── */
+    function fnavCloseLangMenus() {
+        document.querySelectorAll('.fnav-lang-menu').forEach(function (m) { m.classList.remove('open'); });
+        document.querySelectorAll('.fnav-lang-btn').forEach(function (b)  { b.classList.remove('open'); b.setAttribute('aria-expanded', 'false'); });
+    }
+    window.fnavCloseLangMenus = fnavCloseLangMenus;
+
+    function setupLangDropdown(btnId, menuId) {
+        var btn  = document.getElementById(btnId);
+        var menu = document.getElementById(menuId);
+        if (!btn || !menu) return;
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = menu.classList.contains('open');
+            fnavCloseLangMenus();
+            if (!isOpen) {
+                menu.classList.add('open');
+                btn.classList.add('open');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+        });
+    }
+
+    setupLangDropdown('fnav-lang-btn-desktop', 'fnav-lang-menu-desktop');
+    setupLangDropdown('fnav-lang-btn-mobile',  'fnav-lang-menu-mobile');
+
+    document.addEventListener('click', fnavCloseLangMenus);
+
+    /* ── MOBILE DRAWER ── */
+    var drawer   = document.getElementById('fnav-drawer');
+    var overlay  = document.getElementById('fnav-overlay');
+    var openBtn  = document.getElementById('fnav-open');
+    var closeBtn = document.getElementById('fnav-close');
+
+    function openDrawer() {
+        if (drawer)  drawer.classList.add('open');
+        if (overlay) overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+        if (drawer)  drawer.classList.remove('open');
+        if (overlay) overlay.classList.remove('show');
+        document.body.style.overflow = '';
+        fnavCloseLangMenus();
+    }
+
+    if (openBtn)  openBtn.addEventListener('click', openDrawer);
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (overlay)  overlay.addEventListener('click', closeDrawer);
+
+    if (drawer) {
+        drawer.querySelectorAll('a').forEach(function (a) {
+            a.addEventListener('click', closeDrawer);
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDrawer();
+    });
+
+})();
+</script>

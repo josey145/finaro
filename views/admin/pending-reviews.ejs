@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <%- include('../partials/admin-sidebar') %>
+        
+        <main class="admin-main">
+            <h1>Pending Withdrawal Reviews</h1>
+            
+            <% if (success_msg.length > 0) { %>
+                <div class="alert alert-success"><%= success_msg %></div>
+            <% } %>
+            
+            <div class="reviews-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>User</th>
+                            <th>Amount</th>
+                            <th>Step</th>
+                            <th>Submitted</th>
+                            <th>Documents</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% pending.forEach(item => { 
+                            const submitted = JSON.parse(item.submitted_data || '{}');
+                        %>
+                        <tr>
+                            <td>#<%= item.transaction_id %></td>
+                            <td>
+                                <%= item.first_name %> <%= item.last_name %><br>
+                                <small><%= item.email %></small>
+                            </td>
+                            <td>$<%= item.amount %></td>
+                            <td>
+                                <span class="badge badge-warning"><%= item.step_name %></span>
+                            </td>
+                            <td><%= new Date(item.created_at).toLocaleString() %></td>
+                            <td>
+                                <% if (submitted.document_url) { %>
+                                    <a href="<%= submitted.document_url %>" target="_blank" class="btn btn-sm">View Doc</a>
+                                <% } else { %>
+                                    <span class="text-muted">No docs</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <form action="/admin/pending-reviews/<%= item.id %>" method="POST" class="review-form">
+                                    <textarea name="admin_notes" placeholder="Rejection reason (if rejecting)" rows="2"></textarea>
+                                    <div class="btn-group">
+                                        <button type="submit" name="action" value="approve" class="btn btn-success">Approve</button>
+                                        <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

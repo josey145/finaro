@@ -1,0 +1,457 @@
+<%
+  const u        = (typeof user !== 'undefined' && user) ? user : {};
+  const lang     = u.preferred_language || 'en';
+  const currency = u.preferred_currency || 'USD';
+  const theme    = u.preferred_theme    || 'light';
+%>
+<!DOCTYPE html>
+<html lang="<%= lang %>" data-theme="<%= theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Finora Bank</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0F6E56; --accent: #1D9E75;
+            --bg-body: #F4F8F7; --bg-card: #FFFFFF; --bg-input: #F4F8F7;
+            --text-main: #0D1B16; --text-muted: #64748B; --border: #E8EFED;
+            --danger: #ef4444; --success: #22c55e; --warning: #f59e0b;
+            --nav-bg: rgba(255,255,255,0.95);
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #0f172a;
+            --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --nav-bg: rgba(15,23,42,0.97);
+        }
+        @media(prefers-color-scheme:dark) {
+            [data-theme="auto"] {
+                --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #0f172a;
+                --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+                --nav-bg: rgba(15,23,42,0.97);
+            }
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg-body); color:var(--text-main); padding-bottom:90px; transition:background .3s,color .3s; }
+        .main-content { padding:20px; max-width:900px; margin:0 auto; }
+
+        .flash-message { padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; display:flex; align-items:center; gap:10px; }
+        .flash-danger  { background:#fef2f2; color:var(--danger);  border:1px solid #fecaca; }
+        .flash-success { background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; }
+
+        .page-banner { background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%); border-radius:24px; padding:28px 32px; color:white; margin-bottom:24px; box-shadow:0 15px 35px rgba(15,110,86,.3); display:flex; align-items:center; justify-content:space-between; }
+        .page-banner h2 { font-size:1.5rem; font-weight:800; margin:0; }
+        .page-banner p  { font-size:13px; opacity:.85; margin:4px 0 0; }
+        .banner-icon { width:56px; height:56px; background:rgba(255,255,255,.2); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:24px; }
+
+        .settings-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+        .tab-btn { display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:14px; border:1.5px solid var(--border); background:var(--bg-card); font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:700; color:var(--text-muted); cursor:pointer; transition:all .2s; }
+        .tab-btn:hover  { border-color:var(--accent); color:var(--accent); }
+        .tab-btn.active { background:var(--primary); border-color:var(--primary); color:white; }
+
+        .f-card { background:var(--bg-card); border-radius:24px; padding:28px; border:1px solid var(--border); box-shadow:0 10px 30px -5px rgba(15,110,86,.05); margin-bottom:20px; display:none; }
+        .f-card.active { display:block; }
+
+        .section-title { font-size:16px; font-weight:800; margin-bottom:24px; display:flex; align-items:center; gap:10px; }
+        .icon-badge { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+        .ib-green  { background:#f0fdf8; color:var(--primary); }
+        .ib-blue   { background:#eff6ff; color:#3b82f6; }
+        .ib-purple { background:#fdf4ff; color:#a855f7; }
+        .ib-orange { background:#fff7ed; color:#f97316; }
+        .ib-slate  { background:#f1f5f9; color:#64748b; }
+
+        .f-label { font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; display:block; }
+        .f-input, .f-select { width:100%; padding:13px 16px; border:1.5px solid var(--border); border-radius:14px; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; color:var(--text-main); background:var(--bg-input); outline:none; transition:all .2s; }
+        .f-input:focus, .f-select:focus { border-color:var(--primary); background:var(--bg-card); box-shadow:0 0 0 3px rgba(15,110,86,.1); }
+        .f-select { appearance:none; cursor:pointer; }
+        .select-wrap { position:relative; }
+        .select-wrap::after { content:'\f107'; font-family:'Font Awesome 6 Free'; font-weight:900; position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; font-size:12px; }
+        .f-input[type="password"] { letter-spacing:2px; }
+
+        .theme-options { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .theme-card { border:2px solid var(--border); border-radius:16px; padding:16px; cursor:pointer; transition:all .2s; text-align:center; position:relative; background:var(--bg-card); }
+        .theme-card:hover { border-color:var(--accent); }
+        .theme-card.selected { border-color:var(--primary); background:#f0fdf8; }
+        .theme-card input[type="radio"] { position:absolute; opacity:0; }
+        .theme-preview { height:50px; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+        .preview-light { background:#F4F8F7; border:1px solid #E8EFED; }
+        .preview-dark  { background:#1a1a2e; }
+        .preview-auto  { background:linear-gradient(135deg,#F4F8F7 50%,#1a1a2e 50%); border:1px solid #E8EFED; }
+        .theme-name { font-size:13px; font-weight:700; color:var(--text-main); }
+        .theme-check { position:absolute; top:10px; right:10px; width:20px; height:20px; border-radius:50%; background:var(--primary); color:white; display:none; align-items:center; justify-content:center; font-size:10px; }
+        .theme-card.selected .theme-check { display:flex; }
+
+        .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:1px solid var(--border); }
+        .toggle-row:last-child { border-bottom:none; padding-bottom:0; }
+        .toggle-info { display:flex; align-items:center; gap:12px; }
+        .toggle-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+        .toggle-label { font-weight:700; font-size:14px; }
+        .toggle-sub   { font-size:12px; color:var(--text-muted); margin-top:2px; }
+
+        .switch { position:relative; display:inline-block; width:50px; height:28px; }
+        .switch input { opacity:0; width:0; height:0; }
+        .slider { position:absolute; cursor:pointer; inset:0; background:#cbd5e1; border-radius:28px; transition:.3s; }
+        .slider::before { content:''; position:absolute; width:20px; height:20px; left:4px; bottom:4px; background:white; border-radius:50%; transition:.3s; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+        input:checked + .slider { background:var(--primary); }
+        input:checked + .slider::before { transform:translateX(22px); }
+
+        .btn-save { background:linear-gradient(135deg,var(--primary),var(--accent)); color:white; border:none; border-radius:14px; padding:14px 28px; font-weight:700; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
+        .btn-save:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(15,110,86,.3); }
+
+        .strength-bar  { height:4px; border-radius:4px; background:#e2e8f0; margin-top:8px; overflow:hidden; }
+        .strength-fill { height:100%; border-radius:4px; transition:width .3s,background .3s; width:0%; }
+
+        .pin-dots { display:flex; gap:12px; justify-content:center; margin:16px 0; }
+        .pin-dot  { width:14px; height:14px; border-radius:50%; background:#e2e8f0; transition:all .2s; }
+        .pin-dot.filled { background:var(--primary); transform:scale(1.2); }
+
+        /* ── USER MOBILE NAV ── */
+        .mobile-nav { position:fixed; bottom:0; left:0; width:100%; background:var(--nav-bg); backdrop-filter:blur(10px); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:10px 0 25px; z-index:1000; }
+        .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
+        .nav-item.active { color:var(--primary); }
+        .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+
+        @media(min-width:992px) { .main-content { padding:40px; } .mobile-nav { display:none; } body { padding-bottom:0; } }
+    </style>
+
+    <script>
+        /* Apply theme instantly — no flash */
+        document.documentElement.setAttribute('data-theme', '<%= theme %>');
+    </script>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success"><i class="fas fa-circle-check"></i> <%= success_msg %></div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger"><i class="fas fa-circle-exclamation"></i> <%= error_msg %></div>
+    <% } %>
+
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="small text-muted mb-0">Finora Bank</p>
+            <h1 class="h4 fw-bold mb-0">Settings</h1>
+        </div>
+        <a href="/user/dashboard" class="bg-white p-2 rounded-3 border text-decoration-none">
+            <i class="fa-solid fa-arrow-left text-muted"></i>
+        </a>
+    </header>
+
+    <!-- Banner -->
+    <div class="page-banner">
+        <div>
+            <h2>Account Settings</h2>
+            <p>Manage your preferences, security &amp; notifications</p>
+        </div>
+        <div class="banner-icon"><i class="fa-solid fa-sliders"></i></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="settings-tabs">
+        <button class="tab-btn active" onclick="showTab('preferences', this)"><i class="fa-solid fa-globe"></i> Preferences</button>
+        <button class="tab-btn" onclick="showTab('security', this)"><i class="fa-solid fa-shield-halved"></i> Security</button>
+        <button class="tab-btn" onclick="showTab('notifications', this)"><i class="fa-solid fa-bell"></i> Notifications</button>
+        <button class="tab-btn" onclick="showTab('theme', this)"><i class="fa-solid fa-palette"></i> Theme</button>
+    </div>
+
+    <!-- TAB 1: PREFERENCES -->
+    <div class="f-card active" id="tab-preferences">
+        <div class="section-title">
+            <div class="icon-badge ib-green"><i class="fa-solid fa-globe"></i></div>
+            Language &amp; Currency
+        </div>
+        <form action="/user/settings/preferences" method="POST">
+            <input type="hidden" name="preferred_theme"  value="<%= theme %>">
+            <input type="hidden" name="notif_email" value="<%= u.notif_email ? '1' : '' %>">
+            <input type="hidden" name="notif_sms"   value="<%= u.notif_sms   ? '1' : '' %>">
+            <input type="hidden" name="notif_push"  value="<%= u.notif_push  ? '1' : '' %>">
+
+            <div class="row g-4">
+                <div class="col-12 col-md-6">
+                    <label class="f-label"><i class="fa-solid fa-language me-1"></i> Display Language</label>
+                    <div class="select-wrap">
+                        <select name="preferred_language" class="f-select">
+                            <option value="en" <%= lang==='en'?'selected':'' %>>🇬🇧 English</option>
+                            <option value="es" <%= lang==='es'?'selected':'' %>>🇪🇸 Español</option>
+                            <option value="fr" <%= lang==='fr'?'selected':'' %>>🇫🇷 Français</option>
+                            <option value="de" <%= lang==='de'?'selected':'' %>>🇩🇪 Deutsch</option>
+                            <option value="pt" <%= lang==='pt'?'selected':'' %>>🇵🇹 Português</option>
+                            <option value="ar" <%= lang==='ar'?'selected':'' %>>🇸🇦 العربية</option>
+                            <option value="zh" <%= lang==='zh'?'selected':'' %>>🇨🇳 中文</option>
+                            <option value="hi" <%= lang==='hi'?'selected':'' %>>🇮🇳 हिन्दी</option>
+                            <option value="ja" <%= lang==='ja'?'selected':'' %>>🇯🇵 日本語</option>
+                            <option value="ko" <%= lang==='ko'?'selected':'' %>>🇰🇷 한국어</option>
+                            <option value="ru" <%= lang==='ru'?'selected':'' %>>🇷🇺 Русский</option>
+                            <option value="tr" <%= lang==='tr'?'selected':'' %>>🇹🇷 Türkçe</option>
+                            <option value="it" <%= lang==='it'?'selected':'' %>>🇮🇹 Italiano</option>
+                            <option value="nl" <%= lang==='nl'?'selected':'' %>>🇳🇱 Nederlands</option>
+                            <option value="pl" <%= lang==='pl'?'selected':'' %>>🇵🇱 Polski</option>
+                            <option value="sw" <%= lang==='sw'?'selected':'' %>>🇰🇪 Kiswahili</option>
+                            <option value="yo" <%= lang==='yo'?'selected':'' %>>🇳🇬 Yorùbá</option>
+                            <option value="ha" <%= lang==='ha'?'selected':'' %>>🇳🇬 Hausa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="f-label"><i class="fa-solid fa-coins me-1"></i> Display Currency</label>
+                    <div class="select-wrap">
+                        <select name="preferred_currency" class="f-select">
+                            <optgroup label="Major">
+                                <option value="USD" <%= currency==='USD'?'selected':'' %>>🇺🇸 USD — US Dollar</option>
+                                <option value="EUR" <%= currency==='EUR'?'selected':'' %>>🇪🇺 EUR — Euro</option>
+                                <option value="GBP" <%= currency==='GBP'?'selected':'' %>>🇬🇧 GBP — British Pound</option>
+                                <option value="JPY" <%= currency==='JPY'?'selected':'' %>>🇯🇵 JPY — Japanese Yen</option>
+                                <option value="CHF" <%= currency==='CHF'?'selected':'' %>>🇨🇭 CHF — Swiss Franc</option>
+                                <option value="CAD" <%= currency==='CAD'?'selected':'' %>>🇨🇦 CAD — Canadian Dollar</option>
+                                <option value="AUD" <%= currency==='AUD'?'selected':'' %>>🇦🇺 AUD — Australian Dollar</option>
+                                <option value="CNY" <%= currency==='CNY'?'selected':'' %>>🇨🇳 CNY — Chinese Yuan</option>
+                            </optgroup>
+                            <optgroup label="Africa">
+                                <option value="NGN" <%= currency==='NGN'?'selected':'' %>>🇳🇬 NGN — Nigerian Naira</option>
+                                <option value="GHS" <%= currency==='GHS'?'selected':'' %>>🇬🇭 GHS — Ghanaian Cedi</option>
+                                <option value="KES" <%= currency==='KES'?'selected':'' %>>🇰🇪 KES — Kenyan Shilling</option>
+                                <option value="ZAR" <%= currency==='ZAR'?'selected':'' %>>🇿🇦 ZAR — South African Rand</option>
+                                <option value="EGP" <%= currency==='EGP'?'selected':'' %>>🇪🇬 EGP — Egyptian Pound</option>
+                                <option value="ETB" <%= currency==='ETB'?'selected':'' %>>🇪🇹 ETB — Ethiopian Birr</option>
+                                <option value="NGN" <%= currency==='NGN'?'selected':'' %>>🇳🇬 NGN — Naira</option>
+                            </optgroup>
+                            <optgroup label="Asia">
+                                <option value="INR" <%= currency==='INR'?'selected':'' %>>🇮🇳 INR — Indian Rupee</option>
+                                <option value="SGD" <%= currency==='SGD'?'selected':'' %>>🇸🇬 SGD — Singapore Dollar</option>
+                                <option value="HKD" <%= currency==='HKD'?'selected':'' %>>🇭🇰 HKD — Hong Kong Dollar</option>
+                                <option value="KRW" <%= currency==='KRW'?'selected':'' %>>🇰🇷 KRW — South Korean Won</option>
+                                <option value="MYR" <%= currency==='MYR'?'selected':'' %>>🇲🇾 MYR — Malaysian Ringgit</option>
+                                <option value="AED" <%= currency==='AED'?'selected':'' %>>🇦🇪 AED — UAE Dirham</option>
+                                <option value="SAR" <%= currency==='SAR'?'selected':'' %>>🇸🇦 SAR — Saudi Riyal</option>
+                            </optgroup>
+                            <optgroup label="Americas">
+                                <option value="BRL" <%= currency==='BRL'?'selected':'' %>>🇧🇷 BRL — Brazilian Real</option>
+                                <option value="MXN" <%= currency==='MXN'?'selected':'' %>>🇲🇽 MXN — Mexican Peso</option>
+                                <option value="ARS" <%= currency==='ARS'?'selected':'' %>>🇦🇷 ARS — Argentine Peso</option>
+                            </optgroup>
+                            <optgroup label="Europe">
+                                <option value="SEK" <%= currency==='SEK'?'selected':'' %>>🇸🇪 SEK — Swedish Krona</option>
+                                <option value="NOK" <%= currency==='NOK'?'selected':'' %>>🇳🇴 NOK — Norwegian Krone</option>
+                                <option value="PLN" <%= currency==='PLN'?'selected':'' %>>🇵🇱 PLN — Polish Zloty</option>
+                                <option value="TRY" <%= currency==='TRY'?'selected':'' %>>🇹🇷 TRY — Turkish Lira</option>
+                                <option value="RUB" <%= currency==='RUB'?'selected':'' %>>🇷🇺 RUB — Russian Ruble</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Preferences</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- TAB 2: SECURITY -->
+    <div class="f-card" id="tab-security">
+        <div class="section-title"><div class="icon-badge ib-blue"><i class="fa-solid fa-key"></i></div>Change Password</div>
+        <form action="/user/settings/change-password" method="POST">
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <label class="f-label">Current Password</label>
+                    <input type="password" name="current_password" class="f-input" placeholder="••••••••" required>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="f-label">New Password</label>
+                    <input type="password" name="new_password" class="f-input" id="newPassword" placeholder="••••••••" oninput="checkStrength(this.value)" required minlength="8">
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                    <p class="small mt-1" id="strengthLabel"></p>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="f-label">Confirm New Password</label>
+                    <input type="password" name="confirm_password" class="f-input" placeholder="••••••••" oninput="checkMatch(this.value)" required minlength="8">
+                    <p class="small mt-1" id="matchLabel"></p>
+                </div>
+            </div>
+            <button type="submit" class="btn-save"><i class="fa-solid fa-lock"></i> Update Password</button>
+        </form>
+
+        <hr style="border-color:var(--border);margin:28px 0;">
+
+        <div class="section-title"><div class="icon-badge ib-purple"><i class="fa-solid fa-hashtag"></i></div>Change PIN</div>
+        <form action="/user/settings/change-pin" method="POST">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="f-label">Current PIN</label>
+                    <input type="password" name="current_pin" class="f-input" placeholder="••••" maxlength="4" inputmode="numeric" pattern="\d{4}" required style="letter-spacing:8px;text-align:center;font-size:1.2rem;">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="f-label">New PIN</label>
+                    <input type="password" name="new_pin" id="newPin" class="f-input" placeholder="••••" maxlength="4" inputmode="numeric" pattern="\d{4}" oninput="updatePinDots(this.value)" required style="letter-spacing:8px;text-align:center;font-size:1.2rem;">
+                    <div class="pin-dots"><div class="pin-dot" id="dot1"></div><div class="pin-dot" id="dot2"></div><div class="pin-dot" id="dot3"></div><div class="pin-dot" id="dot4"></div></div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="f-label">Confirm PIN</label>
+                    <input type="password" name="confirm_pin" class="f-input" placeholder="••••" maxlength="4" inputmode="numeric" pattern="\d{4}" oninput="checkPinMatch(this.value)" required style="letter-spacing:8px;text-align:center;font-size:1.2rem;">
+                    <p class="small mt-2" id="pinMatchLabel"></p>
+                </div>
+            </div>
+            <div class="mt-4"><button type="submit" class="btn-save"><i class="fa-solid fa-hashtag"></i> Update PIN</button></div>
+        </form>
+    </div>
+
+    <!-- TAB 3: NOTIFICATIONS -->
+    <div class="f-card" id="tab-notifications">
+        <div class="section-title"><div class="icon-badge ib-orange"><i class="fa-solid fa-bell"></i></div>Notification Preferences</div>
+        <form action="/user/settings/preferences" method="POST">
+            <input type="hidden" name="preferred_language" value="<%= lang %>">
+            <input type="hidden" name="preferred_currency" value="<%= currency %>">
+            <input type="hidden" name="preferred_theme"    value="<%= theme %>">
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-icon" style="background:#eff6ff;color:#3b82f6;"><i class="fa-solid fa-envelope"></i></div>
+                    <div><div class="toggle-label">Email Notifications</div><div class="toggle-sub">Transaction alerts by email</div></div>
+                </div>
+                <label class="switch"><input type="checkbox" name="notif_email" value="1" <%= u.notif_email ? 'checked' : '' %>><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-icon" style="background:#f0fdf4;color:var(--success);"><i class="fa-solid fa-mobile-screen"></i></div>
+                    <div><div class="toggle-label">SMS Notifications</div><div class="toggle-sub">Text alerts for transactions</div></div>
+                </div>
+                <label class="switch"><input type="checkbox" name="notif_sms" value="1" <%= u.notif_sms ? 'checked' : '' %>><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-icon" style="background:#fdf4ff;color:#a855f7;"><i class="fa-solid fa-bell"></i></div>
+                    <div><div class="toggle-label">Push Notifications</div><div class="toggle-sub">In-app alerts and reminders</div></div>
+                </div>
+                <label class="switch"><input type="checkbox" name="notif_push" value="1" <%= u.notif_push ? 'checked' : '' %>><span class="slider"></span></label>
+            </div>
+
+            <div class="mt-4"><button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Notifications</button></div>
+        </form>
+    </div>
+
+    <!-- TAB 4: THEME -->
+    <div class="f-card" id="tab-theme">
+        <div class="section-title"><div class="icon-badge ib-slate"><i class="fa-solid fa-palette"></i></div>App Theme</div>
+        <form action="/user/settings/preferences" method="POST">
+            <input type="hidden" name="preferred_language" value="<%= lang %>">
+            <input type="hidden" name="preferred_currency" value="<%= currency %>">
+            <input type="hidden" name="notif_email" value="<%= u.notif_email ? '1' : '' %>">
+            <input type="hidden" name="notif_sms"   value="<%= u.notif_sms   ? '1' : '' %>">
+            <input type="hidden" name="notif_push"  value="<%= u.notif_push  ? '1' : '' %>">
+
+            <div class="theme-options mb-4">
+                <label class="theme-card <%= theme==='light'?'selected':'' %>">
+                    <input type="radio" name="preferred_theme" value="light" <%= theme==='light'?'checked':'' %> onchange="selectTheme(this.closest('.theme-card'))">
+                    <div class="theme-preview preview-light">☀️</div>
+                    <div class="theme-name">Light</div>
+                    <div class="theme-check"><i class="fa-solid fa-check"></i></div>
+                </label>
+                <label class="theme-card <%= theme==='dark'?'selected':'' %>">
+                    <input type="radio" name="preferred_theme" value="dark" <%= theme==='dark'?'checked':'' %> onchange="selectTheme(this.closest('.theme-card'))">
+                    <div class="theme-preview preview-dark">🌙</div>
+                    <div class="theme-name">Dark</div>
+                    <div class="theme-check"><i class="fa-solid fa-check"></i></div>
+                </label>
+                <label class="theme-card <%= theme==='auto'?'selected':'' %>">
+                    <input type="radio" name="preferred_theme" value="auto" <%= theme==='auto'?'checked':'' %> onchange="selectTheme(this.closest('.theme-card'))">
+                    <div class="theme-preview preview-auto">⚙️</div>
+                    <div class="theme-name">Auto</div>
+                    <div class="theme-check"><i class="fa-solid fa-check"></i></div>
+                </label>
+            </div>
+            <p class="small text-muted mb-4"><i class="fa-solid fa-circle-info me-1"></i><strong>Auto</strong> follows your device's light/dark mode.</p>
+            <button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Theme</button>
+        </form>
+    </div>
+
+</div>
+
+<!-- MOBILE NAV — inline, no broken include -->
+<nav class="mobile-nav">
+    <a href="/user/dashboard"     class="nav-item"><i class="fa-solid fa-house-chimney"></i>Home</a>
+    <a href="/user/transactions"  class="nav-item"><i class="fa-solid fa-chart-column"></i>Activity</a>
+    <a href="/user/withdraw"      class="nav-item"><i class="fa-solid fa-money-bill-transfer"></i>Transfer</a>
+    <a href="/user/notifications" class="nav-item"><i class="fa-solid fa-bell"></i>Alerts</a>
+    <a href="/user/profile"       class="nav-item"><i class="fa-solid fa-user-gear"></i>Profile</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function showTab(name, btn) {
+    document.querySelectorAll('.f-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+    history.replaceState(null, '', '#' + name);
+}
+
+// Open tab from URL hash on load
+(function() {
+    const hash = location.hash.replace('#','');
+    const tabs  = ['preferences','security','notifications','theme'];
+    if (tabs.includes(hash)) {
+        document.querySelectorAll('.f-card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + hash).classList.add('active');
+        document.querySelectorAll('.tab-btn')[tabs.indexOf(hash)].classList.add('active');
+    }
+})();
+
+function checkStrength(val) {
+    const fill = document.getElementById('strengthFill');
+    const lbl  = document.getElementById('strengthLabel');
+    let score = 0;
+    if (val.length >= 8)          score++;
+    if (/[A-Z]/.test(val))        score++;
+    if (/[0-9]/.test(val))        score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const lvl = [
+        {w:'0%',   bg:'#e2e8f0', t:''},
+        {w:'25%',  bg:'#ef4444', t:'Weak'},
+        {w:'50%',  bg:'#f59e0b', t:'Fair'},
+        {w:'75%',  bg:'#3b82f6', t:'Good'},
+        {w:'100%', bg:'#22c55e', t:'Strong 💪'},
+    ][score];
+    fill.style.width = lvl.w; fill.style.background = lvl.bg;
+    lbl.textContent = lvl.t; lbl.style.color = lvl.bg;
+}
+
+function checkMatch(val) {
+    const lbl = document.getElementById('matchLabel');
+    const pw1 = document.getElementById('newPassword').value;
+    if (!val) { lbl.textContent=''; return; }
+    lbl.textContent = pw1===val ? '✅ Passwords match' : '❌ Do not match';
+    lbl.style.color = pw1===val ? 'var(--success)' : 'var(--danger)';
+}
+
+function updatePinDots(val) {
+    for (let i=1; i<=4; i++)
+        document.getElementById('dot'+i).classList.toggle('filled', i<=val.length);
+}
+
+function checkPinMatch(val) {
+    const lbl = document.getElementById('pinMatchLabel');
+    const p1  = document.getElementById('newPin').value;
+    if (!val) { lbl.textContent=''; return; }
+    lbl.textContent = p1===val ? '✅ PINs match' : '❌ Do not match';
+    lbl.style.color = p1===val ? 'var(--success)' : 'var(--danger)';
+}
+
+function selectTheme(card) {
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    /* preview theme live */
+    const val = card.querySelector('input').value;
+    document.documentElement.setAttribute('data-theme', val);
+}
+</script>
+</body>
+</html>

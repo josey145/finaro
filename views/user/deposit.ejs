@@ -1,0 +1,507 @@
+<%
+  // ── SAFE LOCALS ── Fallbacks for every variable the template uses
+  const _lang     = typeof lang           !== 'undefined' ? lang           : (typeof user !== 'undefined' && user?.preferred_language) ? user.preferred_language : 'en';
+  const _theme    = typeof theme          !== 'undefined' ? theme          : (typeof user !== 'undefined' && user?.preferred_theme)    ? user.preferred_theme    : 'light';
+  const _symbol   = typeof currencySymbol !== 'undefined' ? currencySymbol : (typeof symbol !== 'undefined' ? symbol : '$');
+  const _currency = typeof currency       !== 'undefined' ? currency       : 'USD';
+  const _fmt      = typeof formatMoney    === 'function'  ? formatMoney    : (n) => _symbol + parseFloat(n||0).toFixed(2);
+
+  // Safe data objects
+  const _activeAccount = typeof activeAccount !== 'undefined' ? activeAccount : (typeof account !== 'undefined' ? account : null);
+  const _account       = typeof account       !== 'undefined' ? account       : _activeAccount;
+  const _balance       = typeof balance       !== 'undefined' ? balance       : (_account?.balance || 0);
+  const _displayBalance = typeof displayBalance !== 'undefined' ? displayBalance : _fmt(_balance);
+%>
+
+<!DOCTYPE html>
+<html lang="<%= _lang %>" data-theme="<%= _theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Finora Bank</title>
+
+    <script>
+        document.documentElement.setAttribute('data-theme', '<%= _theme %>');
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0F6E56; --accent: #1D9E75;
+            --bg-body: #F4F8F7; --bg-card: #FFFFFF; --bg-input: #F4F8F7;
+            --text-main: #0D1B16; --text-muted: #64748B; --border: #E8EFED;
+            --danger: #ef4444; --success: #22c55e; --warning: #f59e0b;
+            --nav-bg: rgba(255,255,255,0.95);
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #172032;
+            --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --nav-bg: rgba(15,23,42,0.97);
+        }
+        @media(prefers-color-scheme:dark) {
+            [data-theme="auto"] {
+                --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #172032;
+                --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+                --nav-bg: rgba(15,23,42,0.97);
+            }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg-body); color:var(--text-main); padding-bottom:90px; transition:background .3s,color .3s; }
+        .main-content { padding:20px; max-width:960px; margin:0 auto; }
+
+        .flash-message { padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; display:flex; align-items:center; gap:10px; }
+        .flash-danger  { background:#fef2f2; color:var(--danger);  border:1px solid #fecaca; }
+        .flash-success { background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; }
+
+        .header-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius:24px; padding:28px 32px; color:white;
+            margin-bottom:20px; box-shadow:0 15px 35px rgba(15,110,86,.3);
+            display:flex; align-items:center; justify-content:space-between; gap:16px;
+        }
+        .header-card h1 { font-size:1.6rem; font-weight:800; margin:0; }
+        .header-card p  { font-size:14px; opacity:.85; margin:4px 0 0; }
+        .header-icon { width:56px; height:56px; background:rgba(255,255,255,.15); border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+        .balance-pill { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:6px 16px; font-size:13px; font-weight:600; margin-top:10px; }
+
+        .f-card {
+            background:var(--bg-card); border-radius:24px; padding:28px;
+            border:1px solid var(--border); box-shadow:0 10px 30px -5px rgba(15,110,86,.05); height:100%;
+        }
+
+        .section-label {
+            font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.8px;
+            color:var(--text-muted); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border);
+        }
+
+        .amount-wrapper { position:relative; margin-bottom:24px; }
+        .amount-prefix {
+            position:absolute; left:18px; top:50%; transform:translateY(-50%);
+            font-size:1.4rem; font-weight:800; color:var(--primary);
+        }
+        .amount-input {
+            width:100%; padding:20px 20px 20px 44px; border:2px solid var(--border); border-radius:16px;
+            font-size:1.6rem; font-weight:800; font-family:'Plus Jakarta Sans',sans-serif;
+            color:var(--text-main); background:var(--bg-input); outline:none;
+            transition:border .2s,box-shadow .2s; text-align:center;
+        }
+        .amount-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,110,86,.1); background:var(--bg-card); }
+
+        .quick-amounts { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
+        .quick-btn {
+            padding:10px; border:1.5px solid var(--border); border-radius:12px; background:var(--bg-input);
+            font-size:13px; font-weight:700; color:var(--text-muted); cursor:pointer;
+            transition:all .2s; font-family:'Plus Jakarta Sans',sans-serif;
+        }
+        .quick-btn:hover, .quick-btn.active { border-color:var(--primary); background:#f0fdf8; color:var(--primary); }
+
+        .method-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:24px; }
+        .method-radio { display:none; }
+        .method-label {
+            border:2px solid var(--border); border-radius:16px; padding:16px; cursor:pointer;
+            transition:all .2s; background:var(--bg-input); display:flex; align-items:center; gap:12px;
+        }
+        .method-label:hover { border-color:var(--primary); }
+        .method-radio:checked + .method-label { border-color:var(--primary); background:#f0fdf8; }
+        .method-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+        .mi-bank    { background:#E1F5EE; color:#0F6E56; }
+        .mi-card    { background:#E6F1FB; color:#185FA5; }
+        .mi-crypto  { background:#FAEEDA; color:#854F0B; }
+        .mi-wire    { background:#EAF3DE; color:#3B6D11; }
+        .method-info strong { font-size:13px; font-weight:700; display:block; color:var(--text-main); }
+        .method-info span   { font-size:11px; color:var(--text-muted); }
+
+        .form-label { font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:8px; display:block; }
+        .form-control, .form-select {
+            background:var(--bg-input); border:1.5px solid var(--border); border-radius:14px;
+            padding:13px 16px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif;
+            color:var(--text-main); width:100%; outline:none; transition:border .2s,box-shadow .2s;
+        }
+        .form-control:focus, .form-select:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,110,86,.1); background:var(--bg-card); }
+
+        .btn-submit {
+            background:var(--primary); color:#fff; border:none; border-radius:14px; padding:16px;
+            font-size:15px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif;
+            cursor:pointer; width:100%; transition:background .2s,transform .15s;
+            display:flex; align-items:center; justify-content:center; gap:10px; margin-top:8px;
+        }
+        .btn-submit:hover   { background:var(--accent); transform:translateY(-1px); }
+        .btn-submit:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+        .bank-details {
+            background:var(--bg-input); border:1.5px dashed var(--border); border-radius:16px;
+            padding:20px; margin-bottom:20px;
+        }
+        .bank-row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 0; border-bottom:1px solid var(--border); font-size:14px;
+        }
+        .bank-row:last-child { border-bottom:none; padding-bottom:0; }
+        .bank-row .label { color:var(--text-muted); font-weight:600; }
+        .bank-row .value { font-weight:700; color:var(--text-main); }
+        .copy-btn {
+            background:none; border:none; cursor:pointer; color:var(--primary); font-size:13px;
+            padding:4px 8px; border-radius:8px; transition:background .15s;
+            font-family:'Plus Jakarta Sans',sans-serif;
+        }
+        .copy-btn:hover { background:#E1F5EE; }
+
+        .recent-item {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:12px 14px; background:var(--bg-input); border-radius:14px;
+            margin-bottom:8px; border:1px solid var(--border);
+        }
+        .recent-item:last-child { margin-bottom:0; }
+        .recent-icon { width:40px; height:40px; border-radius:12px; background:#f0fdf4; color:#22c55e; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        .recent-info { flex:1; padding:0 12px; }
+        .recent-info strong { font-size:13px; font-weight:700; display:block; color:var(--text-main); }
+        .recent-info span   { font-size:11px; color:var(--text-muted); }
+        .recent-amount { font-size:14px; font-weight:800; color:#22c55e; }
+        .tx-status { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; }
+        .status-completed { background:#f0fdf4; color:#22c55e; }
+        .status-pending   { background:#fffbeb; color:#f59e0b; }
+        .status-failed    { background:#fef2f2; color:#ef4444; }
+
+        .info-box {
+            background:#f0fdf8; border:1px solid #bbf7d0; border-radius:16px;
+            padding:18px; margin-top:20px;
+        }
+        .info-box h6 { font-weight:700; font-size:13px; color:var(--primary); margin-bottom:10px; }
+        .info-item { display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; font-size:12px; color:#064e3b; }
+        .info-item:last-child { margin-bottom:0; }
+        .info-item i { color:var(--primary); margin-top:2px; flex-shrink:0; }
+
+        .mobile-nav {
+            position:fixed; bottom:0; left:0; width:100%; background:var(--nav-bg);
+            backdrop-filter:blur(10px); border-top:1px solid var(--border);
+            display:flex; justify-content:space-around; padding:10px 0 25px; z-index:1000;
+        }
+        .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
+        .nav-item.active { color:var(--primary); }
+        .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+
+        #copyToast {
+            position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+            background:#0D1B16; color:#fff; padding:10px 20px; border-radius:20px;
+            font-size:13px; font-weight:600; opacity:0;
+            transition:opacity .3s; z-index:9999; pointer-events:none;
+        }
+
+        @media(max-width:576px) {
+            .quick-amounts{grid-template-columns:repeat(2,1fr);}
+            .method-grid{grid-template-columns:1fr;}
+            .f-card{padding:20px;}
+            .header-card{padding:22px 20px;}
+            .amount-input{font-size:1.3rem;}
+        }
+        @media(min-width:992px) {
+            .main-content{padding:40px;}
+            .mobile-nav{display:none;}
+            body{padding-bottom:0;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success">
+            <i class="fas fa-circle-check"></i> <%= success_msg %>
+        </div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger">
+            <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+        </div>
+    <% } %>
+
+    <!-- Page Header -->
+    <div class="header-card">
+        <div>
+            <div class="mb-1">
+                <a href="/user/dashboard" class="text-white text-decoration-none opacity-75" style="font-size:13px;">
+                    <i class="fa-solid fa-chevron-left me-1"></i> Dashboard
+                </a>
+            </div>
+            <h1>Deposit Funds</h1>
+            <p>Add money to your Finora account</p>
+            <div class="balance-pill">
+                <i class="fa-solid fa-wallet"></i>
+                Current Balance:
+                <strong><%= _displayBalance %></strong>
+                &nbsp;·&nbsp;
+                <span style="opacity:0.8;">···· <%= _account?.account_number?.slice(-4) || '0000' %></span>
+            </div>
+        </div>
+        <div class="header-icon">
+            <i class="fa-solid fa-wallet"></i>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Deposit Form -->
+        <div class="col-12 col-lg-7">
+            <div class="f-card">
+                <div class="section-label">
+                    <i class="fa-solid fa-circle-dollar-to-slot me-2"></i> Deposit Amount
+                </div>
+
+                <form action="/user/deposit" method="POST" id="depositForm">
+
+                    <!-- Amount Input -->
+                    <div class="amount-wrapper">
+                        <span class="amount-prefix"><%= _symbol %></span>
+                        <input type="number"
+                               class="amount-input"
+                               name="amount"
+                               id="amountInput"
+                               placeholder="0.00"
+                               min="1"
+                               max="50000"
+                               step="0.01"
+                               required>
+                    </div>
+
+                    <!-- Quick Amount Buttons -->
+                    <div class="quick-amounts">
+                        <button type="button" class="quick-btn" onclick="setAmount(100)"><%= _symbol %>100</button>
+                        <button type="button" class="quick-btn" onclick="setAmount(500)"><%= _symbol %>500</button>
+                        <button type="button" class="quick-btn" onclick="setAmount(1000)"><%= _symbol %>1,000</button>
+                        <button type="button" class="quick-btn" onclick="setAmount(5000)"><%= _symbol %>5,000</button>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="section-label">
+                        <i class="fa-solid fa-credit-card me-2"></i> Payment Method
+                    </div>
+
+                    <div class="method-grid">
+                        <div>
+                            <input class="method-radio" type="radio" name="payment_method" id="m_bank" value="bank_transfer" checked>
+                            <label class="method-label" for="m_bank">
+                                <div class="method-icon mi-bank"><i class="fa-solid fa-building-columns"></i></div>
+                                <div class="method-info">
+                                    <strong>Bank Transfer</strong>
+                                    <span>1–3 business days</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <input class="method-radio" type="radio" name="payment_method" id="m_card" value="debit_card">
+                            <label class="method-label" for="m_card">
+                                <div class="method-icon mi-card"><i class="fa-solid fa-credit-card"></i></div>
+                                <div class="method-info">
+                                    <strong>Debit Card</strong>
+                                    <span>Instant</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <input class="method-radio" type="radio" name="payment_method" id="m_wire" value="wire_transfer">
+                            <label class="method-label" for="m_wire">
+                                <div class="method-icon mi-wire"><i class="fa-solid fa-paper-plane"></i></div>
+                                <div class="method-info">
+                                    <strong>Wire Transfer</strong>
+                                    <span>Same day</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <input class="method-radio" type="radio" name="payment_method" id="m_crypto" value="crypto">
+                            <label class="method-label" for="m_crypto">
+                                <div class="method-icon mi-crypto"><i class="fa-brands fa-bitcoin"></i></div>
+                                <div class="method-info">
+                                    <strong>Crypto</strong>
+                                    <span>~30 minutes</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label class="form-label" for="description">Note (optional)</label>
+                        <input type="text"
+                               class="form-control"
+                               id="description"
+                               name="description"
+                               placeholder="e.g. Salary, savings top-up...">
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <i class="fa-solid fa-circle-arrow-up"></i>
+                        Submit Deposit Request
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT: Bank Details + Recent -->
+        <div class="col-12 col-lg-5">
+
+            <!-- Bank Details -->
+            <div class="f-card mb-4">
+                <div class="section-label">
+                    <i class="fa-solid fa-building-columns me-2"></i> Bank Transfer Details
+                </div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+                    Use the details below to send funds via bank transfer. Your account will be credited once payment is confirmed.
+                </p>
+
+                <div class="bank-details">
+                    <div class="bank-row">
+                        <span class="label">Bank Name</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="value">Finora Reserve Bank</span>
+                            <button class="copy-btn" onclick="copyText('Finora Reserve Bank')">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bank-row">
+                        <span class="label">Account Name</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="value">
+                                <%= (typeof user !== 'undefined' && user) ? (user.first_name + ' ' + user.last_name) : 'Account Holder' %>
+                            </span>
+                            <button class="copy-btn" onclick="copyText(<%= JSON.stringify((typeof user !== 'undefined' && user) ? (user.first_name + ' ' + user.last_name) : '') %>)">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bank-row">
+                        <span class="label">Account Number</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="value" id="accNum">
+                                <%= (typeof account !== 'undefined' && account && account.account_number) ? account.account_number : 'N/A' %>
+                            </span>
+                            <button class="copy-btn" onclick="copyText(document.getElementById('accNum').textContent.trim())">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bank-row">
+                        <span class="label">Routing Number</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="value">021000021</span>
+                            <button class="copy-btn" onclick="copyText('021000021')">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bank-row">
+                        <span class="label">Reference</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="value" id="refCode">DEP-<%= (typeof user !== 'undefined' && user) ? user.id : '000' %>-<%= Date.now().toString().slice(-6) %></span>
+                            <button class="copy-btn" onclick="copyText(document.getElementById('refCode').textContent.trim())">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h6><i class="fa-solid fa-circle-info me-2"></i>Important</h6>
+                    <div class="info-item">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Always include your reference code when making a transfer so we can match your payment.</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fa-solid fa-clock"></i>
+                        <span>Bank transfers typically reflect within 1–3 business days after confirmation.</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Maximum deposit per transaction is <%= _symbol %>50,000.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Deposits -->
+            <div class="f-card">
+                <div class="section-label">
+                    <i class="fa-solid fa-clock-rotate-left me-2"></i> Recent Deposits
+                </div>
+
+                <% if (typeof recentDeposits !== 'undefined' && recentDeposits && recentDeposits.length > 0) { %>
+                    <% recentDeposits.forEach(tx => { %>
+                        <div class="recent-item">
+                            <div class="recent-icon">
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </div>
+                            <div class="recent-info">
+                                <strong><%= tx.description || 'Fund Deposit' %></strong>
+                                <span>
+                                    <%= new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                    &nbsp;·&nbsp;
+                                    <span class="tx-status <%= tx.status === 'completed' ? 'status-completed' : tx.status === 'pending' ? 'status-pending' : 'status-failed' %>">
+                                        <%= tx.status.charAt(0).toUpperCase() + tx.status.slice(1) %>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="recent-amount">
+                                +<%= _symbol %><%= parseFloat(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2 }) %>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="text-center py-4" style="color:var(--text-muted);">
+                        <i class="fa-solid fa-inbox fs-2 mb-2 d-block"></i>
+                        <span style="font-size:13px;">No deposits yet</span>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Mobile Nav -->
+<%- include('../mobile_partier/nav') %>
+
+<!-- Toast for copy feedback -->
+<div id="copyToast">
+    <i class="fa-solid fa-circle-check me-2" style="color:#22c55e;"></i> Copied!
+</div>
+
+<script>
+    const currencySymbol = '<%= _symbol %>';
+
+    // Quick amount buttons
+    function setAmount(val) {
+        document.getElementById('amountInput').value = val;
+        document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // Copy to clipboard with toast
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const toast = document.getElementById('copyToast');
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2000);
+        });
+    }
+
+    // Prevent double submit
+    document.getElementById('depositForm').addEventListener('submit', function () {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    });
+
+    // Clear quick-btn active state when user types manually
+    document.getElementById('amountInput').addEventListener('input', function () {
+        document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,333 @@
+<%
+  const _lang  = typeof lang  !== 'undefined' ? lang  : (typeof _lang  !== 'undefined' ? _lang  : 'en');
+  const _theme = typeof theme !== 'undefined' ? theme : (typeof _theme !== 'undefined' ? _theme : 'light');
+
+  // Flash messages — support both array and string forms
+  const _errors      = typeof errors      !== 'undefined' && Array.isArray(errors)      ? errors      : [];
+  const _error_msg   = typeof error_msg   !== 'undefined' && error_msg   ? error_msg   : (req && req.flash ? req.flash('error')   : []);
+  const _success_msg = typeof success_msg !== 'undefined' && success_msg ? success_msg : (req && req.flash ? req.flash('success') : []);
+  const _info_msg    = typeof info_msg    !== 'undefined' && info_msg    ? info_msg    : (req && req.flash ? req.flash('info')    : []);
+%>
+
+<!DOCTYPE html>
+<html lang="<%= _lang %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Finora Bank</title>
+
+    <style>
+        :root {
+            --primary:    #0F6E56;
+            --accent:     #1D9E75;
+            --bg-body:    #F4F8F7;
+            --bg-card:    #FFFFFF;
+            --bg-input:   #F4F8F7;
+            --text-main:  #0D1B16;
+            --text-muted: #64748B;
+            --border:     #E8EFED;
+            --danger:     #ef4444;
+            --success:    #22c55e;
+            --info:       #3b82f6;
+            --shadow:     0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        /* footer JS sets data-theme on <html>, so selectors must target html or [data-theme] without body prefix */
+        [data-theme="dark"] {
+            --bg-body:    #0f172a;
+            --bg-card:    #1e293b;
+            --bg-input:   #172032;
+            --text-main:  #f1f5f9;
+            --text-muted: #94a3b8;
+            --border:     #334155;
+            --shadow:     0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            [data-theme="auto"] {
+                --bg-body:    #0f172a;
+                --bg-card:    #1e293b;
+                --bg-input:   #172032;
+                --text-main:  #f1f5f9;
+                --text-muted: #94a3b8;
+                --border:     #334155;
+                --shadow:     0 20px 40px rgba(0,0,0,0.4);
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background .3s, color .3s;
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            transition: background .3s;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand h1 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .brand p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 15px;
+            background: var(--bg-input);
+            color: var(--text-main);
+            transition: border-color .2s, background .3s, color .3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input {
+            padding-right: 44px;
+        }
+
+        .toggle-pw {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0;
+            width: auto;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .toggle-pw:hover {
+            color: var(--primary);
+            background: none;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, opacity .2s;
+            margin-top: 4px;
+        }
+
+        button[type="submit"]:hover   { background: var(--accent); }
+        button[type="submit"]:active  { opacity: 0.85; }
+
+        .links {
+            text-align: center;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .links a:hover { text-decoration: underline; }
+
+        .links .divider {
+            color: var(--border);
+            font-size: 12px;
+        }
+
+        /* ── Alerts ── */
+        .alert {
+            padding: 11px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .alert-icon { flex-shrink: 0; font-size: 15px; }
+
+        .alert-danger  { background: rgba(239,68,68,0.08);  color: var(--danger);  border: 1px solid rgba(239,68,68,0.2);  }
+        .alert-success { background: rgba(34,197,94,0.08);  color: var(--success); border: 1px solid rgba(34,197,94,0.2);  }
+        .alert-info    { background: rgba(59,130,246,0.08); color: var(--info);    border: 1px solid rgba(59,130,246,0.2); }
+    </style>
+</head>
+<body data-theme="<%= _theme %>">
+
+    <body>
+<script>
+  console.log('theme from EJS:', '<%= _theme %>');
+  console.log('html data-theme:', document.documentElement.getAttribute('data-theme'));
+</script>
+
+    <div class="login-box">
+
+        <div class="brand">
+            <h1>FINORA BANK</h1>
+            <p>Sign in to your account</p>
+        </div>
+
+        <%# ── Validation errors (from express-validator via authLocals) ── %>
+        <% if (_errors.length > 0) { %>
+            <% _errors.forEach(function(e) { %>
+                <div class="alert alert-danger">
+                    <span class="alert-icon">✕</span>
+                    <span><%= e.msg %></span>
+                </div>
+            <% }); %>
+        <% } %>
+
+        <%# ── Flash: error ── %>
+        <% const _errList = Array.isArray(_error_msg) ? _error_msg : [_error_msg]; %>
+        <% _errList.filter(Boolean).forEach(function(msg) { %>
+            <div class="alert alert-danger">
+                <span class="alert-icon">✕</span>
+                <span><%= msg %></span>
+            </div>
+        <% }); %>
+
+        <%# ── Flash: success ── %>
+        <% const _sucList = Array.isArray(_success_msg) ? _success_msg : [_success_msg]; %>
+        <% _sucList.filter(Boolean).forEach(function(msg) { %>
+            <div class="alert alert-success">
+                <span class="alert-icon">✓</span>
+                <span><%= msg %></span>
+            </div>
+        <% }); %>
+
+        <%# ── Flash: info ── %>
+        <% const _infList = Array.isArray(_info_msg) ? _info_msg : [_info_msg]; %>
+        <% _infList.filter(Boolean).forEach(function(msg) { %>
+            <div class="alert alert-info">
+                <span class="alert-icon">ℹ</span>
+                <span><%= msg %></span>
+            </div>
+        <% }); %>
+
+        <form action="/auth/login" method="POST" autocomplete="on" novalidate>
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>"
+                    autocomplete="email"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrap">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button type="button" class="toggle-pw" aria-label="Toggle password visibility" onclick="togglePw()">👁</button>
+                </div>
+            </div>
+
+            <button type="submit">Sign In</button>
+        </form>
+
+        <div class="links">
+            <a href="/auth/forgot-password">Forgot password?</a>
+            <span class="divider">─────────────────</span>
+            <a href="/auth/register">Don't have an account? Create one</a>
+            <a href="/auth/resend-verification">Resend verification email</a>
+        </div>
+
+    </div>
+
+    <%# ── CRITICAL: define __FINORA__ BEFORE footer so footer's IIFE reads the correct theme ── %>
+    <script>
+        window.__FINORA__ = {
+            theme: '<%= _theme %>',
+            lang:  '<%= _lang %>',
+        };
+    </script>
+
+<%- include('../mobile_partier/footer') %>
+
+    <script>
+        // Password visibility toggle (runs after footer bootstrap JS is loaded)
+        function togglePw() {
+            const input = document.getElementById('password');
+            const btn   = document.querySelector('.toggle-pw');
+            if (input.type === 'password') {
+                input.type      = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type      = 'password';
+                btn.textContent = '👁';
+            }
+        }
+    </script>

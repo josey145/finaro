@@ -1,0 +1,1041 @@
+<%
+  // ── SAFE LOCALS ── Works even if middleware hasn't run
+  const _lang     = typeof lang           !== 'undefined' ? lang           : (typeof user !== 'undefined' && user?.preferred_language) ? user.preferred_language : 'en';
+  const _theme    = typeof theme          !== 'undefined' ? theme          : (typeof user !== 'undefined' && user?.preferred_theme)    ? user.preferred_theme    : 'light';
+  const _symbol   = typeof currencySymbol !== 'undefined' ? currencySymbol : '$';
+  const _fmt      = typeof formatMoney    === 'function'  ? formatMoney    : (n) => _symbol + parseFloat(n||0).toFixed(2);
+  const _currency = typeof currency       !== 'undefined' ? currency       : 'USD';
+
+  // Safe data objects — prevents "X is not defined" errors
+  const _activeAccount = typeof activeAccount !== 'undefined' ? activeAccount : (typeof account !== 'undefined' ? account : null);
+  const _account       = typeof account       !== 'undefined' ? account       : _activeAccount;
+  const _accounts      = typeof accounts      !== 'undefined' ? accounts      : [];
+  const _balance       = typeof balance       !== 'undefined' ? balance       : (_account?.balance || 0);
+  const _kycApproved   = typeof kycApproved !== 'undefined' ? kycApproved   : false;
+  const _kycStatus     = typeof kycStatus     !== 'undefined' ? kycStatus     : 'not_submitted';
+  const _stepsRequired = typeof stepsRequired !== 'undefined' ? stepsRequired : false;
+%>
+
+<!DOCTYPE html>
+<html lang="<%= _lang %>" data-theme="<%= _theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Finora Bank</title>
+
+    <%# Apply theme BEFORE any CSS loads — prevents flash of wrong colours %>
+    <script>
+        document.documentElement.setAttribute('data-theme', '<%= _theme %>');
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ── Light (default) ── */
+        :root {
+            --primary:    #0F6E56;
+            --accent:     #1D9E75;
+            --bg-body:    #F4F8F7;
+            --bg-card:    #FFFFFF;
+            --bg-input:   #F4F8F7;
+            --text-main:  #0D1B16;
+            --text-muted: #64748B;
+            --border:     #E8EFED;
+            --danger:     #ef4444;
+            --success:    #22c55e;
+            --warning:    #f59e0b;
+            --nav-bg:     rgba(255,255,255,0.95);
+        }
+
+        /* ── Dark ── */
+        [data-theme="dark"] {
+            --bg-body:    #0f172a;
+            --bg-card:    #1e293b;
+            --bg-input:   #172032;
+            --text-main:  #f1f5f9;
+            --text-muted: #94a3b8;
+            --border:     #334155;
+            --nav-bg:     rgba(15,23,42,0.97);
+        }
+
+        /* ── Auto (follows OS) ── */
+        @media (prefers-color-scheme: dark) {
+            [data-theme="auto"] {
+                --bg-body:    #0f172a;
+                --bg-card:    #1e293b;
+                --bg-input:   #172032;
+                --text-main:  #f1f5f9;
+                --text-muted: #94a3b8;
+                --border:     #334155;
+                --nav-bg:     rgba(15,23,42,0.97);
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 90px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .main-content { padding: 20px; max-width: 960px; margin: 0 auto; }
+
+        /* FLASH */
+        .flash-message {
+            padding: 14px 18px; border-radius: 12px; margin-bottom: 20px;
+            font-size: 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .flash-danger  { background: #fef2f2; color: var(--danger);  border: 1px solid #fecaca; }
+        .flash-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+
+        /* PAGE HEADER */
+        .header-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 24px; padding: 28px 32px; color: white;
+            margin-bottom: 20px; box-shadow: 0 15px 35px rgba(15,110,86,0.3);
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        }
+        .header-card h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+        .header-card p  { font-size: 14px; opacity: 0.85; margin: 4px 0 0; }
+        .header-icon {
+            width: 56px; height: 56px; background: rgba(255,255,255,0.15);
+            border-radius: 16px; display: flex; align-items: center;
+            justify-content: center; font-size: 24px; flex-shrink: 0;
+        }
+        .balance-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px; padding: 6px 16px; font-size: 13px;
+            font-weight: 600; margin-top: 10px;
+        }
+
+        /* KYC ALERT */
+        .kyc-alert {
+            background: #fef2f2; border: 1.5px solid #fecaca;
+            border-radius: 16px; padding: 18px 22px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .kyc-alert-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: #fee2e2; color: #ef4444;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .kyc-alert a { color: var(--primary); font-weight: 700; text-decoration: none; }
+        .kyc-alert a:hover { text-decoration: underline; }
+
+        /* MODE TABS */
+        .mode-tabs {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 20px;
+        }
+        .mode-tab {
+            background: var(--bg-card); border: 2px solid var(--border);
+            border-radius: 16px; padding: 16px 12px; text-align: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .mode-tab:hover { border-color: var(--primary); }
+        .mode-tab.active { border-color: var(--primary); background: #f0fdf8; }
+        .mode-tab-icon {
+            width: 44px; height: 44px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin: 0 auto 10px;
+        }
+        .tab-external .mode-tab-icon  { background: #fef2f2; color: #ef4444; }
+        .tab-internal .mode-tab-icon  { background: #eff6ff; color: #3b82f6; }
+        .tab-savings  .mode-tab-icon  { background: #f0fdf4; color: #22c55e; }
+        .mode-tab.active.tab-external { background: #fff8f8; border-color: #ef4444; }
+        .mode-tab.active.tab-internal { background: #f0f6ff; border-color: #3b82f6; }
+        .mode-tab.active.tab-savings  { background: #f0fdf4; border-color: #22c55e; }
+        .mode-tab strong { font-size: 13px; font-weight: 700; display: block; color: var(--text-main); }
+        .mode-tab span   { font-size: 11px; color: var(--text-muted); }
+
+        /* CARDS */
+        .f-card {
+            background: var(--bg-card); border-radius: 24px; padding: 28px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px -5px rgba(15,110,86,0.05);
+        }
+
+        .section-label {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 16px;
+            padding-bottom: 10px; border-bottom: 1px solid var(--border);
+        }
+
+        /* FORM */
+        .form-label { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: block; }
+
+        .form-control, .form-select {
+            background: var(--bg-input); border: 1.5px solid var(--border);
+            border-radius: 14px; padding: 13px 16px; font-size: 14px;
+            font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-main);
+            width: 100%; outline: none; transition: border 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15,110,86,0.1);
+            background: var(--bg-card);
+        }
+        .form-control:disabled, .form-select:disabled {
+            opacity: 0.5; cursor: not-allowed;
+        }
+
+        /* AMOUNT INPUT */
+        .amount-wrapper { position: relative; margin-bottom: 8px; }
+        .amount-prefix {
+            position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+            font-size: 1.4rem; font-weight: 800; color: var(--primary);
+        }
+        .amount-input {
+            width: 100%; padding: 20px 20px 20px 44px;
+            border: 2px solid var(--border); border-radius: 16px;
+            font-size: 1.6rem; font-weight: 800;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main); background: var(--bg-input); outline: none;
+            text-align: center; transition: border 0.2s, box-shadow 0.2s;
+        }
+        .amount-input:focus {
+            border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15,110,86,0.1);
+            background: var(--bg-card);
+        }
+        .amount-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* QUICK AMOUNTS */
+        .quick-amounts { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 20px; }
+        .quick-btn {
+            padding: 9px; border: 1.5px solid var(--border); border-radius: 12px;
+            background: var(--bg-input); font-size: 12px; font-weight: 700; color: var(--text-muted);
+            cursor: pointer; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .quick-btn:hover, .quick-btn.active { border-color: var(--primary); background: #f0fdf8; color: var(--primary); }
+
+        /* RECIPIENT LOOKUP */
+        .input-icon-wrap { position: relative; }
+        .input-icon-wrap .i-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%); color: var(--text-muted); font-size: 14px;
+        }
+        .input-icon-wrap .form-control { padding-left: 38px; }
+        .lookup-spinner {
+            position: absolute; right: 14px; top: 50%;
+            transform: translateY(-50%); color: var(--primary); display: none;
+        }
+
+        .recipient-box {
+            border-radius: 14px; padding: 14px 16px; margin-top: 10px;
+            display: none; align-items: center; gap: 12px;
+            border: 1.5px solid var(--border); background: var(--bg-input);
+        }
+        .recipient-box.show   { display: flex; }
+        .recipient-box.ok     { border-color: #bbf7d0; background: #f0fdf4; }
+        .recipient-box.fail   { border-color: #fecaca; background: #fef2f2; }
+        .recipient-avatar {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: var(--primary); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; flex-shrink: 0;
+        }
+        .recipient-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .recipient-sub  { font-size: 12px; color: var(--text-muted); }
+
+        /* INFO ROWS */
+        .info-row {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+            gap: 12px;
+        }
+        .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .info-row .label { color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+        .info-row .value { font-weight: 700; text-align: right; color: var(--text-main); }
+
+        /* SAVINGS ACCOUNT CARDS */
+        .account-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .acc-card {
+            border: 2px solid var(--border); border-radius: 14px; padding: 14px;
+            cursor: pointer; transition: all 0.2s; background: var(--bg-input);
+        }
+        .acc-card:hover    { border-color: var(--primary); }
+        .acc-card.selected { border-color: var(--primary); background: #f0fdf8; }
+        .acc-card-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; margin-bottom: 8px;
+        }
+        .acc-icon-checking { background: #eff6ff; color: #3b82f6; }
+        .acc-icon-savings  { background: #f0fdf4; color: #22c55e; }
+        .acc-icon-credit   { background: #fefce8; color: #f59e0b; }
+        .acc-card strong { font-size: 13px; font-weight: 700; display: block; text-transform: capitalize; color: var(--text-main); }
+        .acc-card span   { font-size: 12px; color: var(--text-muted); }
+        .acc-card .acc-bal { font-size: 13px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+
+        /* PIN / CODE */
+        .pin-field {
+            font-size: 1.3rem; letter-spacing: 6px; text-align: center;
+            font-weight: 800; color: var(--text-main);
+        }
+
+        /* SUBMIT */
+        .btn-submit {
+            border: none; border-radius: 14px; padding: 16px;
+            font-size: 15px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer; width: 100%; transition: background 0.2s, transform 0.15s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-top: 8px;
+        }
+        .btn-submit-red   { background: #ef4444; color: #fff; }
+        .btn-submit-red:hover   { background: #dc2626; transform: translateY(-1px); }
+        .btn-submit-blue  { background: #3b82f6; color: #fff; }
+        .btn-submit-blue:hover  { background: #2563eb; transform: translateY(-1px); }
+        .btn-submit-green { background: var(--primary); color: #fff; }
+        .btn-submit-green:hover { background: var(--accent); transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        /* CONFIRM MODAL */
+        .modal-content    { border-radius: 24px; border: none; background: var(--bg-card); color: var(--text-main); }
+        .modal-hdr {
+            border-radius: 24px 24px 0 0; padding: 22px 28px;
+            color: white; border: none;
+        }
+        .modal-hdr.red   { background: linear-gradient(135deg,#ef4444,#dc2626); }
+        .modal-hdr.blue  { background: linear-gradient(135deg,#3b82f6,#2563eb); }
+        .modal-hdr.green { background: linear-gradient(135deg,var(--primary),var(--accent)); }
+        .modal-hdr h5 { font-weight: 800; margin: 0; }
+
+        .confirm-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+            color: var(--text-main);
+        }
+        .confirm-row:last-child { border-bottom: none; }
+        .confirm-row .cl { color: var(--text-muted); font-weight: 600; }
+        .confirm-row .cv { font-weight: 700; }
+        .confirm-row .cv.big { font-size: 1.2rem; color: var(--primary); }
+
+        .btn-confirm {
+            border: none; border-radius: 12px; padding: 13px 28px;
+            font-size: 14px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer; color: white; transition: background 0.2s;
+        }
+        .btn-cancel {
+            background: var(--bg-input); color: var(--text-muted); border: 1.5px solid var(--border);
+            border-radius: 12px; padding: 13px 28px; font-size: 14px;
+            font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+        }
+
+        /* FORM SECTION */
+        .form-panel { display: none; }
+        .form-panel.active { display: block; }
+
+        /* MOBILE NAV */
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--nav-bg); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border); display: flex;
+            justify-content: space-around; padding: 10px 0 25px; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+
+        /* Dark mode overrides for Bootstrap */
+        [data-theme="dark"] .dropdown-menu,
+        [data-theme="auto"] .dropdown-menu { background: var(--bg-card); border-color: var(--border); }
+        [data-theme="dark"] .dropdown-item,
+        [data-theme="auto"] .dropdown-item { color: var(--text-main); }
+        [data-theme="dark"] .dropdown-item:hover,
+        [data-theme="auto"] .dropdown-item:hover { background: var(--bg-input); }
+        [data-theme="dark"] .modal-content,
+        [data-theme="auto"] .modal-content { background: var(--bg-card); color: var(--text-main); }
+
+        @media (max-width: 576px) {
+            .mode-tabs      { grid-template-columns: 1fr; }
+            .quick-amounts  { grid-template-columns: repeat(2,1fr); }
+            .account-pick   { grid-template-columns: 1fr; }
+            .f-card         { padding: 20px; }
+        }
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav   { display: none; }
+            body          { padding-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success"><i class="fas fa-circle-check"></i> <%= success_msg %></div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger"><i class="fas fa-circle-exclamation"></i> <%= error_msg %></div>
+    <% } %>
+
+    <!-- Header -->
+    <div class="header-card">
+        <div>
+            <div class="mb-1">
+                <a href="/user/dashboard" class="text-white text-decoration-none opacity-75" style="font-size:13px;">
+                    <i class="fa-solid fa-chevron-left me-1"></i> Dashboard
+                </a>
+            </div>
+            <h1>Withdraw & Transfer</h1>
+            <p>Send money out, transfer between accounts, or move to savings</p>
+            <div class="balance-pill">
+                <i class="fa-solid fa-wallet"></i>
+                Available:
+                <strong>
+                    <%= _fmt(_balance) %>
+                </strong>
+                &nbsp;·&nbsp;
+                <span style="opacity:0.8;">
+                    ···· <%= _activeAccount?.account_number?.slice(-4) || '0000' %>
+                </span>
+            </div>
+        </div>
+        <div class="header-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+    </div>
+
+    <!-- KYC Alert -->
+    <% if (!_kycApproved) { %>
+    <div class="kyc-alert">
+        <div class="kyc-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <strong style="font-size:14px;">KYC Verification Required</strong>
+            <p class="mb-1" style="font-size:13px;color:var(--text-muted);">
+                External withdrawals are locked until your identity is verified.
+                Internal transfers between your own accounts are still available.
+            </p>
+            <a href="/user/kyc-submit"><i class="fa-solid fa-shield-halved me-1"></i>Complete KYC now →</a>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+        <div class="mode-tab tab-external active" onclick="switchMode('external', this)">
+            <div class="mode-tab-icon"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+            <strong>Withdraw</strong>
+            <span>Send to bank / mobile / crypto</span>
+        </div>
+        <div class="mode-tab tab-internal" onclick="switchMode('internal', this)">
+            <div class="mode-tab-icon"><i class="fa-solid fa-user-group"></i></div>
+            <strong>Send to Client</strong>
+            <span>Transfer to another Finora user</span>
+        </div>
+        <div class="mode-tab tab-savings" onclick="switchMode('savings', this)">
+            <div class="mode-tab-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+            <strong>Move to Savings</strong>
+            <span>Between your own accounts</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Forms -->
+        <div class="col-12 col-lg-7">
+            <div class="f-card">
+
+                <!-- ══════════════════════════════════════════
+                     PANEL 1 — EXTERNAL WITHDRAWAL
+                     ══════════════════════════════════════════ -->
+                <div class="form-panel active" id="panel-external">
+                    <div class="section-label">
+                        <i class="fa-solid fa-arrow-up-from-bracket me-2" style="color:#ef4444;"></i>
+                        External Withdrawal
+                    </div>
+
+                    <form action="/user/withdraw" method="POST" id="withdrawForm">
+                        <input type="hidden" name="mode" value="external">
+                        <input type="hidden" name="account_id" value="<%= _activeAccount?.id %>">
+
+                        <!-- Amount -->
+                        <div class="mb-2">
+                            <label class="form-label">Amount</label>
+                            <div class="amount-wrapper">
+                                <span class="amount-prefix"><%= _symbol %></span>
+                                <input type="number" class="amount-input" name="amount"
+                                       id="ext-amount" placeholder="0.00"
+                                       min="1" max="10000" step="0.01" required
+                                       <%= !_kycApproved ? 'disabled' : '' %>>
+                            </div>
+                        </div>
+                        <div class="quick-amounts mb-4">
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',100)"><%= _symbol %>100</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',500)"><%= _symbol %>500</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',1000)"><%= _symbol %>1,000</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('ext-amount',2500)"><%= _symbol %>2,500</button>
+                        </div>
+
+                        <!-- Withdrawal Method -->
+                        <div class="mb-3">
+                            <label class="form-label">Withdrawal Method</label>
+                            <select class="form-select" name="method" id="ext-method"
+                                    onchange="toggleMethodFields()"
+                                    <%= !_kycApproved ? 'disabled' : '' %> required>
+                                <option value="">— Select method —</option>
+                                <option value="bank_transfer">🏦 Bank Transfer</option>
+                                <option value="mobile_money">📱 Mobile Money</option>
+                                <option value="crypto">₿ Cryptocurrency</option>
+                            </select>
+                        </div>
+
+                        <!-- BANK TRANSFER FIELDS -->
+                        <div id="fields-bank" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Bank Name</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-building-columns"></i>
+                                    <input type="text" class="form-control" name="bank_name"
+                                           placeholder="e.g. First National Bank"
+                                           <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Account Number</label>
+                                    <input type="text" class="form-control" name="bank_account_number"
+                                           placeholder="e.g. 0123456789"
+                                           <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Routing / Sort Code</label>
+                                    <input type="text" class="form-control" name="routing_number"
+                                           placeholder="e.g. 021000021"
+                                           <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Account Holder Name</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-user"></i>
+                                    <input type="text" class="form-control" name="account_holder"
+                                           placeholder="Full name on the account"
+                                           <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MOBILE MONEY FIELDS -->
+                        <div id="fields-mobile" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Mobile Network</label>
+                                <select class="form-select" name="mobile_network"
+                                        <%= !_kycApproved ? 'disabled' : '' %>>
+                                    <option value="">— Select network —</option>
+                                    <option value="mtn">MTN Mobile Money</option>
+                                    <option value="airtel">Airtel Money</option>
+                                    <option value="mpesa">M-Pesa</option>
+                                    <option value="vodafone">Vodafone Cash</option>
+                                    <option value="orange">Orange Money</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mobile Number</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-mobile-screen"></i>
+                                    <input type="tel" class="form-control" name="mobile_number"
+                                           placeholder="e.g. +234 800 000 0000"
+                                           <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Account Name</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-solid fa-user"></i>
+                                    <input type="text" class="form-control" name="mobile_account_name"
+                                           placeholder="Name registered to this number"
+                                           <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CRYPTO FIELDS -->
+                        <div id="fields-crypto" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Cryptocurrency</label>
+                                <select class="form-select" name="crypto_currency"
+                                        <%= !_kycApproved ? 'disabled' : '' %>>
+                                    <option value="">— Select coin —</option>
+                                    <option value="BTC">Bitcoin (BTC)</option>
+                                    <option value="ETH">Ethereum (ETH)</option>
+                                    <option value="USDT">Tether (USDT)</option>
+                                    <option value="USDC">USD Coin (USDC)</option>
+                                    <option value="BNB">BNB</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Wallet Address</label>
+                                <div class="input-icon-wrap">
+                                    <i class="i-icon fa-brands fa-bitcoin"></i>
+                                    <input type="text" class="form-control" name="wallet_address"
+                                           placeholder="e.g. 0x1a2b3c..."
+                                           style="font-family: monospace; font-size:13px;"
+                                           <%= !_kycApproved ? 'disabled' : '' %>>
+                                </div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                                    <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>
+                                    Double-check the address. Crypto transfers are irreversible.
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Network</label>
+                                <select class="form-select" name="crypto_network"
+                                        <%= !_kycApproved ? 'disabled' : '' %>>
+                                    <option value="mainnet">Mainnet</option>
+                                    <option value="bsc">BSC (BEP-20)</option>
+                                    <option value="polygon">Polygon</option>
+                                    <option value="tron">Tron (TRC-20)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Note -->
+                        <div class="mb-3">
+                            <label class="form-label">Note (optional)</label>
+                            <div class="input-icon-wrap">
+                                <i class="i-icon fa-solid fa-pen-to-square"></i>
+                                <input type="text" class="form-control" name="description"
+                                       placeholder="What is this for?"
+                                       <%= !_kycApproved ? 'disabled' : '' %>>
+                            </div>
+                        </div>
+
+                        <!-- Withdrawal Code -->
+                        <div class="mb-4">
+                            <label class="form-label">7-Digit Withdrawal Code</label>
+                            <input type="password" class="form-control pin-field"
+                                   name="withdrawal_code" id="withdrawal_code"
+                                   maxlength="7" placeholder="•••••••" required
+                                   <%= !_kycApproved ? 'disabled' : '' %>>
+                            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;display:flex;align-items:center;gap:6px;">
+                                <a href="#" onclick="requestCode(event)" style="color:var(--primary);font-weight:700;">
+                                    <i class="fa-solid fa-envelope me-1"></i>Request code
+                                </a>
+                                <span>·</span>
+                                <span>Expires in 30 minutes</span>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-submit btn-submit-red"
+                                onclick="openConfirm('external')"
+                                <%= !_kycApproved ? 'disabled' : '' %>>
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i> Withdraw Funds
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ══════════════════════════════════════════
+                     PANEL 2 — SEND TO FINORA CLIENT
+                     ══════════════════════════════════════════ -->
+                <div class="form-panel" id="panel-internal">
+                    <div class="section-label">
+                        <i class="fa-solid fa-user-group me-2" style="color:#3b82f6;"></i>
+                        Send to Finora Client
+                    </div>
+
+                    <form action="/user/transfer" method="POST" id="internalForm">
+                        <input type="hidden" name="mode" value="internal">
+
+                        <!-- Recipient lookup -->
+                        <div class="mb-3">
+                            <label class="form-label">Recipient Account Number</label>
+                            <div class="input-icon-wrap" style="position:relative;">
+                                <i class="i-icon fa-solid fa-hashtag"></i>
+                                <input type="text" class="form-control" id="recipient_account"
+                                       name="recipient_account" placeholder="Enter Finora account number"
+                                       autocomplete="off" required oninput="lookupAccount(this.value)">
+                                <i class="fa-solid fa-spinner fa-spin lookup-spinner" id="lookupSpinner"></i>
+                            </div>
+                            <div class="recipient-box" id="recipientBox">
+                                <div class="recipient-avatar" id="recipientInitials">?</div>
+                                <div>
+                                    <div class="recipient-name" id="recipientName">—</div>
+                                    <div class="recipient-sub" id="recipientSub">—</div>
+                                </div>
+                                <div class="ms-auto" id="recipientBadge"></div>
+                            </div>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="mb-2">
+                            <label class="form-label">Amount</label>
+                            <div class="amount-wrapper">
+                                <span class="amount-prefix"><%= _symbol %></span>
+                                <input type="number" class="amount-input" name="amount"
+                                       id="int-amount" placeholder="0.00"
+                                       min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="quick-amounts mb-4">
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',50)"><%= _symbol %>50</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',100)"><%= _symbol %>100</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',500)"><%= _symbol %>500</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('int-amount',1000)"><%= _symbol %>1,000</button>
+                        </div>
+
+                        <!-- Note -->
+                        <div class="mb-4">
+                            <label class="form-label">Note (optional)</label>
+                            <div class="input-icon-wrap">
+                                <i class="i-icon fa-solid fa-pen-to-square"></i>
+                                <input type="text" class="form-control" name="description"
+                                       placeholder="e.g. Rent, loan repayment...">
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-submit btn-submit-blue"
+                                onclick="openConfirm('internal')">
+                            <i class="fa-solid fa-paper-plane"></i> Send Money
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ══════════════════════════════════════════
+                     PANEL 3 — MOVE TO SAVINGS
+                     ══════════════════════════════════════════ -->
+                <div class="form-panel" id="panel-savings">
+                    <div class="section-label">
+                        <i class="fa-solid fa-piggy-bank me-2" style="color:#22c55e;"></i>
+                        Move Between Your Accounts
+                    </div>
+
+                    <form action="/user/move-money" method="POST" id="savingsForm">
+                        <input type="hidden" name="mode" value="savings">
+
+                        <div class="mb-3">
+                            <label class="form-label">From Account</label>
+                            <div class="account-pick" id="fromPicker">
+                                <% if (_accounts && _accounts.length > 0) { %>
+                                    <% _accounts.forEach(acc => { %>
+                                    <div class="acc-card <%= acc.id === _activeAccount?.id ? 'selected' : '' %>"
+                                         onclick="pickAccount('from', '<%= acc.id %>', this)">
+                                        <div class="acc-card-icon acc-icon-<%= acc.account_type?.replace('_builder','') || 'checking' %>">
+                                            <i class="fa-solid <%= acc.account_type === 'savings' ? 'fa-piggy-bank' : acc.account_type === 'credit_builder' ? 'fa-credit-card' : 'fa-building-columns' %>"></i>
+                                        </div>
+                                        <strong class="text-capitalize"><%= (acc.account_type || 'Account').replace('_', ' ') %></strong>
+                                        <span>···· <%= acc.account_number?.slice(-4) || '0000' %></span>
+                                        <div class="acc-bal"><%= _fmt(acc.balance || 0) %></div>
+                                    </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+                            <input type="hidden" name="from_account" id="from_account_input"
+                                   value="<%= _activeAccount?.id %>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">To Account</label>
+                            <div class="account-pick" id="toPicker">
+                                <% if (_accounts && _accounts.length > 0) { %>
+                                    <% _accounts.forEach(acc => { %>
+                                    <div class="acc-card"
+                                         onclick="pickAccount('to', '<%= acc.id %>', this)">
+                                        <div class="acc-card-icon acc-icon-<%= acc.account_type?.replace('_builder','') || 'checking' %>">
+                                            <i class="fa-solid <%= acc.account_type === 'savings' ? 'fa-piggy-bank' : acc.account_type === 'credit_builder' ? 'fa-credit-card' : 'fa-building-columns' %>"></i>
+                                        </div>
+                                        <strong class="text-capitalize"><%= (acc.account_type || 'Account').replace('_', ' ') %></strong>
+                                        <span>···· <%= acc.account_number?.slice(-4) || '0000' %></span>
+                                        <div class="acc-bal"><%= _fmt(acc.balance || 0) %></div>
+                                    </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+                            <input type="hidden" name="to_account" id="to_account_input" value="">
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="mb-2">
+                            <label class="form-label">Amount to Move</label>
+                            <div class="amount-wrapper">
+                                <span class="amount-prefix"><%= _symbol %></span>
+                                <input type="number" class="amount-input" name="amount"
+                                       id="sav-amount" placeholder="0.00"
+                                       min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="quick-amounts mb-4">
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',50)"><%= _symbol %>50</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',100)"><%= _symbol %>100</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',500)"><%= _symbol %>500</button>
+                            <button type="button" class="quick-btn" onclick="setAmt('sav-amount',1000)"><%= _symbol %>1,000</button>
+                        </div>
+
+                        <button type="button" class="btn-submit btn-submit-green"
+                                onclick="openConfirm('savings')">
+                            <i class="fa-solid fa-piggy-bank"></i> Move Money
+                        </button>
+                    </form>
+                </div>
+
+            </div><!-- /f-card -->
+        </div>
+
+        <!-- RIGHT: Info panel -->
+        <div class="col-12 col-lg-5 d-flex flex-column gap-4">
+
+            <!-- Dynamic info based on active tab -->
+            <div class="f-card" id="info-external">
+                <div class="section-label"><i class="fa-solid fa-circle-info me-2"></i> Withdrawal Info</div>
+                <div class="info-row"><span class="label">Daily limit</span><span class="value"><%= _fmt(5000) %></span></div>
+                <div class="info-row"><span class="label">Per transaction</span><span class="value"><%= _fmt(2500) %></span></div>
+                <div class="info-row"><span class="label">Monthly limit</span><span class="value"><%= _fmt(50000) %></span></div>
+                <div class="info-row"><span class="label">Processing time</span><span class="value">1–3 business days</span></div>
+                <div class="info-row"><span class="label">Fee</span><span class="value">Free</span></div>
+                <div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:12px;margin-top:16px;font-size:12px;color:#854f0b;">
+                    <i class="fa-solid fa-lock me-2"></i>
+                    A 7-digit code will be sent to your registered email address. Never share this code with anyone.
+                </div>
+            </div>
+
+            <div class="f-card" id="info-internal" style="display:none;">
+                <div class="section-label"><i class="fa-solid fa-circle-info me-2"></i> Client Transfer Info</div>
+                <div class="info-row"><span class="label">Speed</span><span class="value" style="color:#22c55e;">Instant</span></div>
+                <div class="info-row"><span class="label">Fee</span><span class="value" style="color:#22c55e;">Free</span></div>
+                <div class="info-row"><span class="label">Limit</span><span class="value">No limit</span></div>
+                <div class="info-row"><span class="label">Reversible?</span><span class="value" style="color:#ef4444;">No</span></div>
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px;margin-top:16px;font-size:12px;color:#064e3b;">
+                    <i class="fa-solid fa-shield-halved me-2" style="color:#22c55e;"></i>
+                    Transfers to other Finora users are instant and free. Always verify the recipient's name before confirming.
+                </div>
+            </div>
+
+            <div class="f-card" id="info-savings" style="display:none;">
+                <div class="section-label"><i class="fa-solid fa-circle-info me-2"></i> Move Money Info</div>
+                <div class="info-row"><span class="label">Speed</span><span class="value" style="color:#22c55e;">Instant</span></div>
+                <div class="info-row"><span class="label">Fee</span><span class="value" style="color:#22c55e;">Free</span></div>
+                <div class="info-row"><span class="label">From → To</span><span class="value">Any of your accounts</span></div>
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px;margin-top:16px;font-size:12px;color:#064e3b;">
+                    <i class="fa-solid fa-piggy-bank me-2" style="color:#22c55e;"></i>
+                    Moving money between your own accounts is always instant and free.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-hdr" id="modalHdr">
+                <h5 id="modalTitle">Confirm Transaction</h5>
+            </div>
+            <div class="modal-body p-4">
+                <div id="confirmRows"></div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 gap-2">
+                <button class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-confirm" id="confirmBtn" onclick="submitActive()">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+    <a href="/user/dashboard" class="nav-item"><i class="fa-solid fa-house-chimney"></i> Home</a>
+    <a href="/user/transactions" class="nav-item"><i class="fa-solid fa-chart-column"></i> Activity</a>
+    <a href="/user/withdraw" class="nav-item active"><i class="fa-solid fa-money-bill-transfer"></i> Transfer</a>
+    <a href="/user/profile" class="nav-item"><i class="fa-solid fa-user-gear"></i> Profile</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentMode    = 'external';
+    let recipientValid = false;
+    let recipientData  = {};
+    let lookupTimer    = null;
+    const currencySymbol = '<%= _symbol %>';
+
+    // ── Mode switcher ────────────────────────────────────────────────────────
+    function switchMode(mode, el) {
+        currentMode = mode;
+
+        // Tabs
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+
+        // Panels
+        document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + mode).classList.add('active');
+
+        // Info cards
+        ['external','internal','savings'].forEach(m => {
+            document.getElementById('info-' + m).style.display = m === mode ? '' : 'none';
+        });
+    }
+
+    // ── Quick amount ─────────────────────────────────────────────────────────
+    function setAmt(id, val) {
+        document.getElementById(id).value = val;
+        event.target.closest('.quick-amounts')
+             .querySelectorAll('.quick-btn')
+             .forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // ── Method field toggler (external) ──────────────────────────────────────
+    function toggleMethodFields() {
+        const method = document.getElementById('ext-method').value;
+        ['bank','mobile','crypto'].forEach(f =>
+            document.getElementById('fields-' + f).style.display = 'none'
+        );
+        if (method === 'bank_transfer')  document.getElementById('fields-bank').style.display   = '';
+        if (method === 'mobile_money')   document.getElementById('fields-mobile').style.display = '';
+        if (method === 'crypto')         document.getElementById('fields-crypto').style.display  = '';
+    }
+
+    // ── Withdrawal code request ───────────────────────────────────────────────
+    function requestCode(e) {
+        e.preventDefault();
+        const link = e.target.closest('a');
+        link.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Sending…';
+        fetch('/user/withdraw/request-code', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                link.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>Code sent!';
+                setTimeout(() => {
+                    link.innerHTML = '<i class="fa-solid fa-envelope me-1"></i>Request code';
+                }, 4000);
+            })
+            .catch(() => { link.innerHTML = '<i class="fa-solid fa-envelope me-1"></i>Request code'; });
+    }
+
+    // ── Account lookup (internal panel) ──────────────────────────────────────
+    function lookupAccount(val) {
+        const box     = document.getElementById('recipientBox');
+        const spinner = document.getElementById('lookupSpinner');
+        box.className = 'recipient-box';
+        clearTimeout(lookupTimer);
+        if (!val || val.length < 5) return;
+        spinner.style.display = 'block';
+
+        lookupTimer = setTimeout(async () => {
+            try {
+                const res  = await fetch('/user/transfer/lookup?account_number=' + encodeURIComponent(val));
+                const data = await res.json();
+                spinner.style.display = 'none';
+
+                if (data.found) {
+                    recipientValid = true;
+                    recipientData  = data;
+                    const initials = data.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+                    document.getElementById('recipientInitials').textContent = initials;
+                    document.getElementById('recipientInitials').style.background = '#0F6E56';
+                    document.getElementById('recipientName').textContent = data.name;
+                    document.getElementById('recipientSub').textContent  = 'Finora account · ' + data.account;
+                    document.getElementById('recipientBadge').innerHTML  =
+                        '<span style="background:#f0fdf4;color:#22c55e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;"><i class="fa-solid fa-circle-check me-1"></i>Verified</span>';
+                    box.classList.add('show','ok');
+                } else {
+                    recipientValid = false;
+                    document.getElementById('recipientInitials').textContent = '!';
+                    document.getElementById('recipientInitials').style.background = '#ef4444';
+                    document.getElementById('recipientName').textContent = 'Account not found';
+                    document.getElementById('recipientSub').textContent  = 'Check the account number and try again';
+                    document.getElementById('recipientBadge').innerHTML  = '';
+                    box.classList.add('show','fail');
+                }
+            } catch(e) { spinner.style.display = 'none'; }
+        }, 600);
+    }
+
+    // ── Account picker (savings panel) ───────────────────────────────────────
+    function pickAccount(side, id, el) {
+        const picker = side === 'from' ? 'fromPicker' : 'toPicker';
+        document.getElementById(picker)
+                .querySelectorAll('.acc-card')
+                .forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById(side + '_account_input').value = id;
+    }
+
+    // ── Open confirm modal ────────────────────────────────────────────────────
+    function openConfirm(mode) {
+        const hdr  = document.getElementById('modalHdr');
+        const btn  = document.getElementById('confirmBtn');
+        const rows = document.getElementById('confirmRows');
+
+        hdr.className = 'modal-hdr';
+        let rowsHTML = '';
+
+        if (mode === 'external') {
+            const amt    = parseFloat(document.getElementById('ext-amount').value);
+            const method = document.getElementById('ext-method');
+            const label  = method.options[method.selectedIndex]?.text || '—';
+            if (!amt || amt <= 0) return alert('Please enter a valid amount.');
+            const code = document.getElementById('withdrawal_code').value;
+            if (!code || code.length < 7) return alert('Please enter the 7-digit withdrawal code.');
+            hdr.classList.add('red');
+            hdr.querySelector('h5').textContent = 'Confirm Withdrawal';
+            btn.style.background = '#ef4444';
+            rowsHTML = row('Amount', currencySymbol + amt.toLocaleString(undefined,{minimumFractionDigits:2}), true)
+                     + row('Method', label)
+                     + row('Fee', 'Free');
+
+        } else if (mode === 'internal') {
+            const amt = parseFloat(document.getElementById('int-amount').value);
+            if (!amt || amt <= 0)  return alert('Please enter a valid amount.');
+            if (!recipientValid)   return alert('Please enter a valid recipient account.');
+            hdr.classList.add('blue');
+            hdr.querySelector('h5').textContent = 'Confirm Transfer';
+            btn.style.background = '#3b82f6';
+            rowsHTML = row('To', recipientData.name)
+                     + row('Account', recipientData.account)
+                     + row('Amount', currencySymbol + amt.toLocaleString(undefined,{minimumFractionDigits:2}), true)
+                     + row('Fee', 'Free')
+                     + row('Speed', 'Instant');
+
+        } else if (mode === 'savings') {
+            const amt  = parseFloat(document.getElementById('sav-amount').value);
+            const from = document.getElementById('from_account_input').value;
+            const to   = document.getElementById('to_account_input').value;
+            if (!amt || amt <= 0) return alert('Please enter a valid amount.');
+            if (!from)            return alert('Please select a From account.');
+            if (!to)              return alert('Please select a To account.');
+            if (from === to)      return alert('From and To accounts must be different.');
+            hdr.classList.add('green');
+            hdr.querySelector('h5').textContent = 'Confirm Move';
+            btn.style.background = '#0F6E56';
+            rowsHTML = row('Amount', currencySymbol + amt.toLocaleString(undefined,{minimumFractionDigits:2}), true)
+                     + row('Fee', 'Free')
+                     + row('Speed', 'Instant');
+        }
+
+        rows.innerHTML = rowsHTML;
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    }
+
+    function row(label, value, big = false) {
+        return `<div class="confirm-row">
+            <span class="cl">${label}</span>
+            <span class="cv${big ? ' big' : ''}">${value}</span>
+        </div>`;
+    }
+
+    // ── Submit the active form ────────────────────────────────────────────────
+    function submitActive() {
+        const btn = document.getElementById('confirmBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Processing…';
+
+        if (currentMode === 'external')  document.getElementById('withdrawForm').submit();
+        if (currentMode === 'internal')  document.getElementById('internalForm').submit();
+        if (currentMode === 'savings')   document.getElementById('savingsForm').submit();
+    }
+
+    // Numbers only in code field
+    document.getElementById('withdrawal_code').addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>
+</body>
+</html>

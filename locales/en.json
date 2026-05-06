@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "withdraw": "Withdraw",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "phone": "Phone Number",
+    "submit": "Submit",
+    "verify_email": "Verify Your Email",
+    "enter_pin": "Enter 4-Digit PIN",
+    "set_pin": "Set Your PIN"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}",
+    "balance": "Account Balance",
+    "recent_transactions": "Recent Transactions",
+    "no_transactions": "No transactions yet"
+  },
+  "kyc": {
+    "title": "KYC Verification",
+    "status": "Status",
+    "submit_documents": "Submit Documents",
+    "pending": "Pending Review",
+    "approved": "Verified",
+    "rejected": "Rejected"
+  },
+  "withdraw": {
+    "title": "Withdraw Funds",
+    "amount": "Amount",
+    "request_code": "Request Withdrawal Code",
+    "enter_code": "Enter 7-Digit Code",
+    "steps_required": "Additional verification steps required",
+    "step_progress": "Step {{current}} of {{total}}"
+  },
+  "admin": {
+    "users": "Manage Users",
+    "kyc_review": "KYC Review",
+    "fund_account": "Fund Account",
+    "deduct_account": "Deduct Account",
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "errors": {
+    "insufficient_balance": "Insufficient balance",
+    "invalid_code": "Invalid or expired code",
+    "kyc_required": "KYC verification required",
+    "account_suspended": "Account suspended"
+  }
+}

@@ -1,0 +1,246 @@
+<%
+  /* ── Safe defaults if middleware hasn't run ── */
+  const _lang     = typeof lang     !== 'undefined' ? lang     : 'en';
+  const _theme    = typeof theme    !== 'undefined' ? theme    : 'light';
+  const _currency = typeof currency !== 'undefined' ? currency : 'USD';
+  const _symbol   = typeof currencySymbol !== 'undefined' ? currencySymbol : (typeof symbol !== 'undefined' ? symbol : '$');
+  const _t        = typeof t        !== 'undefined' ? t        : {};
+%>
+<!DOCTYPE html>
+<html lang="<%= _lang %>" data-theme="<%= _theme %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Open Account' %> - Finora Bank</title>
+
+    <script>
+        document.documentElement.setAttribute('data-theme', '<%= _theme %>');
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F6E56;
+            --accent: #1D9E75;
+            --bg-body: #F4F8F7;
+            --bg-card: #FFFFFF;
+            --bg-input: #F4F8F7;
+            --text-main: #0D1B16;
+            --text-muted: #64748B;
+            --border: #E8EFED;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --nav-bg: rgba(255,255,255,0.95);
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #172032;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --nav-bg: rgba(15,23,42,0.97);
+        }
+        @media (prefers-color-scheme: dark) {
+            [data-theme="auto"] {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --bg-input: #172032;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border: #334155;
+                --nav-bg: rgba(15,23,42,0.97);
+            }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 90px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .main-content { padding: 20px; max-width: 860px; margin: 0 auto; }
+        .flash-message {
+            padding: 14px 18px; border-radius: 12px; margin-bottom: 20px;
+            font-size: 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .flash-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .flash-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+        .f-card {
+            background: var(--bg-card); border-radius: 24px; padding: 32px;
+            border: 1px solid var(--border); box-shadow: 0 10px 30px -5px rgba(15, 110, 86, 0.05);
+            margin-bottom: 16px;
+        }
+        .account-option {
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 28px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-card);
+            height: 100%;
+        }
+        .account-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(15, 110, 86, 0.1);
+        }
+        .account-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .account-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px; color: white;
+        }
+        .btn-submit {
+            background: var(--primary); color: white; border: none;
+            border-radius: 14px; padding: 15px 32px;
+            font-size: 15px; font-weight: 700;
+            cursor: pointer; width: 100%;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-submit:hover { background: var(--accent); transform: translateY(-1px); }
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--nav-bg); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border); display: flex;
+            justify-content: space-around; padding: 10px 0 25px 0; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+            .mobile-nav { display: none; }
+            body { padding-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success">
+            <i class="fas fa-circle-check"></i> <%= success_msg %>
+        </div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger">
+            <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+        </div>
+    <% } %>
+
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="small text-muted mb-0">
+                <a href="/user/dashboard" class="text-decoration-none" style="color:var(--primary);">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+                </a>
+            </p>
+            <h1 class="h4 fw-bold mb-0"><%= typeof title !== 'undefined' ? title : 'Open an Account' %></h1>
+        </div>
+    </header>
+
+    <div class="f-card">
+        <p class="text-muted mb-4">Choose the type of account you want to open:</p>
+
+        <form action="/user/open-account" method="POST" id="openAccountForm">
+            <div class="row g-4 mb-4">
+
+                <!-- Checking -->
+                <div class="col-12 col-md-4">
+                    <label class="account-option <%= typeof hasChecking !== 'undefined' && hasChecking ? 'disabled' : '' %>" style="display:block; cursor:pointer;">
+                        <input type="radio" name="account_type" value="checking" 
+                               <%= typeof hasChecking !== 'undefined' && hasChecking ? 'disabled' : 'required' %> 
+                               style="position:absolute; opacity:0;">
+                        <div class="account-icon">
+                            <i class="fa-solid fa-money-check-dollar"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Checking</h5>
+                        <p class="small text-muted mb-0">Daily spending, bills, and transfers</p>
+                        <% if (typeof hasChecking !== 'undefined' && hasChecking) { %>
+                            <span class="badge bg-success mt-2">Already Open</span>
+                        <% } %>
+                    </label>
+                </div>
+
+                <!-- Savings -->
+                <div class="col-12 col-md-4">
+                    <label class="account-option <%= typeof hasSavings !== 'undefined' && hasSavings ? 'disabled' : '' %>" style="display:block; cursor:pointer;">
+                        <input type="radio" name="account_type" value="savings" 
+                               <%= typeof hasSavings !== 'undefined' && hasSavings ? 'disabled' : '' %> 
+                               style="position:absolute; opacity:0;">
+                        <div class="account-icon">
+                            <i class="fa-solid fa-piggy-bank"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Savings</h5>
+                        <p class="small text-muted mb-0">Earn interest on your savings</p>
+                        <% if (typeof hasSavings !== 'undefined' && hasSavings) { %>
+                            <span class="badge bg-success mt-2">Already Open</span>
+                        <% } %>
+                    </label>
+                </div>
+
+                <!-- Credit Builder -->
+                <div class="col-12 col-md-4">
+                    <label class="account-option <%= typeof hasCredit !== 'undefined' && hasCredit ? 'disabled' : '' %>" style="display:block; cursor:pointer;">
+                        <input type="radio" name="account_type" value="credit_builder" 
+                               <%= typeof hasCredit !== 'undefined' && hasCredit ? 'disabled' : '' %> 
+                               style="position:absolute; opacity:0;">
+                        <div class="account-icon">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Credit Builder</h5>
+                        <p class="small text-muted mb-0">Build credit with a secured card</p>
+                        <% if (typeof hasCredit !== 'undefined' && hasCredit) { %>
+                            <span class="badge bg-success mt-2">Already Open</span>
+                        <% } %>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="fa-solid fa-circle-check me-2"></i> Open Account
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Mobile Nav -->
+<%- include('../mobile_partier/nav') %>
+
+<script>
+    // Highlight selected option
+    const options = document.querySelectorAll('.account-option:not(.disabled)');
+    options.forEach(opt => {
+        opt.addEventListener('click', function() {
+            options.forEach(o => o.style.borderColor = 'var(--border)');
+            this.style.borderColor = 'var(--primary)';
+        });
+    });
+
+    // Prevent submit if disabled
+    document.getElementById('openAccountForm').addEventListener('submit', function(e) {
+        const selected = document.querySelector('input[name="account_type"]:checked');
+        if (!selected) {
+            e.preventDefault();
+            alert('Please select an account type');
+        }
+    });
+</script>
+
+</body>
+</html>

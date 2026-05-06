@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Admin | Finora Bank</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0F6E56;
+            --accent: #1D9E75;
+            --bg-body: #F4F8F7;
+            --white: #FFFFFF;
+            --text-main: #0D1B16;
+            --text-muted: #64748B;
+            --border: #E8EFED;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 40px;
+        }
+
+        .main-content { padding: 24px; max-width: 780px; margin: 0 auto; }
+
+        .flash-message {
+            padding: 14px 18px; border-radius: 12px; margin-bottom: 20px;
+            font-size: 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .flash-danger  { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .flash-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+
+        /* BANNER */
+        .page-banner {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 24px; padding: 28px 32px; color: white;
+            margin-bottom: 24px; box-shadow: 0 15px 35px rgba(15, 110, 86, 0.3);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .page-banner h2 { font-size: 1.4rem; font-weight: 800; margin: 0; }
+        .page-banner p  { font-size: 13px; opacity: 0.85; margin: 4px 0 0; }
+        .banner-icon {
+            width: 56px; height: 56px; background: rgba(255,255,255,0.2);
+            border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
+
+        /* CARD */
+        .f-card {
+            background: var(--white); border-radius: 24px; padding: 28px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px -5px rgba(15, 110, 86, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .section-label {
+            font-size: 11px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px; background: var(--border);
+        }
+
+        /* TRANSACTION SUMMARY ROW */
+        .tx-summary {
+            display: flex; align-items: center; gap: 16px;
+            padding: 18px; background: var(--bg-body);
+            border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px;
+        }
+        .tx-icon {
+            width: 52px; height: 52px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+        }
+        .tx-deposit    { background: #f0fdf4; color: var(--success); }
+        .tx-withdrawal { background: #fef2f2; color: var(--danger); }
+        .tx-transfer   { background: #eff6ff; color: #3b82f6; }
+        .tx-admin      { background: #fdf4ff; color: #a855f7; }
+
+        /* FORM */
+        .form-label {
+            font-size: 12px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block;
+        }
+
+        .f-input {
+            background: var(--bg-body); border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px 16px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px; width: 100%; color: var(--text-main);
+            transition: all 0.2s; outline: none;
+        }
+        .f-input:focus {
+            border-color: var(--primary); background: white;
+            box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.1);
+        }
+
+        select.f-input { appearance: none; cursor: pointer; }
+
+        /* STATUS COLORS IN SELECT */
+        .f-input option { font-weight: 600; }
+
+        /* DATE HIGHLIGHT - the star of the page */
+        .date-field-wrap { position: relative; }
+        .date-field-wrap .f-input {
+            padding-right: 44px;
+            font-weight: 700; font-size: 15px;
+            color: var(--primary);
+        }
+        .date-field-wrap .calendar-icon {
+            position: absolute; right: 16px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary); font-size: 16px; pointer-events: none;
+        }
+
+        /* CURRENT VS NEW badge */
+        .old-value {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #fef9ec; border: 1px solid #fde68a;
+            color: #92400e; border-radius: 10px;
+            padding: 6px 12px; font-size: 12px; font-weight: 600; margin-bottom: 10px;
+        }
+
+        /* AMOUNT PREFIX */
+        .amount-wrap { position: relative; }
+        .amount-wrap .dollar {
+            position: absolute; left: 16px; top: 50%;
+            transform: translateY(-50%); font-weight: 800;
+            color: var(--primary); font-size: 15px;
+        }
+        .amount-wrap .f-input { padding-left: 30px; font-weight: 800; color: var(--primary); font-size: 15px; }
+
+        /* BUTTONS */
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white; border: none; border-radius: 14px;
+            padding: 15px 28px; font-weight: 700; font-size: 15px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer; width: 100%; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15, 110, 86, 0.3); }
+
+        .btn-cancel {
+            background: var(--bg-body); color: var(--text-muted);
+            border: 1px solid var(--border); border-radius: 14px;
+            padding: 15px 28px; font-weight: 700; font-size: 15px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer; width: 100%; transition: all 0.2s;
+            text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-cancel:hover { background: white; color: var(--text-main); }
+
+        /* STATUS BADGES */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+        }
+        .pill-completed { background: #f0fdf4; color: var(--success); }
+        .pill-pending   { background: #fffbeb; color: var(--warning); }
+        .pill-failed    { background: #fef2f2; color: var(--danger); }
+
+        @media (min-width: 992px) {
+            .main-content { padding: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+
+    <!-- Flash Messages -->
+    <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+        <div class="flash-message flash-success">
+            <i class="fas fa-circle-check"></i> <%= success_msg %>
+        </div>
+    <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+        <div class="flash-message flash-danger">
+            <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
+        </div>
+    <% } %>
+
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="small text-muted mb-0">Admin Panel</p>
+            <h1 class="h4 fw-bold mb-0">Edit Transaction</h1>
+        </div>
+        <a href="/admin/transactions" class="bg-white p-2 rounded-3 border text-decoration-none">
+            <i class="fa-solid fa-arrow-left text-muted"></i>
+        </a>
+    </header>
+
+    <!-- Banner -->
+    <div class="page-banner">
+        <div>
+            <h2>Transaction #<%= transaction.id %></h2>
+            <p>
+                <%= transaction.first_name %> <%= transaction.last_name %> &nbsp;·&nbsp; <%= transaction.email %>
+            </p>
+        </div>
+        <div class="banner-icon">
+            <i class="fa-solid fa-pen-to-square"></i>
+        </div>
+    </div>
+
+    <!-- TRANSACTION SNAPSHOT -->
+    <div class="f-card">
+        <div class="section-label"><i class="fa-solid fa-receipt"></i> Transaction Snapshot</div>
+
+        <div class="tx-summary">
+            <%
+                let iconClass = 'tx-transfer';
+                let iconName  = 'fa-exchange-alt';
+                if (transaction.type === 'deposit' || transaction.type === 'admin_credit') {
+                    iconClass = 'tx-deposit'; iconName = 'fa-arrow-down';
+                } else if (transaction.type === 'withdrawal' || transaction.type === 'admin_debit') {
+                    iconClass = 'tx-withdrawal'; iconName = 'fa-arrow-up';
+                } else if (transaction.type.startsWith('admin')) {
+                    iconClass = 'tx-admin'; iconName = 'fa-shield-halved';
+                }
+            %>
+            <div class="tx-icon <%= iconClass %>">
+                <i class="fa-solid <%= iconName %>"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold" style="font-size:15px;">
+                    <%= transaction.type.replace(/_/g, ' ').toUpperCase() %>
+                </div>
+                <div class="text-muted small mt-1">
+                    <%= transaction.description || '—' %>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold" style="font-size:1.3rem; color: var(--primary);">
+                    $<%= parseFloat(transaction.amount).toLocaleString(undefined, {minimumFractionDigits: 2}) %>
+                </div>
+                <div class="mt-1">
+                    <% if (transaction.status === 'completed') { %>
+                        <span class="status-pill pill-completed"><i class="fa-solid fa-circle-check"></i> Completed</span>
+                    <% } else if (transaction.status === 'pending') { %>
+                        <span class="status-pill pill-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+                    <% } else { %>
+                        <span class="status-pill pill-failed"><i class="fa-solid fa-xmark"></i> <%= transaction.status %></span>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDIT FORM -->
+        <form action="/admin/transactions/<%= transaction.id %>/edit" method="POST">
+
+            <div class="section-label"><i class="fa-solid fa-calendar-days"></i> Edit Fields</div>
+
+            <!-- DATE — Primary field -->
+            <div class="mb-4">
+                <label class="form-label">Transaction Date & Time</label>
+                <div class="old-value">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Current: <%= new Date(transaction.created_at).toLocaleString() %>
+                </div>
+                <div class="date-field-wrap">
+                    <input
+                        type="datetime-local"
+                        name="created_at"
+                        class="f-input"
+                        value="<%= new Date(new Date(transaction.created_at).getTime() - new Date(transaction.created_at).getTimezoneOffset() * 60000).toISOString().slice(0,16) %>"
+                        required
+                    >
+                    <i class="fa-solid fa-calendar-days calendar-icon"></i>
+                </div>
+            </div>
+
+            <!-- AMOUNT -->
+            <div class="mb-4">
+                <label class="form-label">Amount</label>
+                <div class="amount-wrap">
+                    <span class="dollar">$</span>
+                    <input
+                        type="number"
+                        name="amount"
+                        class="f-input"
+                        value="<%= parseFloat(transaction.amount).toFixed(2) %>"
+                        step="0.01" min="0.01"
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="mb-4">
+                <label class="form-label">Description</label>
+                <input
+                    type="text"
+                    name="description"
+                    class="f-input"
+                    value="<%= transaction.description || '' %>"
+                    placeholder="Transaction description"
+                >
+            </div>
+
+            <!-- STATUS -->
+            <div class="mb-4">
+                <label class="form-label">Status</label>
+                <div style="position: relative;">
+                    <select name="status" class="f-input">
+                        <option value="completed" <%= transaction.status === 'completed' ? 'selected' : '' %>>✅ Completed</option>
+                        <option value="pending"   <%= transaction.status === 'pending'   ? 'selected' : '' %>>⏳ Pending</option>
+                        <option value="failed"    <%= transaction.status === 'failed'    ? 'selected' : '' %>>❌ Failed</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down" style="position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none;"></i>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="row g-3 mt-2">
+                <div class="col-6">
+                    <a href="/admin/transactions" class="btn-cancel">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </a>
+                </div>
+                <div class="col-6">
+                    <button type="submit" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
