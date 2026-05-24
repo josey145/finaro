@@ -133,6 +133,19 @@
         .form-panel { display:none; }
         .form-panel.active { display:block; }
 
+        .method-select-wrapper {
+                position: relative;
+            }
+            .method-icon {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 10;
+                pointer-events: none;
+                font-size: 16px;
+            }
+
         .mobile-nav { position:fixed; bottom:0; left:0; width:100%; background:var(--nav-bg); backdrop-filter:blur(10px); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:10px 0 25px; z-index:1000; }
         .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
         .nav-item.active { color:var(--primary); }

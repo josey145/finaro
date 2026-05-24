@@ -1,440 +1,640 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> - Finora Bank</title>
+  <title><%= title %> - Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #0F6E56;
-      --accent:  #1D9E75;
-      --bg-body: #F4F8F7;
-      --white:   #FFFFFF;
-      --text-main:  #0D1B16;
-      --text-muted: #64748B;
-      --border:  #E8EFED;
-      --danger:  #ef4444;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --info:    #3b82f6;
+      --primary: #0F6E56; --accent: #1D9E75;
+      --bg: #F4F8F7; --white: #fff;
+      --text: #0D1B16; --muted: #64748B;
+      --border: #E8EFED; --danger: #ef4444;
+      --success: #22c55e; --warning: #f59e0b;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family:'Plus Jakarta Sans',sans-serif;
-      background:var(--bg-body);
-      color:var(--text-main);
-      padding-bottom:90px;
-    }
-    .main-content { padding:20px; max-width:1200px; margin:0 auto; }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);padding-bottom:40px;}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 20px;}
 
-    /* FLASH */
-    .flash-message {
-      padding:14px 18px; border-radius:12px; margin-bottom:20px;
-      font-size:14px; display:flex; align-items:center; gap:10px;
-    }
-    .flash-danger  { background:#fef2f2; color:var(--danger);  border:1px solid #fecaca; }
-    .flash-success { background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; }
+    /* ── header ── */
+    .page-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+    .back-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--white);color:var(--text);text-decoration:none;font-size:13px;font-weight:700;transition:.2s;}
+    .back-btn:hover{border-color:var(--accent);}
+    .page-title{font-size:1.4rem;font-weight:800;}
+    .page-sub{font-size:13px;color:var(--muted);margin-top:2px;}
 
-    /* HERO */
-    .balance-card {
-      background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
-      border-radius:24px; padding:28px 32px; color:white;
-      margin-bottom:28px;
-      box-shadow:0 15px 35px rgba(15,110,86,.3);
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
-    }
-    .balance-label { font-size:13px; opacity:.85; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
-    .balance-title { font-size:1.8rem; font-weight:800; letter-spacing:-.5px; }
-    .hero-icon {
-      width:56px; height:56px; border-radius:16px;
-      background:rgba(255,255,255,.2);
-      display:flex; align-items:center; justify-content:center;
-      font-size:22px; color:white;
-    }
+    /* ── flash ── */
+    .flash{padding:13px 18px;border-radius:12px;margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:10px;}
+    .flash-ok{background:#f0fdf4;color:var(--success);border:1px solid #bbf7d0;}
+    .flash-err{background:#fef2f2;color:var(--danger);border:1px solid #fecaca;}
 
-    /* CARD */
-    .f-card {
-      background:var(--white); border-radius:24px; padding:28px;
-      border:1px solid var(--border);
-      box-shadow:0 10px 30px -5px rgba(15,110,86,.06);
-      margin-bottom:20px;
-    }
-    .f-card h6 {
-      font-size:15px; font-weight:700; margin-bottom:20px;
-      color:var(--text-main); display:flex; align-items:center; gap:10px;
-    }
-    .section-icon {
-      width:32px; height:32px; border-radius:10px;
-      background:linear-gradient(135deg,var(--primary),var(--accent));
-      display:flex; align-items:center; justify-content:center;
-      color:white; font-size:13px; flex-shrink:0;
-    }
+    /* ── layout ── */
+    .grid{display:grid;grid-template-columns:1fr;gap:20px;}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 340px;}}
 
-    /* PROFILE HEADER */
-    .profile-header {
-      display:flex; align-items:center; gap:16px; margin-bottom:24px;
-    }
-    .profile-avatar {
-      width:72px; height:72px; border-radius:20px;
-      background:linear-gradient(135deg,var(--primary),var(--accent));
-      display:flex; align-items:center; justify-content:center;
-      color:white; font-size:28px; font-weight:800;
-      flex-shrink:0;
-    }
-    .profile-info h2 { font-size:1.3rem; font-weight:800; margin-bottom:4px; }
-    .profile-info p { font-size:13px; color:var(--text-muted); }
-    
-    /* STATUS BADGES */
-    .status-badge {
-      display:inline-flex; align-items:center; gap:6px;
-      padding:5px 12px; border-radius:20px;
-      font-size:12px; font-weight:600;
-    }
-    .badge-success { background:#f0fdf4; color:var(--success); }
-    .badge-warning { background:#fffbeb; color:var(--warning); }
-    .badge-danger  { background:#fef2f2; color:var(--danger); }
-    .badge-info    { background:#eff6ff; color:var(--info); }
+    /* ── card ── */
+    .card{background:var(--white);border-radius:20px;padding:24px;border:1px solid var(--border);box-shadow:0 6px 20px -4px rgba(15,110,86,.07);margin-bottom:20px;}
+    .card-title{font-size:14px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+    .ci{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0;}
 
-    /* INFO GRID */
-    .info-grid {
-      display:grid; grid-template-columns:1fr; gap:12px;
-    }
-    @media(min-width:768px) {
-      .info-grid { grid-template-columns:1fr 1fr; }
-    }
-    .info-item {
-      padding:14px 16px; background:var(--bg-body);
-      border-radius:14px; border:1px solid var(--border);
-    }
-    .info-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:4px; }
-    .info-value { font-size:14px; font-weight:700; color:var(--text-main); }
+    /* ── form ── */
+    .fg{margin-bottom:18px;}
+    .lbl{font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px;display:block;}
+    .inp,.sel{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;font-weight:500;color:var(--text);background:var(--bg);outline:none;transition:.2s;}
+    .inp:focus,.sel:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 4px rgba(29,158,117,.09);}
+    .hint{font-size:11.5px;color:var(--muted);margin-top:5px;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 
-    /* TABLE */
-    .f-table { width:100%; border-collapse:separate; border-spacing:0; }
-    .f-table th {
-      text-align:left; padding:12px 16px; font-size:11px;
-      text-transform:uppercase; letter-spacing:.8px;
-      color:var(--text-muted); font-weight:700;
-      border-bottom:2px solid var(--border);
-    }
-    .f-table td {
-      padding:14px 16px; font-size:13px;
-      border-bottom:1px solid var(--border);
-    }
-    .f-table tr:last-child td { border-bottom:none; }
-    .tx-type { font-weight:600; }
-    .tx-credit { color:var(--success); }
-    .tx-debit  { color:var(--danger); }
-    .tx-amount { font-weight:700; }
+    /* ── toggle ── */
+    .tog-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--bg);border-radius:14px;border:1.5px solid var(--border);margin-bottom:12px;}
+    .tog-row:last-child{margin-bottom:0;}
+    .tog-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+    .tog-desc{font-size:11.5px;color:var(--muted);}
+    .sw{position:relative;width:44px;height:24px;flex-shrink:0;}
+    .sw input{opacity:0;width:0;height:0;}
+    .sl{position:absolute;cursor:pointer;inset:0;background:#D1D5DB;border-radius:100px;transition:.3s;}
+    .sl::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    input:checked+.sl{background:var(--primary);}
+    input:checked+.sl::before{transform:translateX(20px);}
 
-    /* ACTION BUTTONS */
-    .action-bar {
-      display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;
-    }
-    .btn {
-      padding:10px 18px; border-radius:12px; font-family:'Plus Jakarta Sans',sans-serif;
-      font-size:13px; font-weight:700; cursor:pointer; border:none;
-      display:flex; align-items:center; gap:8px; transition:all .2s;
-      text-decoration:none;
-    }
-    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--accent)); color:white; }
-    .btn-danger  { background:#fef2f2; color:var(--danger); border:1.5px solid #fecaca; }
-    .btn-warning { background:#fffbeb; color:var(--warning); border:1.5px solid #fde68a; }
-    .btn:hover { transform:translateY(-1px); }
+    /* ── badge ── */
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;}
+    .b-green{background:#f0fdf4;color:var(--success);}
+    .b-red{background:#fef2f2;color:var(--danger);}
+    .b-yellow{background:#fffbeb;color:var(--warning);}
+    .b-blue{background:#eff6ff;color:#3b82f6;}
+    .b-purple{background:#f5f3ff;color:#7c3aed;}
 
-    /* EMPTY STATE */
-    .empty-state { text-align:center; padding:40px 20px; color:var(--text-muted); }
-    .empty-state i { font-size:40px; margin-bottom:12px; opacity:.5; }
+    /* ── user hero ── */
+    .user-hero{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:18px;padding:24px;color:#fff;margin-bottom:20px;display:flex;align-items:center;gap:18px;}
+    .avatar{width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;flex-shrink:0;}
+    .hero-name{font-size:1.2rem;font-weight:800;}
+    .hero-meta{font-size:12.5px;opacity:.85;margin-top:3px;}
 
-    /* MOBILE NAV */
-    .mobile-nav {
-      position:fixed; bottom:0; left:0; width:100%;
-      background:rgba(255,255,255,.95); backdrop-filter:blur(10px);
-      border-top:1px solid var(--border);
-      display:flex; justify-content:space-around;
-      padding:10px 0 25px; z-index:1000;
-    }
-    .nav-item { text-align:center; color:var(--text-muted); text-decoration:none; font-size:10px; font-weight:700; }
-    .nav-item.active { color:var(--primary); }
-    .nav-item i { font-size:20px; margin-bottom:4px; display:block; }
+    /* ── action btn ── */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.25s;width:100%;margin-bottom:10px;}
+    .btn:last-child{margin-bottom:0;}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;box-shadow:0 6px 18px rgba(15,110,86,.28);}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(15,110,86,.35);}
+    .btn-danger{background:#fef2f2;color:var(--danger);border:1.5px solid #fecaca;}
+    .btn-danger:hover{background:var(--danger);color:#fff;}
+    .btn-warn{background:#fffbeb;color:var(--warning);border:1.5px solid #fde68a;}
+    .btn-warn:hover{background:var(--warning);color:#fff;}
+    .btn-blue{background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe;}
+    .btn-blue:hover{background:#2563eb;color:#fff;}
+    .btn-purple{background:#f5f3ff;color:#7c3aed;border:1.5px solid #ddd6fe;}
+    .btn-purple:hover{background:#7c3aed;color:#fff;}
+    .btn-sm{padding:8px 16px;width:auto;font-size:12px;border-radius:10px;margin-bottom:0;}
 
-    /* GRID */
-    #main-grid { display:grid; grid-template-columns:1fr; gap:20px; }
-    @media(min-width:992px) {
-      .main-content { padding:40px; }
-      .mobile-nav { display:none; }
-      body { padding-bottom:0; }
-      #main-grid { grid-template-columns:1fr 360px; }
-    }
+    /* ── inline-confirm ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--white);border-radius:20px;padding:28px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .modal h3{font-size:16px;font-weight:800;margin-bottom:8px;}
+    .modal p{font-size:13.5px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+    .modal-row{display:flex;gap:10px;}
+    .modal-row .btn{margin-bottom:0;}
+
+    /* ── stat row ── */
+    .stat-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
+    .stat-row:last-child{border-bottom:none;padding-bottom:0;}
+    .stat-key{color:var(--muted);font-weight:600;}
+    .stat-val{font-weight:700;}
+
+    /* ── divider ── */
+    .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+
+    /* ── password reveal ── */
+    .pw-wrap{position:relative;}
+    .pw-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:13px;background:none;border:none;padding:0;}
   </style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="main-content">
-
-  <!-- Flash Messages -->
-  <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
-    <div class="flash-message flash-success">
-      <i class="fas fa-circle-check"></i> <%= success_msg %>
-    </div>
+  <!-- Flash -->
+  <% if (success_msg && success_msg.length) { %>
+    <div class="flash flash-ok"><i class="fas fa-circle-check"></i> <%= success_msg %></div>
   <% } %>
-  <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
-    <div class="flash-message flash-danger">
-      <i class="fas fa-circle-exclamation"></i> <%= error_msg %>
-    </div>
+  <% if (error_msg && error_msg.length) { %>
+    <div class="flash flash-err"><i class="fas fa-circle-exclamation"></i> <%= error_msg %></div>
   <% } %>
 
   <!-- Header -->
-  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+  <div class="page-header">
+    <a href="/admin/users" class="back-btn"><i class="fas fa-arrow-left"></i> Users</a>
     <div>
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Admin Panel</p>
-      <h1 style="font-size:1.2rem;font-weight:800;margin:0;display:flex;align-items:center;gap:8px;">
-        <i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i>
-        User Details
-      </h1>
+      <div class="page-title">Edit User</div>
+      <div class="page-sub">ID #<%= user.id %> · Created <%= new Date(user.created_at).toLocaleDateString() %></div>
     </div>
-    <div style="display:flex;gap:8px;">
-      <a href="/admin/settings" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
-        <i class="fa-solid fa-gear" style="color:var(--primary);"></i>
-      </a>
-      <a href="/auth/logout" style="background:white;padding:8px 12px;border-radius:12px;border:1px solid var(--border);text-decoration:none;">
-        <i class="fa-solid fa-right-from-bracket" style="color:var(--danger);"></i>
-      </a>
-    </div>
-  </header>
-
-  <!-- HERO BANNER -->
-  <div class="balance-card">
-    <div>
-      <div class="balance-label">Account Balance</div>
-      <div class="balance-title">$<%= parseFloat(user.balance || 0).toFixed(2) %></div>
-    </div>
-    <div class="hero-icon"><i class="fa-solid fa-wallet"></i></div>
   </div>
 
-  <!-- ACTION BAR -->
-  <div class="action-bar">
-    <a href="/admin/fund?userId=<%= user.id %>" class="btn btn-primary">
-      <i class="fa-solid fa-money-bill-transfer"></i> Fund / Deduct
-    </a>
-    <form method="POST" action="/admin/users/<%= user.id %>/suspend" style="display:inline;" onsubmit="return confirm('Toggle suspend status?')">
-      <input type="hidden" name="action" value="<%= user.is_suspended ? 'unsuspend' : 'suspend' %>">
-      <button type="submit" class="btn <%= user.is_suspended ? 'btn-warning' : 'btn-warning' %>">
-        <i class="fa-solid <%= user.is_suspended ? 'fa-play' : 'fa-pause' %>"></i>
-        <%= user.is_suspended ? 'Unsuspend' : 'Suspend' %>
-      </button>
-    </form>
-    <form method="POST" action="/admin/users/<%= user.id %>/delete" style="display:inline;" onsubmit="return confirm('Are you sure? This will permanently delete the user and all data.')">
-      <button type="submit" class="btn btn-danger">
-        <i class="fa-solid fa-trash"></i> Delete
-      </button>
-    </form>
+  <!-- Hero -->
+  <div class="user-hero">
+    <div class="avatar"><%= (user.username || 'U').charAt(0).toUpperCase() %></div>
+    <div>
+      <div class="hero-name"><%= user.username %></div>
+      <div class="hero-meta"><%= user.email %></div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge <%= user.role === 'admin' ? 'b-purple' : 'b-blue' %>">
+          <i class="fas <%= user.role === 'admin' ? 'fa-shield-halved' : 'fa-user' %>"></i>
+          <%= user.role %>
+        </span>
+        <span class="badge <%= user.kyc_status === 'approved' ? 'b-green' : user.kyc_status === 'rejected' ? 'b-red' : 'b-yellow' %>">
+          KYC: <%= user.kyc_status %>
+        </span>
+        <% if (user.blocked) { %><span class="badge b-red"><i class="fas fa-ban"></i> Blocked</span><% } %>
+        <% if (user.suspended) { %><span class="badge b-yellow"><i class="fas fa-pause"></i> Suspended</span><% } %>
+        <% if (!user.email_verified) { %><span class="badge b-red">Email Unverified</span><% } %>
+        <% if (!user.account_verified) { %><span class="badge b-yellow">Account Unverified</span><% } %>
+      </div>
+    </div>
   </div>
 
-  <!-- MAIN GRID -->
-  <div id="main-grid">
-
-    <!-- ── LEFT: DETAILS ── -->
+  <div class="grid">
+    <!-- ═══ LEFT ═══ -->
     <div>
 
-      <!-- Profile Card -->
-      <div class="f-card">
-        <div class="profile-header">
-          <div class="profile-avatar">
-            <%= user.first_name.charAt(0).toUpperCase() %><%= user.last_name.charAt(0).toUpperCase() %>
+      <!-- ── Profile form ── -->
+      <form method="POST" action="/admin/users/<%= user.id %>/edit">
+        <div class="card">
+          <div class="card-title">
+            <span class="ci"><i class="fas fa-user"></i></span> Profile Information
           </div>
-          <div class="profile-info">
-            <h2><%= user.first_name %> <%= user.last_name %></h2>
-            <p><i class="fa-solid fa-envelope" style="margin-right:4px;"></i> <%= user.email %></p>
-            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-              <% if (user.kyc_status === 'approved') { %>
-                <span class="status-badge badge-success"><i class="fa-solid fa-circle" style="font-size:8px;"></i> KYC Approved</span>
-              <% } else if (user.kyc_status === 'pending') { %>
-                <span class="status-badge badge-warning"><i class="fa-solid fa-circle" style="font-size:8px;"></i> KYC Pending</span>
-              <% } else { %>
-                <span class="status-badge badge-danger"><i class="fa-solid fa-circle" style="font-size:8px;"></i> KYC <%= user.kyc_status %></span>
-              <% } %>
-              
-              <% if (user.is_suspended) { %>
-                <span class="status-badge badge-danger"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Suspended</span>
-              <% } else { %>
-                <span class="status-badge badge-success"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Active</span>
-              <% } %>
-              
-              <% if (user.email_verified) { %>
-                <span class="status-badge badge-info"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Verified</span>
-              <% } %>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Username</label>
+              <input class="inp" name="username" value="<%= user.username %>" required>
+            </div>
+            <div class="fg">
+              <label class="lbl">Email</label>
+              <input class="inp" type="email" name="email" value="<%= user.email %>" required>
+              <div class="hint">Changes email used for login.</div>
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Phone</label>
+              <input class="inp" name="phone" value="<%= user.phone || '' %>">
+            </div>
+            <div class="fg">
+              <label class="lbl">Date of Birth</label>
+              <input class="inp" type="date" name="dob" value="<%= user.dob ? user.dob.toISOString().split('T')[0] : '' %>">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Country</label>
+              <input class="inp" name="country" value="<%= user.country || '' %>">
+            </div>
+            <div class="fg">
+              <label class="lbl">State</label>
+              <input class="inp" name="state" value="<%= user.state || '' %>">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">City</label>
+              <input class="inp" name="city" value="<%= user.city || '' %>">
+            </div>
+            <div class="fg">
+              <label class="lbl">ZIP / Postal Code</label>
+              <input class="inp" name="zip" value="<%= user.zip || '' %>">
+            </div>
+          </div>
+
+          <div class="fg">
+            <label class="lbl">Address</label>
+            <input class="inp" name="address" value="<%= user.address || '' %>">
+          </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">ID Type</label>
+              <select class="sel" name="id_type">
+                <option value="">— select —</option>
+                <% ['passport','national_id','drivers_license','residence_permit'].forEach(t => { %>
+                  <option value="<%= t %>" <%= user.id_type === t ? 'selected' : '' %>><%= t.replace(/_/g,' ') %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="lbl">ID Number</label>
+              <input class="inp" name="id_number" value="<%= user.id_number || '' %>">
             </div>
           </div>
         </div>
 
-        <h6>
-          <span class="section-icon"><i class="fa-solid fa-id-card"></i></span>
-          Account Information
-        </h6>
-        <div class="info-grid">
-          <div class="info-item">
-            <div class="info-label">Account Number</div>
-            <div class="info-value"><%= user.account_number || 'N/A' %></div>
+        <!-- ── Verification & Status ── -->
+        <div class="card">
+          <div class="card-title">
+            <span class="ci"><i class="fas fa-shield-check"></i></span> Verification & Status
           </div>
-          <div class="info-item">
-            <div class="info-label">Phone</div>
-            <div class="info-value"><%= user.phone || 'Not provided' %></div>
+
+          <div class="tog-row">
+            <div><div class="tog-name">Email Verified</div><div class="tog-desc">User can log in with this email</div></div>
+            <label class="sw">
+              <input type="checkbox" name="email_verified" value="on" <%= user.email_verified ? 'checked' : '' %>>
+              <span class="sl"></span>
+            </label>
           </div>
-          <div class="info-item">
-            <div class="info-label">User ID</div>
-            <div class="info-value">#<%= user.id %></div>
+          <div class="tog-row">
+            <div><div class="tog-name">Account Verified</div><div class="tog-desc">Full account access granted</div></div>
+            <label class="sw">
+              <input type="checkbox" name="account_verified" value="on" <%= user.account_verified ? 'checked' : '' %>>
+              <span class="sl"></span>
+            </label>
           </div>
-          <div class="info-item">
-            <div class="info-label">Joined</div>
-            <div class="info-value"><%= new Date(user.created_at).toLocaleDateString() %></div>
+
+          <div class="row2" style="margin-top:16px;">
+            <div class="fg">
+              <label class="lbl">KYC Status</label>
+              <select class="sel" name="kyc_status">
+                <% ['pending','submitted','approved','rejected'].forEach(s => { %>
+                  <option value="<%= s %>" <%= user.kyc_status === s ? 'selected' : '' %>><%= s.charAt(0).toUpperCase()+s.slice(1) %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="lbl">Trading Status</label>
+              <select class="sel" name="trading_status">
+                <% ['normal','restricted','banned'].forEach(s => { %>
+                  <option value="<%= s %>" <%= user.trading_status === s ? 'selected' : '' %>><%= s.charAt(0).toUpperCase()+s.slice(1) %></option>
+                <% }) %>
+              </select>
+            </div>
           </div>
-          <div class="info-item">
-            <div class="info-label">Account Created</div>
-            <div class="info-value"><%= user.account_created ? new Date(user.account_created).toLocaleDateString() : 'N/A' %></div>
+        </div>
+
+        <!-- ── Trading / Balance ── -->
+        <div class="card">
+          <div class="card-title">
+            <span class="ci"><i class="fas fa-chart-line"></i></span> Trading & Balance
           </div>
-          <div class="info-item">
-            <div class="info-label">Last Updated</div>
-            <div class="info-value"><%= user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'N/A' %></div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Balance</label>
+              <input class="inp" type="number" step="0.01" name="balance" value="<%= user.balance %>">
+            </div>
+            <div class="fg">
+              <label class="lbl">Balance Currency</label>
+              <input class="inp" name="balance_currency" value="<%= user.balance_currency || 'USD' %>">
+            </div>
           </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Margin Balance</label>
+              <input class="inp" type="number" step="0.01" name="margin_balance" value="<%= user.margin_balance %>">
+            </div>
+            <div class="fg">
+              <label class="lbl">Equity</label>
+              <input class="inp" type="number" step="0.01" name="equity" value="<%= user.equity %>">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Used Margin</label>
+              <input class="inp" type="number" step="0.01" name="used_margin" value="<%= user.used_margin %>">
+            </div>
+            <div class="fg">
+              <label class="lbl">Free Margin</label>
+              <input class="inp" type="number" step="0.01" name="free_margin" value="<%= user.free_margin %>">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Margin Level %</label>
+              <input class="inp" type="number" step="0.01" name="margin_level_percent" value="<%= user.margin_level_percent %>">
+            </div>
+            <div class="fg">
+              <label class="lbl">Leverage</label>
+              <input class="inp" type="number" name="leverage" value="<%= user.leverage || 100 %>">
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="fg">
+              <label class="lbl">Trading Mode</label>
+              <select class="sel" name="trading_mode">
+                <% ['normal','demo','restricted'].forEach(m => { %>
+                  <option value="<%= m %>" <%= user.trading_mode === m ? 'selected' : '' %>><%= m.charAt(0).toUpperCase()+m.slice(1) %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="lbl">Account Currency</label>
+              <input class="inp" name="currency" value="<%= user.currency || 'USD' %>">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-floppy-disk"></i> Save Profile Changes
+        </button>
+      </form>
+
+      <!-- ── Change Email ── -->
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title"><span class="ci"><i class="fas fa-envelope"></i></span> Change Email</div>
+        <div class="fg">
+          <label class="lbl">New Email Address</label>
+          <input class="inp" type="email" id="newEmail" placeholder="user@example.com">
+          <div class="hint">This also changes the login email. A confirmation is NOT sent automatically.</div>
+        </div>
+        <button class="btn btn-blue btn-sm" onclick="changeEmail()">
+          <i class="fas fa-paper-plane"></i> Update Email
+        </button>
+      </div>
+
+      <!-- ── Change Password ── -->
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title"><span class="ci"><i class="fas fa-key"></i></span> Change Password</div>
+        <div class="fg">
+          <label class="lbl">New Password</label>
+          <div class="pw-wrap">
+            <input class="inp" type="password" id="newPassword" placeholder="Min 8 characters" style="padding-right:44px;">
+            <button type="button" class="pw-eye" onclick="togglePw()"><i class="fas fa-eye" id="eyeIcon"></i></button>
+          </div>
+          <div class="hint">Password is hashed before storage. The user will not be notified.</div>
+        </div>
+        <button class="btn btn-blue btn-sm" onclick="changePassword()">
+          <i class="fas fa-lock"></i> Set New Password
+        </button>
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- ═══ RIGHT ═══ -->
+    <div>
+
+      <!-- ── Quick Stats ── -->
+      <div class="card">
+        <div class="card-title"><span class="ci"><i class="fas fa-info-circle"></i></span> Quick Stats</div>
+        <div class="stat-row"><span class="stat-key">User ID</span><span class="stat-val">#<%= user.id %></span></div>
+        <div class="stat-row"><span class="stat-key">Role</span>
+          <span class="badge <%= user.role === 'admin' ? 'b-purple' : 'b-blue' %>"><%= user.role %></span>
+        </div>
+        <div class="stat-row"><span class="stat-key">Balance</span>
+          <span class="stat-val">$<%= parseFloat(user.balance || 0).toLocaleString('en-US', {minimumFractionDigits:2}) %></span>
+        </div>
+        <div class="stat-row"><span class="stat-key">Leverage</span><span class="stat-val"><%= user.leverage || 100 %>x</span></div>
+        <div class="stat-row"><span class="stat-key">KYC</span>
+          <span class="badge <%= user.kyc_status === 'approved' ? 'b-green' : user.kyc_status === 'rejected' ? 'b-red' : 'b-yellow' %>"><%= user.kyc_status %></span>
+        </div>
+        <div class="stat-row"><span class="stat-key">Trading</span>
+          <span class="badge <%= user.trading_status === 'normal' ? 'b-green' : user.trading_status === 'restricted' ? 'b-yellow' : 'b-red' %>"><%= user.trading_status %></span>
+        </div>
+        <div class="stat-row"><span class="stat-key">Email verified</span>
+          <span class="badge <%= user.email_verified ? 'b-green' : 'b-red' %>"><%= user.email_verified ? 'Yes' : 'No' %></span>
+        </div>
+        <div class="stat-row"><span class="stat-key">Account verified</span>
+          <span class="badge <%= user.account_verified ? 'b-green' : 'b-red' %>"><%= user.account_verified ? 'Yes' : 'No' %></span>
+        </div>
+        <div class="stat-row"><span class="stat-key">Blocked</span>
+          <span class="badge <%= user.blocked ? 'b-red' : 'b-green' %>"><%= user.blocked ? 'Yes' : 'No' %></span>
+        </div>
+        <div class="stat-row"><span class="stat-key">Suspended</span>
+          <span class="badge <%= user.suspended ? 'b-yellow' : 'b-green' %>"><%= user.suspended ? 'Yes' : 'No' %></span>
         </div>
       </div>
 
-      <!-- Transactions -->
-      <div class="f-card">
-        <h6>
-          <span class="section-icon"><i class="fa-solid fa-money-bill-transfer"></i></span>
-          Recent Transactions
-        </h6>
-        <% if (transactions && transactions.length > 0) { %>
-          <table class="f-table">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% transactions.forEach(tx => { %>
-                <tr>
-                  <td>
-                    <span class="tx-type tx-<%= tx.type.includes('credit') || tx.type === 'deposit' ? 'credit' : 'debit' %>">
-                      <i class="fa-solid <%= tx.type.includes('credit') || tx.type === 'deposit' ? 'fa-arrow-up' : 'fa-arrow-down' %>"></i>
-                      <%= tx.type.replace('_', ' ').toUpperCase() %>
-                    </span>
-                  </td>
-                  <td class="tx-amount">$<%= parseFloat(tx.amount).toFixed(2) %></td>
-                  <td>
-                    <% if (tx.status === 'completed') { %>
-                      <span class="status-badge badge-success"><%= tx.status %></span>
-                    <% } else if (tx.status === 'pending') { %>
-                      <span class="status-badge badge-warning"><%= tx.status %></span>
-                    <% } else { %>
-                      <span class="status-badge badge-danger"><%= tx.status %></span>
-                    <% } %>
-                  </td>
-                  <td style="color:var(--text-muted);font-size:12px;"><%= new Date(tx.created_at).toLocaleDateString() %></td>
-                  <td style="color:var(--text-muted);font-size:12px;"><%= tx.description || '-' %></td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
+      <!-- ── Role Management ── -->
+      <div class="card">
+        <div class="card-title"><span class="ci"><i class="fas fa-user-shield"></i></span> Role Management</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+          Current role: <strong style="color:var(--text)"><%= user.role %></strong>
+        </p>
+        <% if (user.role !== 'admin') { %>
+          <button class="btn btn-purple" onclick="openModal('promoteModal')">
+            <i class="fas fa-shield-halved"></i> Promote to Admin
+          </button>
         <% } else { %>
-          <div class="empty-state">
-            <i class="fa-solid fa-receipt"></i>
-            <p>No transactions yet</p>
-          </div>
+          <button class="btn btn-warn" onclick="openModal('demoteModal')">
+            <i class="fas fa-user-minus"></i> Demote to User
+          </button>
         <% } %>
       </div>
 
-    </div>
+      <!-- ── Account Actions ── -->
+      <div class="card">
+        <div class="card-title"><span class="ci" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fas fa-sliders"></i></span> Account Actions</div>
 
-    <!-- ── RIGHT: SIDEBAR ── -->
-    <div>
+        <% if (!user.email_verified) { %>
+          <button class="btn btn-blue" onclick="verifyField('email_verified')">
+            <i class="fas fa-envelope-circle-check"></i> Verify Email
+          </button>
+        <% } %>
+        <% if (!user.account_verified) { %>
+          <button class="btn btn-blue" onclick="verifyField('account_verified')">
+            <i class="fas fa-circle-check"></i> Verify Account
+          </button>
+        <% } %>
 
-      <!-- KYC Documents -->
-      <div class="f-card">
-        <h6>
-          <span class="section-icon"><i class="fa-solid fa-id-card-clip"></i></span>
-          KYC Documents
-        </h6>
-        <% if (kycDocs && kycDocs.length > 0) { %>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <% kycDocs.forEach(doc => { %>
-              <div style="padding:12px 16px;background:var(--bg-body);border-radius:14px;border:1px solid var(--border);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <span style="font-size:13px;font-weight:600;"><%= doc.document_type.toUpperCase() %></span>
-                  <% if (doc.status === 'approved') { %>
-                    <span class="status-badge badge-success"><%= doc.status %></span>
-                  <% } else if (doc.status === 'pending') { %>
-                    <span class="status-badge badge-warning"><%= doc.status %></span>
-                  <% } else { %>
-                    <span class="status-badge badge-danger"><%= doc.status %></span>
-                  <% } %>
-                </div>
-                <div style="font-size:11px;color:var(--text-muted);">
-                  Submitted <%= new Date(doc.submitted_at).toLocaleDateString() %>
-                </div>
-                <% if (doc.admin_notes) { %>
-                  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;font-style:italic;">
-                    Note: <%= doc.admin_notes %>
-                  </div>
-                <% } %>
-              </div>
-            <% }) %>
-          </div>
+        <% if (!user.suspended) { %>
+          <button class="btn btn-warn" onclick="openModal('suspendModal')">
+            <i class="fas fa-pause-circle"></i> Suspend User
+          </button>
         <% } else { %>
-          <div class="empty-state" style="padding:20px;">
-            <i class="fa-solid fa-folder-open"></i>
-            <p style="font-size:13px;">No KYC documents submitted</p>
-          </div>
+          <button class="btn btn-blue" onclick="suspendAction('unsuspend')">
+            <i class="fas fa-play-circle"></i> Unsuspend User
+          </button>
+        <% } %>
+
+        <% if (!user.blocked) { %>
+          <button class="btn btn-danger" onclick="openModal('blockModal')">
+            <i class="fas fa-ban"></i> Block User
+          </button>
+        <% } else { %>
+          <button class="btn btn-blue" onclick="blockAction('unblock')">
+            <i class="fas fa-circle-check"></i> Unblock User
+          </button>
         <% } %>
       </div>
 
-      <!-- Quick Nav -->
-      <div class="f-card">
-        <h6>
-          <span class="section-icon"><i class="fa-solid fa-bolt"></i></span>
-          Quick Navigation
-        </h6>
-        <a href="/admin/users" class="quick-link">
-          <div class="ql-icon" style="background:linear-gradient(135deg,var(--primary),var(--accent));"><i class="fa-solid fa-users"></i></div>
-          <div><div class="ql-label">All Users</div><div class="ql-sub">Back to user list</div></div>
-          <i class="fa-solid fa-chevron-right ql-arrow"></i>
-        </a>
-        <a href="/admin/users/create" class="quick-link">
-          <div class="ql-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);"><i class="fa-solid fa-user-plus"></i></div>
-          <div><div class="ql-label">Create User</div><div class="ql-sub">Add another account</div></div>
-          <i class="fa-solid fa-chevron-right ql-arrow"></i>
-        </a>
-        <a href="/admin/kyc" class="quick-link">
-          <div class="ql-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><i class="fa-solid fa-id-card-clip"></i></div>
-          <div><div class="ql-label">Review KYC</div><div class="ql-sub">Check pending approvals</div></div>
-          <i class="fa-solid fa-chevron-right ql-arrow"></i>
-        </a>
-        <a href="/admin/dashboard" class="quick-link">
-          <div class="ql-icon" style="background:linear-gradient(135deg,#64748b,#475569);"><i class="fa-solid fa-house-chimney"></i></div>
-          <div><div class="ql-label">Dashboard</div><div class="ql-sub">Back to overview</div></div>
-          <i class="fa-solid fa-chevron-right ql-arrow"></i>
-        </a>
+      <!-- ── Danger Zone ── -->
+      <div class="card" style="border-color:#fecaca;">
+        <div class="card-title">
+          <span class="ci" style="background:linear-gradient(135deg,var(--danger),#dc2626);"><i class="fas fa-triangle-exclamation"></i></span>
+          Danger Zone
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+          Permanently deletes this user and all associated data. This cannot be undone.
+        </p>
+        <button class="btn btn-danger" onclick="openModal('deleteModal')">
+          <i class="fas fa-trash"></i> Delete User
+        </button>
       </div>
 
+    </div><!-- /right -->
+  </div><!-- /grid -->
+</div><!-- /wrap -->
+
+<!-- ═══ Modals ═══ -->
+
+<!-- Promote -->
+<div class="modal-bg" id="promoteModal">
+  <div class="modal">
+    <h3>Promote to Admin?</h3>
+    <p>This will give <strong><%= user.username %></strong> full administrator access to the platform.</p>
+    <div class="modal-row">
+      <button class="btn btn-purple" onclick="changeRole('admin')"><i class="fas fa-shield-halved"></i> Confirm Promote</button>
+      <button class="btn btn-danger" onclick="closeModal('promoteModal')">Cancel</button>
     </div>
-  </div><!-- /main-grid -->
+  </div>
 </div>
 
-<!-- Mobile Nav -->
-<nav class="mobile-nav">
-  <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house-chimney"></i>Home</a>
-  <a href="/admin/users"     class="nav-item active"><i class="fa-solid fa-users"></i>Users</a>
-  <a href="/admin/kyc"       class="nav-item"><i class="fa-solid fa-id-card"></i>KYC</a>
-  <a href="/admin/settings"  class="nav-item"><i class="fa-solid fa-gear"></i>Settings</a>
-</nav>
+<!-- Demote -->
+<div class="modal-bg" id="demoteModal">
+  <div class="modal">
+    <h3>Demote to User?</h3>
+    <p>This will revoke admin privileges from <strong><%= user.username %></strong>.</p>
+    <div class="modal-row">
+      <button class="btn btn-warn" onclick="changeRole('user')"><i class="fas fa-user-minus"></i> Confirm Demote</button>
+      <button class="btn btn-danger" onclick="closeModal('demoteModal')">Cancel</button>
+    </div>
+  </div>
+</div>
 
+<!-- Suspend -->
+<div class="modal-bg" id="suspendModal">
+  <div class="modal">
+    <h3>Suspend User?</h3>
+    <p>Suspending <strong><%= user.username %></strong> will prevent them from logging in.</p>
+    <div class="modal-row">
+      <button class="btn btn-warn" onclick="suspendAction('suspend')"><i class="fas fa-pause"></i> Confirm Suspend</button>
+      <button class="btn btn-danger" onclick="closeModal('suspendModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Block -->
+<div class="modal-bg" id="blockModal">
+  <div class="modal">
+    <h3>Block User?</h3>
+    <p>Blocking <strong><%= user.username %></strong> will immediately terminate their session and deny all access.</p>
+    <div class="modal-row">
+      <button class="btn btn-danger" onclick="blockAction('block')"><i class="fas fa-ban"></i> Confirm Block</button>
+      <button class="btn btn-warn" onclick="closeModal('blockModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete -->
+<div class="modal-bg" id="deleteModal">
+  <div class="modal">
+    <h3>Delete User?</h3>
+    <p>This will <strong>permanently delete</strong> <%= user.username %> and all their data. There is no undo.</p>
+    <div class="modal-row">
+      <button class="btn btn-danger" onclick="deleteUser()"><i class="fas fa-trash"></i> Yes, Delete</button>
+      <button class="btn btn-warn" onclick="closeModal('deleteModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const userId = '<%= user.id %>';
+
+  /* ── modal helpers ── */
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-bg').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  /* ── toast ── */
+  function toast(msg, ok = true) {
+    const el = document.createElement('div');
+    el.className = `flash ${ok ? 'flash-ok' : 'flash-err'}`;
+    el.innerHTML = `<i class="fas ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${msg}`;
+    el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;min-width:280px;';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  /* ── generic POST ── */
+  async function post(url, body = {}) {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return r.json();
+  }
+
+  /* ── change email ── */
+  async function changeEmail() {
+    const email = document.getElementById('newEmail').value.trim();
+    if (!email) return toast('Enter a new email address.', false);
+    const d = await post(`/admin/users/${userId}/change-email`, { email });
+    toast(d.message, d.success);
+    if (d.success) document.getElementById('newEmail').value = '';
+  }
+
+  /* ── change password ── */
+  async function changePassword() {
+    const pw = document.getElementById('newPassword').value;
+    if (!pw || pw.length < 8) return toast('Password must be at least 8 characters.', false);
+    const d = await post(`/admin/users/${userId}/change-password`, { password: pw });
+    toast(d.message, d.success);
+    if (d.success) document.getElementById('newPassword').value = '';
+  }
+
+  function togglePw() {
+    const inp = document.getElementById('newPassword');
+    const ico = document.getElementById('eyeIcon');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    ico.classList.toggle('fa-eye'); ico.classList.toggle('fa-eye-slash');
+  }
+
+  /* ── change role ── */
+  async function changeRole(role) {
+    const d = await post(`/admin/users/${userId}/change-role`, { role });
+    if (d.success) { toast(d.message); setTimeout(() => location.reload(), 1200); }
+    else toast(d.message, false);
+    ['promoteModal','demoteModal'].forEach(closeModal);
+  }
+
+  /* ── block ── */
+  async function blockAction(action) {
+    const d = await post(`/admin/users/${userId}/block`, { action });
+    if (d.success) { toast(d.message); setTimeout(() => location.reload(), 1200); }
+    else toast(d.message, false);
+    closeModal('blockModal');
+  }
+
+  /* ── suspend ── */
+  async function suspendAction(action) {
+    const d = await post(`/admin/users/${userId}/suspend`, { action });
+    if (d.success) { toast(d.message); setTimeout(() => location.reload(), 1200); }
+    else toast(d.message, false);
+    closeModal('suspendModal');
+  }
+
+  /* ── verify ── */
+  async function verifyField(field) {
+    const d = await post(`/admin/users/${userId}/verify`, { field });
+    if (d.success) { toast(d.message); setTimeout(() => location.reload(), 1200); }
+    else toast(d.message, false);
+  }
+
+  /* ── delete ── */
+  async function deleteUser() {
+    const d = await post(`/admin/users/${userId}/delete`);
+    if (d.success) { toast('User deleted. Redirecting…'); setTimeout(() => location.href = '/admin/users', 1500); }
+    else toast(d.message, false);
+    closeModal('deleteModal');
+  }
+</script>
 </body>
 </html>

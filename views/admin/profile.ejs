@@ -1,0 +1,214 @@
+<!-- views/admin/profile.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0F6E56;
+            --accent: #14b8a6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+        }
+        body { background: var(--bg); font-family: 'Segoe UI', sans-serif; }
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+            border: 4px solid rgba(255,255,255,0.3);
+        }
+        .nav-pills .nav-link {
+            border-radius: 10px;
+            color: #64748b;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem;
+        }
+        .nav-pills .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+        .form-section {
+            padding: 1.5rem;
+        }
+        .input-group-text {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <!-- Flash Messages -->
+            <% if (typeof success_msg !== 'undefined' && success_msg.length) { %>
+                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                    <%= success_msg %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+            <% if (typeof error_msg !== 'undefined' && error_msg.length) { %>
+                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                    <%= error_msg %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+
+            <div class="profile-card">
+                <!-- Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <%= admin.first_name ? admin.first_name.charAt(0).toUpperCase() : 'A' %>
+                    </div>
+                    <h4 class="mb-1"><%= admin.first_name %> <%= admin.last_name %></h4>
+                    <p class="mb-0 opacity-75"><i class="fa-solid fa-shield-halved me-2"></i>Administrator</p>
+                    <p class="mb-0 opacity-75 small"><%= admin.email %></p>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-pills px-4 pt-3" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="info-tab" data-bs-toggle="pill" data-bs-target="#info" type="button">
+                            <i class="fa-solid fa-user me-2"></i>Personal Info
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="security-tab" data-bs-toggle="pill" data-bs-target="#security" type="button">
+                            <i class="fa-solid fa-lock me-2"></i>Security
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="profileTabsContent">
+                    <!-- Personal Info Tab -->
+                    <div class="tab-pane fade show active form-section" id="info">
+                        <form action="/admin/profile/update" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">First Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                        <input type="text" name="first_name" class="form-control" value="<%= admin.first_name %>" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Last Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                        <input type="text" name="last_name" class="form-control" value="<%= admin.last_name %>" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                        <input type="email" name="email" class="form-control" value="<%= admin.email %>" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Phone</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
+                                        <input type="tel" name="phone" class="form-control" value="<%= admin.phone || '' %>">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                        <textarea name="address" class="form-control" rows="2"><%= admin.address || '' %></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">City</label>
+                                    <input type="text" name="city" class="form-control" value="<%= admin.city || '' %>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Country</label>
+                                    <input type="text" name="country" class="form-control" value="<%= admin.country || '' %>">
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100" style="background: var(--primary); border: none;">
+                                        <i class="fa-solid fa-save me-2"></i>Update Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-pane fade form-section" id="security">
+                        <!-- Change Password -->
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-key me-2 text-warning"></i>Change Password</h6>
+                        <form action="/admin/profile/change-password" method="POST" class="mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Current Password</label>
+                                    <input type="password" name="current_password" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" name="new_password" class="form-control" required minlength="8">
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fa-solid fa-lock me-2"></i>Change Password
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <hr class="my-4">
+
+                        <!-- Change Email -->
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-envelope me-2 text-info"></i>Change Email</h6>
+                        <form action="/admin/profile/change-email" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label">New Email Address</label>
+                                    <input type="email" name="new_email" class="form-control" required>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-info text-white w-100">
+                                        <i class="fa-solid fa-paper-plane me-2"></i>Update Email
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

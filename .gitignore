@@ -1,2 +1,15 @@
 node_modules/
+# Environment files
 .env
+.env copy
+
+# Uploads
+public/uploads/
+
+# Archives
+*.zip
+*.pdf
+
+# Backups
+* copy*
+* copy*/

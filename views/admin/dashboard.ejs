@@ -243,6 +243,18 @@
             <div class="f-card">
                 <h6 class="fw-bold mb-4">Quick Actions</h6>
 
+                <!-- Admin Profile -->
+                <a href="/admin/profile" class="quick-link">
+                    <div class="quick-link-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="px-2 py-2">
+                        <div class="fw-bold small" style="color:var(--text-main);">My Profile</div>
+                        <div class="small text-muted">Change password, email, name</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted ms-auto me-2"></i>
+                </a>
+
                 <a href="/admin/users/create" class="quick-link">
                     <div class="quick-link-icon" style="background:linear-gradient(135deg,var(--primary),var(--accent));">
                         <i class="fa-solid fa-user-plus"></i>
@@ -320,6 +332,31 @@
                     </div>
                     <i class="fa-solid fa-chevron-right text-muted ms-auto me-2"></i>
                 </a>
+
+                <!-- User Detail (Primary) -->
+                <a href="/admin/users/1" class="quick-link">  <!-- Replace 1 with actual userId -->
+                    <div class="quick-link-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="px-2 py-2">
+                        <div class="fw-bold small" style="color:var(--text-main);">User Detail</div>
+                        <div class="small text-muted">View primary user profile</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted ms-auto me-2"></i>
+                </a>
+
+
+        <!-- Select User to View/Edit -->
+            <a href="/admin/users/select" class="quick-link">
+                <div class="quick-link-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                    <i class="fa-solid fa-users-viewfinder"></i>
+                </div>
+                <div class="px-2 py-2">
+                    <div class="fw-bold small" style="color:var(--text-main);">Manage Users</div>
+                    <div class="small text-muted">Search, view & edit users</div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted ms-auto me-2"></i>
+            </a>
             </div>
         </div>
 

@@ -479,27 +479,22 @@
                     </div>
                 </div>
                 <% } %>
-
-                <!-- Action Buttons -->
-                <% if (doc.status === 'pending') { %>
-                <div class="action-area">
-                    <button class="btn-approve" onclick="approveKYC(<%= doc.id %>)">
-                        <i class="fa-solid fa-circle-check"></i> Approve
-                    </button>
-                    <button class="btn-reject" onclick="openRejectModal(<%= doc.id %>)">
-                        <i class="fa-solid fa-circle-xmark"></i> Reject
-                    </button>
-                    <span style="font-size:12px;color:#64748B;">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i>
-                        Click any image to enlarge
-                    </span>
-                </div>
-                <% } else { %>
-                <div style="font-size:13px;color:#64748B;">
-                    <i class="fa-solid fa-circle-info me-1"></i>
-                    This document has already been <strong><%= doc.status %></strong>.
-                </div>
-                <% } %>
+            <!-- ACTION BUTTONS -->
+            <% if (doc.status === 'pending') { %>
+            <div class="action-area">
+                <button class="btn-approve" onclick="approveKYC(<%= doc.kyc_id %>)">
+                    <i class="fa-solid fa-circle-check"></i> Approve
+                </button>
+                <button class="btn-reject" onclick="openRejectModal(<%= doc.kyc_id %>)">
+                    <i class="fa-solid fa-circle-xmark"></i> Reject
+                </button>
+            </div>
+            <% } else { %>
+            <div style="font-size:13px;color:#64748B;">
+                <i class="fa-solid fa-circle-info me-1"></i>
+                This document has already been <strong><%= doc.status %></strong>.
+            </div>
+            <% } %>
 
             </div>
         </div>
