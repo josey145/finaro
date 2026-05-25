@@ -63,19 +63,24 @@ app.use('/admin',  require('./routes/admin'));
 // ERROR HANDLERS
 // ============================================
 // Add to app.js or routes
+// Temporary email test route
 app.get('/test-email', async (req, res) => {
+    const { sendEmail } = require('./utils/email');
+    
     try {
-        const transporter = require('./utils/email'); // however you import it
-        await transporter.sendMail({
-            from: process.env.FROM_EMAIL || 'helpcenter@finaro.org',
-            to: 'your-personal-email@gmail.com', // use your real email
-            subject: 'Test from Render',
-            text: 'If you see this, SMTP works!'
-        });
-        res.send('✅ Email sent! Check your inbox.');
+        const result = await sendEmail(
+            'your-personal-email@gmail.com',  // Use your real email
+            'Test from Render',
+            '<h1>If you see this, email works!</h1>'
+        );
+        
+        if (result.success) {
+            res.send(`✅ Email sent! Message ID: ${result.messageId}`);
+        } else {
+            res.status(500).send(`❌ Email failed: ${result.error}`);
+        }
     } catch (err) {
-        console.error('EMAIL ERROR:', err);
-        res.status(500).send('❌ Email failed: ' + err.message);
+        res.status(500).send(`❌ Error: ${err.message}`);
     }
 });
 

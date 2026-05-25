@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// ─── PRIMARY SMTP (Your mail.finaro.org) ────────────────────────────────────
+// ─── PRIMARY: Your mail server ───────────────────────────────────────────────
 const PRIMARY_CONFIG = {
     host: 'mail.finaro.org',
     port: 465,
@@ -12,10 +12,12 @@ const PRIMARY_CONFIG = {
     },
     tls: {
         rejectUnauthorized: false
-    }
+    },
+    connectionTimeout: 5000,  // 5 second timeout
+    greetingTimeout: 5000
 };
 
-// ─── FALLBACK SMTP (Gmail) ─────────────────────────────────────────────────
+// ─── FALLBACK: Gmail ─────────────────────────────────────────────────────────
 const FALLBACK_CONFIG = {
     service: 'gmail',
     auth: {
@@ -24,105 +26,74 @@ const FALLBACK_CONFIG = {
     }
 };
 
-// ─── Transporters ────────────────────────────────────────────────────────────
-let primaryTransporter = null;
-let fallbackTransporter = null;
+// ─── Create transporters ───────────────────────────────────────────────────────
+const primaryTransporter = nodemailer.createTransport(PRIMARY_CONFIG);
+const fallbackTransporter = nodemailer.createTransport(FALLBACK_CONFIG);
 
-const getPrimaryTransporter = () => {
-    if (!primaryTransporter) {
-        primaryTransporter = nodemailer.createTransport(PRIMARY_CONFIG);
-    }
-    return primaryTransporter;
-};
-
-const getFallbackTransporter = () => {
-    if (!fallbackTransporter) {
-        fallbackTransporter = nodemailer.createTransport(FALLBACK_CONFIG);
-    }
-    return fallbackTransporter;
-};
-
-// ─── Test which one works ─────────────────────────────────────────────────────
-const testTransporters = async () => {
+// ─── Test on startup (for logging only) ──────────────────────────────────────
+const testConnections = async () => {
     try {
-        const primary = getPrimaryTransporter();
-        await primary.verify();
-        console.log('✅ Primary SMTP Ready — mail.finaro.org');
-        return 'primary';
+        await primaryTransporter.verify();
+        console.log('✅ Primary SMTP (mail.finaro.org) connected');
     } catch (err) {
         console.log('⚠️ Primary SMTP failed:', err.message);
-        try {
-            const fallback = getFallbackTransporter();
-            await fallback.verify();
-            console.log('✅ Fallback SMTP Ready — Gmail');
-            return 'fallback';
-        } catch (err2) {
-            console.log('❌ Both SMTPs failed:', err2.message);
-            return null;
-        }
     }
-};
-
-// Run test on startup
-let activeTransporter = null;
-testTransporters().then(result => {
-    if (result === 'primary') activeTransporter = getPrimaryTransporter();
-    else if (result === 'fallback') activeTransporter = getFallbackTransporter();
-});
-
-// ─── Send Email (auto-fallback) ─────────────────────────────────────────────
-const sendEmail = async (to, subject, html, attempt = 1) => {
-    const MAX_RETRIES = 3;
     
     try {
-        // Use active transporter, or test again if none
-        if (!activeTransporter) {
-            const result = await testTransporters();
-            activeTransporter = result === 'primary' ? getPrimaryTransporter() : 
-                               result === 'fallback' ? getFallbackTransporter() : null;
-        }
-
-        if (!activeTransporter) {
-            throw new Error('No working SMTP available');
-        }
-
-        const info = await activeTransporter.sendMail({
-            from: `"${process.env.SITE_NAME || 'Ambrato Bank'}" <${activeTransporter === getFallbackTransporter() ? process.env.GMAIL_USER : 'helpcenter@finaro.org'}>`,
-            to,
-            subject,
-            html
-        });
-
-        console.log(`✉️ Email sent → ${to} | Subject: "${subject}" | MsgID: ${info.messageId}`);
-        return { success: true, messageId: info.messageId };
-
-    } catch (error) {
-        console.error(`❌ Email attempt ${attempt} failed:`, error.message);
-        
-        // If primary failed, switch to fallback
-        if (activeTransporter === getPrimaryTransporter() && attempt === 1) {
-            console.log('🔄 Switching to Gmail fallback...');
-            activeTransporter = getFallbackTransporter();
-            return sendEmail(to, subject, html, attempt + 1);
-        }
-
-        if (attempt < MAX_RETRIES) {
-            await new Promise(r => setTimeout(r, 3000));
-            return sendEmail(to, subject, html, attempt + 1);
-        }
-
-        return { success: false, error: error.message };
+        await fallbackTransporter.verify();
+        console.log('✅ Fallback SMTP (Gmail) connected');
+    } catch (err) {
+        console.log('⚠️ Fallback SMTP failed:', err.message);
     }
 };
 
-// ─── Safe Send (fire-and-forget) ─────────────────────────────────────────────
+testConnections();
+
+// ─── Send with auto-fallback ───────────────────────────────────────────────────
+const sendWithFallback = async (mailOptions) => {
+    // Try primary first
+    try {
+        const info = await primaryTransporter.sendMail(mailOptions);
+        console.log('✉️ Primary SMTP sent:', info.messageId);
+        return { success: true, messageId: info.messageId };
+    } catch (primaryErr) {
+        console.log('⚠️ Primary failed, trying Gmail...', primaryErr.message);
+        
+        // Try fallback
+        try {
+            const info = await fallbackTransporter.sendMail(mailOptions);
+            console.log('✉️ Gmail fallback sent:', info.messageId);
+            return { success: true, messageId: info.messageId, via: 'gmail' };
+        } catch (fallbackErr) {
+            console.error('❌ Both SMTPs failed:', fallbackErr.message);
+            return { success: false, error: fallbackErr.message };
+        }
+    }
+};
+
+// ─── Main send function ────────────────────────────────────────────────────────
+const sendEmail = async (to, subject, html) => {
+    const fromEmail = process.env.GMAIL_USER || 'helpcenter@finaro.org';
+    const fromName = process.env.SITE_NAME || 'Ambrato Bank';
+    
+    const mailOptions = {
+        from: `"${fromName}" <${fromEmail}>`,
+        to,
+        subject,
+        html
+    };
+    
+    return sendWithFallback(mailOptions);
+};
+
+// ─── Safe send (fire-and-forget) ─────────────────────────────────────────────
 const sendEmailSafe = (to, subject, html) => {
     sendEmail(to, subject, html).catch(err => {
         console.error('🚨 Email crash:', err.message);
     });
 };
 
-// ─── Templates & Exports (same as before) ──────────────────────────────────
+// ─── Email Templates ──────────────────────────────────────────────────────────
 const header = `
     <div style="background:#0d9488;padding:30px;text-align:center;">
         <h1 style="color:white;margin:0;letter-spacing:2px;">AMBRATO BANK</h1>
