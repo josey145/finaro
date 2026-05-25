@@ -818,8 +818,9 @@ exports.getTransfer = async (req, res) => {
 };
 
 exports.postTransfer = async (req, res) => {
-    const { recipient_account, amount, description } = req.body;
 
+    const recipient_account = (req.body.recipient_account || '').trim();
+    const { amount, description } = req.body;
     try {
         const parsedAmount = parseFloat(amount);
 
@@ -925,7 +926,9 @@ exports.postTransfer = async (req, res) => {
 };
 
 exports.lookupAccount = async (req, res) => {
-    const { account_number } = req.query;
+
+    const account_number = (req.query.account_number || '').trim();
+    // const { account_number } = req.query;
 
     try {
         if (!account_number || account_number.trim().length < 5) {
