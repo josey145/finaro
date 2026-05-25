@@ -62,6 +62,24 @@ app.use('/admin',  require('./routes/admin'));
 // ============================================
 // ERROR HANDLERS
 // ============================================
+// Add to app.js or routes
+app.get('/test-email', async (req, res) => {
+    try {
+        const transporter = require('./utils/email'); // however you import it
+        await transporter.sendMail({
+            from: process.env.FROM_EMAIL || 'helpcenter@finaro.org',
+            to: 'your-personal-email@gmail.com', // use your real email
+            subject: 'Test from Render',
+            text: 'If you see this, SMTP works!'
+        });
+        res.send('✅ Email sent! Check your inbox.');
+    } catch (err) {
+        console.error('EMAIL ERROR:', err);
+        res.status(500).send('❌ Email failed: ' + err.message);
+    }
+});
+
+
 app.use((err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
         req.flash('error', 'File is too large. Maximum size is 5 MB.');

@@ -22,7 +22,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> - Finora Bank</title>
+    <title><%= title %> - Ambrato Bank</title>
 
     <script>
         document.documentElement.setAttribute('data-theme', '<%= _theme %>');
@@ -93,7 +93,7 @@
         <div class="mode-tab tab-internal" onclick="switchMode('internal', this)">
             <div class="mode-tab-icon"><i class="fa-solid fa-user-group"></i></div>
             <strong>Send to Client</strong>
-            <span>Transfer to another Finora user</span>
+            <span>Transfer to another Ambrato user</span>
         </div>
         <div class="mode-tab tab-savings" onclick="switchMode('savings', this)">
             <div class="mode-tab-icon"><i class="fa-solid fa-piggy-bank"></i></div>
@@ -264,7 +264,7 @@
                 <div class="form-panel" id="panel-internal">
                     <div class="section-label">
                         <i class="fa-solid fa-user-group me-2" style="color:#3b82f6;"></i>
-                        Send to Finora Client
+                        Send to Ambrato Client
                     </div>
 
                     <form action="/user/transfer" method="POST" id="internalForm">
@@ -274,7 +274,7 @@
                             <label class="form-label">Recipient Account Number</label>
                             <div class="input-icon-wrap" style="position:relative;">
                                 <i class="i-icon fa-solid fa-hashtag"></i>
-                                <input type="text" class="form-control" id="recipient_account" name="recipient_account" placeholder="Enter Finora account number" autocomplete="off" required oninput="lookupAccount(this.value)">
+                                <input type="text" class="form-control" id="recipient_account" name="recipient_account" placeholder="Enter Ambrato account number" autocomplete="off" required oninput="lookupAccount(this.value)">
                                 <i class="fa-solid fa-spinner fa-spin lookup-spinner" id="lookupSpinner"></i>
                             </div>
                             <div class="recipient-box" id="recipientBox">
@@ -407,7 +407,7 @@
                 <div class="info-row"><span class="label">Reversible?</span><span class="value" style="color:#ef4444;">No</span></div>
                 <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px;margin-top:16px;font-size:12px;color:#064e3b;">
                     <i class="fa-solid fa-shield-halved me-2" style="color:#22c55e;"></i>
-                    Transfers to other Finora users are instant and free. Always verify the recipient's name before confirming.
+                    Transfers to other Ambrato users are instant and free. Always verify the recipient's name before confirming.
                 </div>
             </div>
 
@@ -512,7 +512,7 @@
                     document.getElementById('recipientInitials').textContent=initials;
                     document.getElementById('recipientInitials').style.background='#0F6E56';
                     document.getElementById('recipientName').textContent=data.name;
-                    document.getElementById('recipientSub').textContent='Finora account · '+data.account;
+                    document.getElementById('recipientSub').textContent='Ambrato account · '+data.account;
                     document.getElementById('recipientBadge').innerHTML='<span style="background:#f0fdf4;color:#22c55e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;"><i class="fa-solid fa-circle-check me-1"></i>Verified</span>';
                     box.classList.add('show','ok');
                 }else{
