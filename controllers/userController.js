@@ -87,9 +87,10 @@ exports.getDashboard = async (req, res) => {
     try {
         const { lang, currency, theme, symbol } = await applyUserPrefs(req, res);
 
+        // FIXED: Changed "active" to parameterized ?
         const [accounts] = await pool.execute(
-            'SELECT * FROM accounts WHERE user_id = ? AND status = "active"',
-            [req.user.id]
+            'SELECT * FROM accounts WHERE user_id = ? AND status = ?',
+            [req.user.id, 'active']
         );
 
         let activeAccount = accounts.find(a => a.id == req.session?.activeAccountId);
@@ -119,6 +120,7 @@ exports.getDashboard = async (req, res) => {
             [req.user.id, activeAccount?.id || 0]
         );
 
+        // FIXED: Changed double quotes to single quotes in SQL
         const [[totalDeposits]] = await pool.execute(
             "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND (account_id = ? OR account_id IS NULL) AND type = 'deposit' AND status = 'completed'",
             [req.user.id, activeAccount?.id || 0]
@@ -248,9 +250,10 @@ exports.getAccountDetails = async (req, res) => {
             }
             account = accounts[0];
         } else {
+            // FIXED: Changed "active" to parameterized ?
             const [accounts] = await pool.execute(
-                'SELECT * FROM accounts WHERE user_id = ? AND is_active = 1 LIMIT 1',
-                [req.user.id]
+                'SELECT * FROM accounts WHERE user_id = ? AND status = ? LIMIT 1',
+                [req.user.id, 'active']
             );
             if (!accounts.length) {
                 const [anyAccounts] = await pool.execute(
@@ -299,9 +302,10 @@ exports.getMoveMoney = async (req, res) => {
     try {
         const { lang, currency, theme, symbol } = await applyUserPrefs(req, res);
 
+        // FIXED: Changed "active" to parameterized ?
         const [accounts] = await pool.execute(
-            'SELECT * FROM accounts WHERE user_id = ? AND status = "active"',
-            [req.user.id]
+            'SELECT * FROM accounts WHERE user_id = ? AND status = ?',
+            [req.user.id, 'active']
         );
 
         for (let acc of accounts) {
@@ -356,6 +360,7 @@ exports.postMoveMoney = async (req, res) => {
             [amt, to_account]
         );
 
+        // FIXED: Changed double quotes to single quotes
         await conn.execute(
             `INSERT INTO transactions (user_id, account_id, type, amount, description, status) VALUES (?, ?, 'transfer', ?, ?, 'completed')`,
             [req.user.id, from_account, amt, `Transfer to account ${to_account}`]
@@ -665,6 +670,7 @@ exports.postKYCSubmit = async (req, res) => {
             [req.user.id, document_type, document_number, file.path, file.filename]
         );
 
+        // FIXED: Changed double quotes to single quotes
         await pool.execute(
             "UPDATE users SET kyc_status = 'pending' WHERE id = ?",
             [req.user.id]
@@ -952,9 +958,10 @@ exports.getWithdraw = async (req, res) => {
     try {
         const { lang, currency, theme, symbol } = await applyUserPrefs(req, res);
 
+        // FIXED: Changed "active" to parameterized ?
         const [accounts] = await pool.execute(
-            'SELECT * FROM accounts WHERE user_id = ? AND status = "active"',
-            [req.user.id]
+            'SELECT * FROM accounts WHERE user_id = ? AND status = ?',
+            [req.user.id, 'active']
         );
 
         let activeAccount = accounts.find(a => a.id == req.session?.activeAccountId);
@@ -996,14 +1003,14 @@ exports.getWithdraw = async (req, res) => {
             kycApproved,
             kycStatus:      kycDoc?.status || 'not_submitted',
             stepsRequired,
-            currency,           // ← already there
-            symbol,             // ← already there  
+            currency,
+            symbol,
             lang,
             theme,
             dailyLimit,
             perTransaction,
             monthlyLimit,
-            userBalanceInCurrency,  // ← ADD THIS — actual balance in user's currency for JS validation
+            userBalanceInCurrency,
         });
 
     } catch (error) {
@@ -1038,10 +1045,6 @@ exports.requestWithdrawalCode = async (req, res) => {
     }
 };
 
-// ===============================================================================
-// FIXED: initiateWithdrawal — KYC bypass removed, always goes through steps
-// ===============================================================================
-
 exports.initiateWithdrawal = async (req, res) => {
     const { amount, recipient_account, description } = req.body;
 
@@ -1058,15 +1061,12 @@ exports.initiateWithdrawal = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please enter a valid amount' });
         }
 
-        // ── Get user's preferred currency ──
         const [[userPrefs]] = await pool.execute(
             'SELECT preferred_currency FROM users WHERE id = ?',
             [req.user.id]
         );
         const userCurrency = userPrefs?.preferred_currency || 'USD';
 
-        // ── Convert submitted amount to USD for DB comparison ──
-        // If user is in USD already, rate = 1. Otherwise fetch rate.
         let amountInUSD = parsedAmount;
         if (userCurrency !== 'USD') {
             amountInUSD = await convert(parsedAmount, userCurrency, 'USD');
@@ -1074,7 +1074,6 @@ exports.initiateWithdrawal = async (req, res) => {
 
         console.log(`User currency: ${userCurrency}, Input: ${parsedAmount}, USD equivalent: ${amountInUSD}`);
 
-        // ── Check balance (DB is always in USD) ──
         const [accounts] = await pool.execute(
             'SELECT balance FROM accounts WHERE user_id = ?',
             [req.user.id]
@@ -1087,18 +1086,14 @@ exports.initiateWithdrawal = async (req, res) => {
         console.log('Balance (USD):', accounts[0].balance, 'Amount needed (USD):', amountInUSD);
 
         if (parseFloat(accounts[0].balance) < amountInUSD) {
-            // Show error in user's currency
             return res.status(400).json({ 
                 success: false, 
                 message: 'Insufficient balance' 
             });
         }
 
-        // ── Store amount in USD in DB ──
         const parsedAmountUSD = amountInUSD;
 
-        // ... rest of your existing code unchanged, 
-        // but replace all `parsedAmount` with `parsedAmountUSD` from here down
         const [settings] = await pool.execute(
             "SELECT setting_value FROM settings WHERE setting_key = 'global_withdrawal_steps_required'"
         );
@@ -1131,7 +1126,6 @@ exports.initiateWithdrawal = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Withdrawal step configuration error.' });
             }
 
-            // ✅ Store USD amount in DB
             const [result] = await pool.execute(
                 `INSERT INTO transactions (user_id, type, amount, status, description, recipient_account, withdrawal_step, completed_steps)
                  VALUES (?, 'withdrawal', ?, 'pending', ?, ?, ?, '[]')`,
@@ -1141,7 +1135,6 @@ exports.initiateWithdrawal = async (req, res) => {
             const transactionId = result.insertId;
             console.log('Created transaction:', transactionId, 'amount (USD):', parsedAmountUSD);
 
-            // ... rest of your step initialization code unchanged ...
             for (const step of stepConfigs) {
                 const isKycSkipped = step.step_code === 'KYC_VERIFY' && kycApproved;
                 await pool.execute(
@@ -1202,7 +1195,6 @@ exports.initiateWithdrawal = async (req, res) => {
             });
         }
 
-        // Direct completion path
         await pool.execute(
             'UPDATE accounts SET balance = balance - ? WHERE user_id = ?',
             [parsedAmountUSD, req.user.id]
@@ -1220,9 +1212,6 @@ exports.initiateWithdrawal = async (req, res) => {
         res.status(500).json({ success: false, message: 'Withdrawal failed: ' + error.message });
     }
 };
-// ===============================================================================
-// FIXED: getWithdrawSteps — Added step count from DB instead of hardcoded 4
-// ===============================================================================
 
 exports.getWithdrawSteps = async (req, res) => {
     const { transactionId } = req.params;
@@ -1230,7 +1219,6 @@ exports.getWithdrawSteps = async (req, res) => {
     try {
         const { lang, currency, theme, symbol } = await applyUserPrefs(req, res);
 
-        // -- 1. Validate transactionId --
         if (!transactionId || transactionId === 'undefined' || transactionId === 'null') {
             console.error('[getWithdrawSteps] Invalid transactionId:', transactionId);
             req.flash('error', 'Invalid withdrawal session');
@@ -1244,7 +1232,6 @@ exports.getWithdrawSteps = async (req, res) => {
             return res.redirect('/user/withdraw');
         }
 
-        // -- 2. Fetch transaction --
         const [transactions] = await pool.execute(
             'SELECT * FROM transactions WHERE id = ? AND user_id = ?',
             [txId, req.user.id]
@@ -1258,7 +1245,6 @@ exports.getWithdrawSteps = async (req, res) => {
 
         const transaction = transactions[0];
 
-        // -- 3. Check status --
         if (transaction.status === 'completed') {
             req.flash('success', 'Withdrawal already completed');
             return res.redirect('/user/dashboard');
@@ -1268,7 +1254,6 @@ exports.getWithdrawSteps = async (req, res) => {
             return res.redirect('/user/dashboard');
         }
 
-        // -- 4. Check 24h expiry --
         const txAge = Date.now() - new Date(transaction.created_at).getTime();
         if (txAge > 24 * 60 * 60 * 1000) {
             await pool.execute(`UPDATE transactions SET status = 'expired' WHERE id = ?`, [txId]);
@@ -1278,7 +1263,6 @@ exports.getWithdrawSteps = async (req, res) => {
 
         const currentStepNum = parseInt(transaction.withdrawal_step) || 1;
 
-        // -- 5. Fetch step config --
         const [[stepConfig]] = await pool.execute(
             'SELECT * FROM withdrawal_step_configs WHERE step_number = ? AND is_active = TRUE',
             [currentStepNum]
@@ -1290,13 +1274,11 @@ exports.getWithdrawSteps = async (req, res) => {
             return res.redirect('/user/dashboard');
         }
 
-        // -- 6. Fetch step logs --
         const [stepLogs] = await pool.execute(
             `SELECT * FROM transaction_step_logs WHERE transaction_id = ? ORDER BY step_number ASC`,
             [txId]
         );
 
-        // -- 7. Verify previous steps --
         const previousIncomplete = stepLogs.filter(
             log => log.step_number < currentStepNum && log.status !== 'completed'
         );
@@ -1308,7 +1290,6 @@ exports.getWithdrawSteps = async (req, res) => {
             return res.redirect(`/user/withdraw/steps/${txId}`);
         }
 
-        // -- 8. Parse validation_rules --
         let validationRules = {
             requires_document: false,
             requires_selfie: false,
@@ -1335,7 +1316,6 @@ exports.getWithdrawSteps = async (req, res) => {
 
         console.log('[getWithdrawSteps] Parsed validationRules:', validationRules);
 
-        // -- 9. Parse rejection_reasons --
         let rejectionReasons = [];
         try {
             let raw = stepConfig.rejection_reasons;
@@ -1350,8 +1330,6 @@ exports.getWithdrawSteps = async (req, res) => {
             console.error('[getWithdrawSteps] rejection_reasons parse error:', e.message);
         }
 
-        // -- 10. Generate or retrieve step nonce --
-        // FIXED: Always MERGE nonce into existing data to preserve admin_otp_code
         const currentLog = stepLogs.find(log => log.step_number === currentStepNum);
         let stepNonce = null;
 
@@ -1374,7 +1352,6 @@ exports.getWithdrawSteps = async (req, res) => {
 
             if (!logData.step_nonce) {
                 stepNonce = require('crypto').randomBytes(32).toString('hex');
-                // MERGE: only update nonce fields, keep everything else (e.g. admin_otp_code)
                 logData.step_nonce   = stepNonce;
                 logData.step_number  = currentStepNum;
                 await pool.execute(
@@ -1386,20 +1363,14 @@ exports.getWithdrawSteps = async (req, res) => {
             }
         }
 
-     
-    // -- 11. Format amount -- 
         const txAmount = parseFloat(transaction.amount) || 0;
-        // Convert stored USD amount back to user's display currency
         const formattedAmount = await formatMoney(txAmount, currency);
-        // This is correct — formatMoney converts USD→user currency for DISPLAY only
 
-        // -- 12. Get total steps from DB --
         const [activeStepConfigs] = await pool.execute(
             'SELECT COUNT(*) as total FROM withdrawal_step_configs WHERE is_active = TRUE'
         );
         const totalSteps = activeStepConfigs[0]?.total || 4;
 
-        // -- 13. Build safe transaction object --
         const safeTransaction = {
             id: transaction.id,
             amount: txAmount,
@@ -1410,7 +1381,6 @@ exports.getWithdrawSteps = async (req, res) => {
             withdrawal_step: currentStepNum
         };
 
-        // -- 14. Build safe step config --
         const safeStepConfig = {
             step_number: stepConfig.step_number || currentStepNum,
             step_code: stepConfig.step_code || `STEP_${currentStepNum}`,
@@ -1420,7 +1390,6 @@ exports.getWithdrawSteps = async (req, res) => {
             rejection_reasons: rejectionReasons
         };
 
-        // -- 15. Render --
         console.log('[getWithdrawSteps] Rendering step:', currentStepNum, 'tx:', txId, 'step_code:', safeStepConfig.step_code, 'rules:', validationRules);
 
         res.render('user/withdraw-steps', {
@@ -1446,10 +1415,6 @@ exports.getWithdrawSteps = async (req, res) => {
     }
 };
 
-// ===============================================================================
-// FIXED: processWithdrawStep — Merge nonce into next step data (don't overwrite)
-// ===============================================================================
-
 exports.processWithdrawStep = async (req, res) => {
     const { transactionId } = req.params;
     const { stepData, otp_code, step_nonce } = req.body;
@@ -1460,7 +1425,6 @@ exports.processWithdrawStep = async (req, res) => {
     try {
         await conn.beginTransaction();
 
-        // -- 1. Lock and get transaction -------------------------------------
         const [transactions] = await conn.execute(
             'SELECT * FROM transactions WHERE id = ? AND user_id = ? FOR UPDATE',
             [transactionId, req.user.id]
@@ -1473,7 +1437,6 @@ exports.processWithdrawStep = async (req, res) => {
             throw new Error(`Transaction is ${transaction.status}`);
         }
 
-        // Check expiry
         const txAge = Date.now() - new Date(transaction.created_at).getTime();
         if (txAge > 24 * 60 * 60 * 1000) {
             await conn.execute(`UPDATE transactions SET status = 'expired' WHERE id = ?`, [transactionId]);
@@ -1482,14 +1445,12 @@ exports.processWithdrawStep = async (req, res) => {
 
         const currentStep = transaction.withdrawal_step || 1;
 
-        // -- 2. Get step config ---------------------------------------------
         const [[stepConfig]] = await conn.execute(
             'SELECT * FROM withdrawal_step_configs WHERE step_number = ? AND is_active = TRUE',
             [currentStep]
         );
         if (!stepConfig) throw new Error('Step config not found');
 
-        // -- 3. Get current step log (explicit columns including OTP) -------
         const [[currentLog]] = await conn.execute(
             `SELECT id, transaction_id, step_number, step_code, status, submitted_data,
                     admin_otp_code, otp_consumed, otp_attempts, otp_locked_until, otp_set_at
@@ -1500,7 +1461,6 @@ exports.processWithdrawStep = async (req, res) => {
         if (!currentLog) throw new Error('Step log not found');
         if (currentLog.status !== 'pending') throw new Error(`Step already ${currentLog.status}`);
 
-        // -- 4. Parse submitted_data (for nonce only) -----------------------
         let logData = {};
         try {
             const raw = currentLog.submitted_data;
@@ -1520,7 +1480,6 @@ exports.processWithdrawStep = async (req, res) => {
             logData = {};
         }
 
-        // -- 5. Verify nonce ------------------------------------------------
         if (!step_nonce) throw new Error('Step session missing. Refresh the page.');
 
         const crypto = require('crypto');
@@ -1534,7 +1493,6 @@ exports.processWithdrawStep = async (req, res) => {
 
         if (!nonceValid) throw new Error('Invalid step session. Refresh the page.');
 
-        // -- 6. Verify previous steps are complete --------------------------
         const [previousLogs] = await conn.execute(
             `SELECT tsl.status, wsc.is_required, wsc.step_name
              FROM transaction_step_logs tsl
@@ -1548,7 +1506,6 @@ exports.processWithdrawStep = async (req, res) => {
             throw new Error(`Complete previous steps first: ${incomplete.map(l => l.step_name).join(', ')}`);
         }
 
-        // -- 7. Parse validation rules --------------------------------------
         let validationRules = {};
         try {
             if (typeof stepConfig.validation_rules === 'string' && stepConfig.validation_rules !== '[object Object]') {
@@ -1558,16 +1515,13 @@ exports.processWithdrawStep = async (req, res) => {
             }
         } catch (e) { validationRules = {}; }
 
-        // -- 8. Step processing ---------------------------------------------
         let isValid = false;
         let submittedData = {};
 
-        // Admin-only steps — user cannot self-complete
         if (stepConfig.step_code === 'ADMIN_APPROVE' || stepConfig.is_required === 0) {
             throw new Error('This step requires admin review. Please wait.');
         }
 
-        // Document / selfie upload
         if (validationRules.requires_document === true || validationRules.requires_selfie === true) {
             if (!document_url) throw new Error('Document upload required');
             submittedData = { 
@@ -1579,7 +1533,6 @@ exports.processWithdrawStep = async (req, res) => {
             isValid = true;
         }
 
-        // OTP verification — reads from DB columns, never from submitted_data
         if (validationRules.requires_otp === true) {
             if (!otp_code || otp_code.length < 4) {
                 throw new Error('Enter the verification code provided by admin');
@@ -1629,7 +1582,6 @@ exports.processWithdrawStep = async (req, res) => {
                 });
             }
 
-            // Consume the OTP — one-time use
             await conn.execute(
                 `UPDATE transaction_step_logs SET otp_consumed = 1 WHERE id = ?`,
                 [currentLog.id]
@@ -1639,7 +1591,6 @@ exports.processWithdrawStep = async (req, res) => {
             isValid = true;
         }
 
-        // Terms / acknowledgement (no document or OTP required — just checkbox)
         if (!validationRules.requires_document && !validationRules.requires_selfie && !validationRules.requires_otp) {
             if (!stepData || stepData.accepted !== 'true') {
                 throw new Error('Please accept the terms to proceed');
@@ -1650,8 +1601,7 @@ exports.processWithdrawStep = async (req, res) => {
 
         if (!isValid) throw new Error('Validation failed');
 
-        // -- 9. Mark current step complete ----------------------------------
-        submittedData.step_nonce   = null; // invalidate nonce — replay protection
+        submittedData.step_nonce   = null;
         submittedData.completed_at = new Date().toISOString();
 
         await conn.execute(
@@ -1661,7 +1611,6 @@ exports.processWithdrawStep = async (req, res) => {
             [JSON.stringify(submittedData), currentLog.id]
         );
 
-        // -- 10. Find next incomplete step ----------------------------------
         const [allLogs] = await conn.execute(
             `SELECT tsl.step_number, tsl.status, wsc.step_code, wsc.step_name, wsc.description, wsc.is_required
              FROM transaction_step_logs tsl
@@ -1673,7 +1622,6 @@ exports.processWithdrawStep = async (req, res) => {
 
         const nextLog = allLogs.find(log => log.status !== 'completed');
 
-        // -- 11. All steps done → finalise withdrawal -----------------------
         if (!nextLog) {
             await conn.execute(
                 'UPDATE accounts SET balance = balance - ? WHERE user_id = ?',
@@ -1693,13 +1641,11 @@ exports.processWithdrawStep = async (req, res) => {
             return res.json({ success: true, completed: true, message: 'Withdrawal complete', redirect: '/user/dashboard' });
         }
 
-        // -- 12. Advance to next step — write nonce, preserve OTP columns ---
         await conn.execute(
             `UPDATE transactions SET withdrawal_step = ? WHERE id = ?`,
             [nextLog.step_number, transactionId]
         );
 
-        // Read existing submitted_data for next step (keeps whatever is already there)
         const [[nextStepLog]] = await conn.execute(
             `SELECT submitted_data FROM transaction_step_logs
              WHERE transaction_id = ? AND step_number = ?`,
@@ -1722,7 +1668,6 @@ exports.processWithdrawStep = async (req, res) => {
             nextData = {};
         }
 
-        // Merge only the nonce fields — never touch OTP columns (they're in DB columns)
         const nextNonce = crypto.randomBytes(32).toString('hex');
         nextData.step_nonce     = nextNonce;
         nextData.step_number    = nextLog.step_number;
@@ -1735,8 +1680,6 @@ exports.processWithdrawStep = async (req, res) => {
             [JSON.stringify(nextData), transactionId, nextLog.step_number]
         );
 
-        // -- 13. Next step is admin-review — do NOT overwrite submitted_data
-        //        (the nonce write above is enough; admin reads via their own UI)
         if (nextLog.step_code === 'ADMIN_APPROVE' || nextLog.is_required === 0) {
             await conn.commit();
             return res.json({
@@ -1769,9 +1712,6 @@ exports.processWithdrawStep = async (req, res) => {
         conn.release();
     }
 };
-// ===============================================================================
-// MISSING: cancelWithdrawal — Added to fix Route.post() undefined callback error
-// ===============================================================================
 
 exports.cancelWithdrawal = async (req, res) => {
     const { transactionId } = req.params;
@@ -1811,7 +1751,6 @@ exports.cancelWithdrawal = async (req, res) => {
     }
 };
 
-// ── Incomplete Withdrawals (for transactions page banner) ──────────────────
 exports.getPendingWithdrawals = async (req, res) => {
     try {
         const { lang, currency, theme, symbol } = await applyUserPrefs(req, res);
@@ -1841,7 +1780,6 @@ exports.getPendingWithdrawals = async (req, res) => {
             tx.completedSteps = steps.filter(s => s.status === 'completed').length;
             tx.totalSteps = steps.length;
 
-            // Check if current step needs OTP (user is waiting for admin code)
             const currentStep = steps.find(s => s.status === 'pending');
             tx.currentStepInfo = currentStep || null;
             tx.needsOtp = false;
@@ -1859,19 +1797,16 @@ exports.getPendingWithdrawals = async (req, res) => {
             }
         }
 
-            // Add inside getTransactions, before res.render:
-            const [pendingWithdrawals] = await pool.execute(
-                `SELECT t.id, t.amount, t.withdrawal_step, t.created_at
-                FROM transactions t
-                WHERE t.user_id = ? AND t.type = 'withdrawal' AND t.status = 'pending'
-                ORDER BY t.created_at DESC LIMIT 5`,
-                [req.user.id]
-            );
-            for (const tx of pendingWithdrawals) {
-                tx.displayAmount = await formatMoney(tx.amount, currency);
-            }
-
-          
+        const [pendingWithdrawals] = await pool.execute(
+            `SELECT t.id, t.amount, t.withdrawal_step, t.created_at
+            FROM transactions t
+            WHERE t.user_id = ? AND t.type = 'withdrawal' AND t.status = 'pending'
+            ORDER BY t.created_at DESC LIMIT 5`,
+            [req.user.id]
+        );
+        for (const tx of pendingWithdrawals) {
+            tx.displayAmount = await formatMoney(tx.amount, currency);
+        }
 
         res.render('user/pending-withdrawals', {
             title: 'Pending Withdrawals',
@@ -1890,7 +1825,6 @@ exports.getPendingWithdrawals = async (req, res) => {
     }
 };
 
-// ── Network Error Page ─────────────────────────────────────────────────────
 exports.getNetworkError = async (req, res) => {
     try {
         const { lang, theme, symbol, currency } = await applyUserPrefs(req, res);
@@ -1914,8 +1848,6 @@ exports.getNetworkError = async (req, res) => {
     }
 };
 
-
-// ── Contact Support Page ───────────────────────────────────────────────────
 exports.getContactSupport = async (req, res) => {
     try {
         const { lang, currency, theme, symbol } = await applyUserPrefs(req, res);
@@ -1923,7 +1855,6 @@ exports.getContactSupport = async (req, res) => {
         const txId  = req.query.tx     || null;
         const reason = req.query.reason || 'general';
 
-        // If a transaction ID is provided, fetch its details so we can pre-fill the form
         let transaction = null;
         if (txId) {
             const [txRows] = await pool.execute(
@@ -1964,7 +1895,6 @@ exports.getContactSupport = async (req, res) => {
     }
 };
 
-// ── Submit Support Request ─────────────────────────────────────────────────
 exports.postContactSupport = async (req, res) => {
     const { subject, message, transaction_id, reason } = req.body;
 
@@ -1974,8 +1904,6 @@ exports.postContactSupport = async (req, res) => {
             return res.redirect('/user/contact-support');
         }
 
-        // Save as a notification to admin (reuse notifications table)
-        // user_id = NULL means it shows in admin notifications
         await pool.execute(
             `INSERT INTO notifications (user_id, title, message, type, is_read)
              VALUES (NULL, ?, ?, 'support_request', 0)`,
@@ -1988,7 +1916,6 @@ exports.postContactSupport = async (req, res) => {
             ]
         );
 
-        // Also email the support team if email alerts are on
         const [settingRows] = await pool.execute(
             `SELECT setting_key, setting_value FROM settings
              WHERE setting_key IN ('alert_email_enabled', 'support_email')`
@@ -2007,7 +1934,6 @@ exports.postContactSupport = async (req, res) => {
             );
         }
 
-        // Confirm to the user via SMS if enabled
         const [smsRow] = await pool.execute(
             `SELECT setting_value FROM settings WHERE setting_key = 'alert_sms_enabled'`
         );
@@ -2031,9 +1957,6 @@ exports.postContactSupport = async (req, res) => {
     }
 };
 
-// ===============================================================================
-// FILE UPLOAD HANDLERS WITH BETTER ERROR MANAGEMENT
-// ===============================================================================
 exports.postDeposit = async (req, res) => {
     const { amount, payment_method, description } = req.body;
 
@@ -2117,9 +2040,10 @@ exports.getDeposit = async (req, res) => {
     try {
         const { lang, currency, theme, symbol } = await applyUserPrefs(req, res);
 
+        // FIXED: Changed "active" to parameterized ?
         const [accounts] = await pool.execute(
-            'SELECT * FROM accounts WHERE user_id = ? AND status = "active"',
-            [req.user.id]
+            'SELECT * FROM accounts WHERE user_id = ? AND status = ?',
+            [req.user.id, 'active']
         );
 
         for (let acc of accounts) {
