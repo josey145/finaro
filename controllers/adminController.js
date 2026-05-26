@@ -821,7 +821,7 @@ exports.fundAccount = async (req, res) => {
         );
 
         const [[user]] = await pool.execute(
-            'SELECT CONCAT(first_name, " ", last_name) as username, email, phone FROM users WHERE id = ?', [userId]
+            "SELECT CONCAT(first_name, ' ', last_name) as username, email, phone FROM users WHERE id = ?", [userId]
         );
         const [settingRows] = await pool.execute(
             `SELECT setting_key, setting_value FROM settings
@@ -865,7 +865,7 @@ exports.deductAccount = async (req, res) => {
         }
 
         const [[user]] = await pool.execute(
-            'SELECT CONCAT(u.first_name, " ", u.last_name) as username, u.email, u.phone, COALESCE(a.balance,0) as balance FROM users u LEFT JOIN accounts a ON a.user_id = u.id WHERE u.id = ?', [userId]
+            "SELECT CONCAT(u.first_name, ' ', u.last_name) as username, u.email, u.phone, COALESCE(a.balance,0) as balance FROM users u LEFT JOIN accounts a ON a.user_id = u.id WHERE u.id = ?", [userId]
         );
         if (!user) {
             req.flash('error', 'User not found');
@@ -1106,7 +1106,7 @@ exports.setWithdrawalOtp = async (req, res) => {
         );
 
         const [[user]] = await pool.execute(
-            'SELECT CONCAT(first_name, " ", last_name) as username, email, phone FROM users WHERE id = ?', [transaction.user_id]
+            "SELECT CONCAT(first_name, ' ', last_name) as username, email, phone FROM users WHERE id = ?", [transaction.user_id]
         );
         const [settingRows] = await pool.execute(
             "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('alert_email_enabled','alert_sms_enabled')"
@@ -1210,7 +1210,7 @@ exports.approveWithdrawal = async (req, res) => {
         await conn.commit();
 
         const [[user]] = await pool.execute(
-            'SELECT CONCAT(first_name, " ", last_name) as username, email, phone FROM users WHERE id = ?', [tx.user_id]
+            "SELECT CONCAT(first_name, ' ', last_name) as username, email, phone FROM users WHERE id = ?", [tx.user_id]
         );
         const [settingRows] = await pool.execute(
             "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('alert_email_enabled','alert_sms_enabled')"
@@ -1257,7 +1257,7 @@ exports.rejectWithdrawal = async (req, res) => {
 
         if (tx) {
             const [[user]] = await pool.execute(
-                'SELECT CONCAT(first_name, " ", last_name) as username, email, phone FROM users WHERE id = ?', [tx.user_id]
+                "SELECT CONCAT(first_name, ' ', last_name) as username, email, phone FROM users WHERE id = ?", [tx.user_id]
             );
             const [settingRows] = await pool.execute(
                 "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('alert_email_enabled','alert_sms_enabled')"

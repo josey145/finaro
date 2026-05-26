@@ -4,10 +4,10 @@ require('dotenv').config();
 // ─── PRIMARY: Your mail server ───────────────────────────────────────────────
 const PRIMARY_CONFIG = {
     host: 'mail.finaro.org',
-    port: 587,
+    port: 465,
     secure: true,
     auth: {
-        user: 'helpcenter@finaro.org',
+        user: 'info@finaro.org',
         pass: process.env.SMTP_PASS
     },
     tls: {
