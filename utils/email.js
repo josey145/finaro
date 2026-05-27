@@ -1,23 +1,11 @@
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
-// ─── PRIMARY: Your mail server ───────────────────────────────────────────────
-const PRIMARY_CONFIG = {
-    host: 'mail.finaro.org',
-    port: 465,
-    secure: true,
-    auth: {
-        user: 'info@finaro.org',
-        pass: process.env.SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    connectionTimeout: 5000,  // 5 second timeout
-    greetingTimeout: 5000
-};
+// ─── Resend Client ────────────────────────────────────────────────────────────
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ─── FALLBACK: Gmail ─────────────────────────────────────────────────────────
+// ─── FALLBACK: Gmail ──────────────────────────────────────────────────────────
 const FALLBACK_CONFIG = {
     service: 'gmail',
     auth: {
@@ -26,67 +14,77 @@ const FALLBACK_CONFIG = {
     }
 };
 
-// ─── Create transporters ───────────────────────────────────────────────────────
-const primaryTransporter = nodemailer.createTransport(PRIMARY_CONFIG);
 const fallbackTransporter = nodemailer.createTransport(FALLBACK_CONFIG);
 
 // ─── Test on startup (for logging only) ──────────────────────────────────────
 const testConnections = async () => {
-    try {
-        await primaryTransporter.verify();
-        console.log('✅ Primary SMTP (mail.finaro.org) connected');
-    } catch (err) {
-        console.log('⚠️ Primary SMTP failed:', err.message);
+    if (process.env.RESEND_API_KEY) {
+        console.log('✅ Resend API key found — primary mailer ready');
+    } else {
+        console.warn('⚠️ RESEND_API_KEY not set — will fall back to Gmail');
     }
-    
+
     try {
         await fallbackTransporter.verify();
         console.log('✅ Fallback SMTP (Gmail) connected');
     } catch (err) {
-        console.log('⚠️ Fallback SMTP failed:', err.message);
+        console.log('⚠️ Fallback SMTP (Gmail) failed:', err.message);
     }
 };
 
 testConnections();
 
-// ─── Send with auto-fallback ───────────────────────────────────────────────────
+// ─── Send with auto-fallback ──────────────────────────────────────────────────
 const sendWithFallback = async (mailOptions) => {
-    // Try primary first
-    try {
-        const info = await primaryTransporter.sendMail(mailOptions);
-        console.log('✉️ Primary SMTP sent:', info.messageId);
-        return { success: true, messageId: info.messageId };
-    } catch (primaryErr) {
-        console.log('⚠️ Primary failed, trying Gmail...', primaryErr.message);
-        
-        // Try fallback
+    const fromName = process.env.SITE_NAME || 'Ambrato Bank';
+    const fromEmail = 'onboarding@resend.dev'; // Change to your verified domain email later
+
+    // Try Resend first
+    if (process.env.RESEND_API_KEY) {
         try {
-            const info = await fallbackTransporter.sendMail(mailOptions);
-            console.log('✉️ Gmail fallback sent:', info.messageId);
-            return { success: true, messageId: info.messageId, via: 'gmail' };
-        } catch (fallbackErr) {
-            console.error('❌ Both SMTPs failed:', fallbackErr.message);
-            return { success: false, error: fallbackErr.message };
+            const { data, error } = await resend.emails.send({
+                from: `${fromName} <${fromEmail}>`,
+                to: mailOptions.to,
+                subject: mailOptions.subject,
+                html: mailOptions.html
+            });
+
+            if (error) throw new Error(error.message);
+
+            console.log('✉️ Resend sent:', data.id);
+            return { success: true, messageId: data.id };
+        } catch (resendErr) {
+            console.log('⚠️ Resend failed, trying Gmail...', resendErr.message);
         }
+    }
+
+    // Fallback to Gmail
+    try {
+        const info = await fallbackTransporter.sendMail(mailOptions);
+        console.log('✉️ Gmail fallback sent:', info.messageId);
+        return { success: true, messageId: info.messageId, via: 'gmail' };
+    } catch (fallbackErr) {
+        console.error('❌ Both mailers failed:', fallbackErr.message);
+        return { success: false, error: fallbackErr.message };
     }
 };
 
-// ─── Main send function ────────────────────────────────────────────────────────
+// ─── Main send function ───────────────────────────────────────────────────────
 const sendEmail = async (to, subject, html) => {
     const fromEmail = process.env.GMAIL_USER || 'helpcenter@finaro.org';
-    const fromName = process.env.SITE_NAME || 'Ambrato Bank';
-    
+    const fromName  = process.env.SITE_NAME  || 'Ambrato Bank';
+
     const mailOptions = {
         from: `"${fromName}" <${fromEmail}>`,
         to,
         subject,
         html
     };
-    
+
     return sendWithFallback(mailOptions);
 };
 
-// ─── Safe send (fire-and-forget) ─────────────────────────────────────────────
+// ─── Safe send (fire-and-forget) ──────────────────────────────────────────────
 const sendEmailSafe = (to, subject, html) => {
     sendEmail(to, subject, html).catch(err => {
         console.error('🚨 Email crash:', err.message);
@@ -116,7 +114,7 @@ const wrapper = (content) => `
 const sendVerificationEmail = async (email, token, name) => {
     const BASE_URL = process.env.SITE_URL || 'https://ambrato.onrender.com';
     const verificationUrl = `${BASE_URL}/auth/verify-email?token=${token}`;
-    
+
     const html = wrapper(`
         <h2>Welcome, ${name}!</h2>
         <p>Click the button below to verify your email address:</p>
