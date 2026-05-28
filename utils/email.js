@@ -8,12 +8,14 @@ if (process.env.RESEND_API_KEY) {
     resend = new Resend(process.env.RESEND_API_KEY);
 }
 
-// ─── FALLBACK: Gmail ──────────────────────────────────────────────────────────
+// ─── FALLBACK: Zoho SMTP ──────────────────────────────────────────────────────
 const FALLBACK_CONFIG = {
-    service: 'gmail',
+    host: 'smtp.zoho.com',
+    port: 465,
+    secure: true,
     auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
+        user: process.env.ZOHO_USER,
+        pass: process.env.ZOHO_PASS
     }
 };
 
@@ -24,14 +26,14 @@ const testConnections = async () => {
     if (process.env.RESEND_API_KEY) {
         console.log('✅ Resend API key found — primary mailer ready');
     } else {
-        console.warn('⚠️ RESEND_API_KEY not set — will fall back to Gmail');
+        console.warn('⚠️ RESEND_API_KEY not set — will fall back to Zoho');
     }
 
     try {
         await fallbackTransporter.verify();
-        console.log('✅ Fallback SMTP (Gmail) connected');
+        console.log('✅ Fallback SMTP (Zoho) connected');
     } catch (err) {
-        console.log('⚠️ Fallback SMTP (Gmail) failed:', err.message);
+        console.log('⚠️ Fallback SMTP (Zoho) failed:', err.message);
     }
 };
 
@@ -39,11 +41,11 @@ testConnections();
 
 // ─── Send with auto-fallback ──────────────────────────────────────────────────
 const sendWithFallback = async (mailOptions) => {
-    const fromName = process.env.SITE_NAME || 'Ambrato Bank';
-    const fromEmail = 'onboarding@resend.dev'; // Change to your verified domain email later
+    const fromName  = process.env.SITE_NAME || 'Ambrato Bank';
+    const fromEmail = process.env.ZOHO_USER || 'ambrato.team@ambrato.com.ng';
 
     // Try Resend first
-    if (process.env.RESEND_API_KEY) {
+    if (resend) {
         try {
             const { data, error } = await resend.emails.send({
                 from: `${fromName} <${fromEmail}>`,
@@ -57,15 +59,15 @@ const sendWithFallback = async (mailOptions) => {
             console.log('✉️ Resend sent:', data.id);
             return { success: true, messageId: data.id };
         } catch (resendErr) {
-            console.log('⚠️ Resend failed, trying Gmail...', resendErr.message);
+            console.log('⚠️ Resend failed, trying Zoho...', resendErr.message);
         }
     }
 
-    // Fallback to Gmail
+    // Fallback to Zoho
     try {
         const info = await fallbackTransporter.sendMail(mailOptions);
-        console.log('✉️ Gmail fallback sent:', info.messageId);
-        return { success: true, messageId: info.messageId, via: 'gmail' };
+        console.log('✉️ Zoho fallback sent:', info.messageId);
+        return { success: true, messageId: info.messageId, via: 'zoho' };
     } catch (fallbackErr) {
         console.error('❌ Both mailers failed:', fallbackErr.message);
         return { success: false, error: fallbackErr.message };
@@ -74,7 +76,7 @@ const sendWithFallback = async (mailOptions) => {
 
 // ─── Main send function ───────────────────────────────────────────────────────
 const sendEmail = async (to, subject, html) => {
-    const fromEmail = process.env.GMAIL_USER || 'helpcenter@finaro.org';
+    const fromEmail = process.env.ZOHO_USER  || 'ambrato.team@ambrato.com.ng';
     const fromName  = process.env.SITE_NAME  || 'Ambrato Bank';
 
     const mailOptions = {
@@ -115,7 +117,7 @@ const wrapper = (content) => `
     </div>`;
 
 const sendVerificationEmail = async (email, token, name) => {
-    const BASE_URL = process.env.SITE_URL || 'https://ambrato.onrender.com';
+    const BASE_URL = process.env.SITE_URL || 'https://ambrato.com.ng';
     const verificationUrl = `${BASE_URL}/auth/verify-email?token=${token}`;
 
     const html = wrapper(`
@@ -134,7 +136,7 @@ const sendVerificationEmail = async (email, token, name) => {
 };
 
 const sendWelcomeEmail = async (email, name) => {
-    const BASE_URL = process.env.SITE_URL || 'https://ambrato.onrender.com';
+    const BASE_URL = process.env.SITE_URL || 'https://ambrato.com.ng';
     const html = wrapper(`
         <h2>Welcome to Ambrato Bank, ${name}! 🎉</h2>
         <p>Your account is now active and ready to use.</p>
