@@ -10,7 +10,7 @@ if (process.env.RESEND_API_KEY) {
 
 // ─── FALLBACK: Zoho SMTP ──────────────────────────────────────────────────────
 const FALLBACK_CONFIG = {
-    host: 'smtp.zoho.com',
+    host: 'smtppro.zoho.com',
     port: 465,
     secure: true,
     auth: {
@@ -116,13 +116,25 @@ const wrapper = (content) => `
         </div>
     </div>`;
 
-const sendVerificationEmail = async (email, token, name) => {
-    const BASE_URL = process.env.SITE_URL || 'https://ambrato.com.ng';
+// ─── Verification Email (now includes account number) ─────────────────────────
+const sendVerificationEmail = async (email, token, name, accountNumber) => {
+    const BASE_URL = process.env.SITE_URL || 'https://www.ambrato.com.ng';
     const verificationUrl = `${BASE_URL}/auth/verify-email?token=${token}`;
 
     const html = wrapper(`
         <h2>Welcome, ${name}!</h2>
-        <p>Click the button below to verify your email address:</p>
+        <p>Thank you for registering with Ambrato Bank. Click the button below to verify your email address:</p>
+        
+        ${accountNumber ? `
+        <div style="background:#f0fdfa;border-radius:12px;padding:20px;margin:20px 0;border:1px solid #0d9488;">
+            <p style="margin:0;color:#64748b;font-size:13px;text-align:center;">Your Account Number</p>
+            <p style="margin:8px 0 0;font-size:28px;font-weight:bold;color:#0d9488;text-align:center;letter-spacing:4px;">
+                ${accountNumber}
+            </p>
+            <p style="margin:8px 0 0;color:#94a3b8;font-size:11px;text-align:center;">Please save this number for future reference</p>
+        </div>
+        ` : ''}
+
         <div style="text-align:center;margin:24px 0;">
             <a href="${verificationUrl}" style="display:inline-block;padding:14px 28px;background:#0d9488;color:white;text-decoration:none;border-radius:8px;font-size:16px;">
                 Verify Email
@@ -135,19 +147,37 @@ const sendVerificationEmail = async (email, token, name) => {
     return sendEmail(email, 'Verify Your Email — Ambrato Bank', html);
 };
 
-const sendWelcomeEmail = async (email, name) => {
-    const BASE_URL = process.env.SITE_URL || 'https://ambrato.com.ng';
+// ─── Welcome Email (shows account number after verification) ─────────────────
+const sendWelcomeEmail = async (email, name, accountNumber) => {
+    const BASE_URL = process.env.SITE_URL || 'https://www.ambrato.com.ng';
     const html = wrapper(`
         <h2>Welcome to Ambrato Bank, ${name}! 🎉</h2>
-        <p>Your account is now active and ready to use.</p>
+        <p>Your email has been verified and your account is now active.</p>
+
+        ${accountNumber ? `
+        <div style="background:#f0fdfa;border-radius:12px;padding:20px;margin:20px 0;border:1px solid #0d9488;">
+            <p style="margin:0;color:#64748b;font-size:13px;text-align:center;">Your Account Number</p>
+            <p style="margin:8px 0 0;font-size:28px;font-weight:bold;color:#0d9488;text-align:center;letter-spacing:4px;">
+                ${accountNumber}
+            </p>
+            <p style="margin:8px 0 0;color:#94a3b8;font-size:11px;text-align:center;">Please save this number for future reference</p>
+        </div>
+        ` : ''}
+
+        <div style="background:white;border-radius:12px;padding:20px;margin:20px 0;">
+            <p style="margin:0;color:#64748b;font-size:14px;">Account Type: <strong>Checking Account</strong></p>
+            <p style="margin:8px 0 0;color:#64748b;font-size:14px;">Currency: <strong>USD</strong></p>
+            <p style="margin:8px 0 0;color:#64748b;font-size:14px;">Status: <strong style="color:#16a34a;">Active ✅</strong></p>
+        </div>
+
         <div style="text-align:center;margin:24px 0;">
             <a href="${BASE_URL}/auth/login" style="display:inline-block;padding:14px 28px;background:#0d9488;color:white;text-decoration:none;border-radius:8px;font-size:16px;">
-                Login Now
+                Login to Your Account
             </a>
         </div>
     `);
 
-    return sendEmail(email, 'Welcome to Ambrato Bank!', html);
+    return sendEmail(email, 'Welcome to Ambrato Bank! 🎉', html);
 };
 
 const sendWithdrawalCode = async (email, code, name) => {

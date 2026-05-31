@@ -204,7 +204,7 @@ exports.postResendVerification = async (req, res) => {
             'UPDATE users SET email_verification_token = ? WHERE id = ?',
             [newToken, user.id]
         );
-        await sendVerificationEmail(email, newToken, `${user.first_name} ${user.last_name}`);
+        await sendVerificationEmail(email, verificationToken, `${first_name} ${last_name}`, accountNumber);
 
         req.flash('success', 'A new verification email has been sent. Please check your inbox.');
         res.redirect('/auth/resend-verification');
@@ -235,9 +235,18 @@ exports.verifyEmail = async (req, res) => {
             'UPDATE users SET email_verified = TRUE, email_verification_token = NULL WHERE id = ?',
             [user.id]
         );
-        await sendWelcomeEmail(user.email, `${user.first_name} ${user.last_name}`);
 
-        req.flash('success', 'Email verified! Welcome to Finora Bank. You can now log in.');
+        // ─── Fetch account number ─────────────────────────────────────────
+        const [accounts] = await pool.execute(
+            'SELECT account_number FROM accounts WHERE user_id = ?',
+            [user.id]
+        );
+        const accountNumber = accounts[0]?.account_number || null;
+
+        // ─── Send welcome email with account number ────────────────────────
+        await sendWelcomeEmail(user.email, `${user.first_name} ${user.last_name}`, accountNumber);
+
+        req.flash('success', 'Email verified! Welcome to Ambrato Bank. You can now log in.');
         res.redirect('/auth/login');
 
     } catch (error) {
