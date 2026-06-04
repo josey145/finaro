@@ -224,10 +224,12 @@ exports.getEditUser = async (req, res) => {
 exports.postEditUser = async (req, res) => {
     const { userId } = req.params;
     const {
-        first_name, last_name, email, phone, date_of_birth, preferred_currency, country, city, address,
-        email_verified, kyc_status, is_suspended, withdrawal_steps_required,
+        first_name, last_name, email, phone, date_of_birth,
+        preferred_currency, country, city, address,
+        email_verified, is_suspended, withdrawal_steps_required,
+        // ⚠️  kyc_status intentionally NOT destructured — it cannot be set here
     } = req.body;
-
+ 
     try {
         await pool.execute(
             `UPDATE users SET
@@ -241,33 +243,31 @@ exports.postEditUser = async (req, res) => {
                 city                      = ?,
                 address                   = ?,
                 email_verified            = ?,
-                kyc_status                = ?,
                 is_suspended              = ?,
                 withdrawal_steps_required = ?,
                 updated_at                = NOW()
              WHERE id = ?`,
             [
                 first_name || '',
-                last_name || '',
+                last_name  || '',
                 email,
-                phone || null,
-                date_of_birth || null,
-                preferred_currency || 'USD',
-                country || null,
-                city || null,
-                address || null,
+                phone               || null,
+                date_of_birth       || null,
+                preferred_currency  || 'USD',
+                country             || null,
+                city                || null,
+                address             || null,
                 email_verified === 'on' || email_verified === '1' ? 1 : 0,
-                kyc_status || 'not_submitted',
-                is_suspended === 'on' || is_suspended === '1' ? 1 : 0,
+                is_suspended   === 'on' || is_suspended   === '1' ? 1 : 0,
                 withdrawal_steps_required === 'on' || withdrawal_steps_required === '1' ? 1 : 0,
                 userId,
             ]
         );
-
-        req.flash('success', 'User profile updated successfully');
+ 
+        req.flash('success', 'User profile updated successfully. (KYC status can only be changed from the KYC Review page.)');
         res.redirect(`/admin/users/${userId}/edit`);
     } catch (error) {
-        console.error(error);
+        console.error('[postEditUser]', error);
         req.flash('error', 'Failed to update user: ' + error.message);
         res.redirect(`/admin/users/${userId}/edit`);
     }
@@ -645,22 +645,75 @@ exports.suspendUser = async (req, res) => {
 
 exports.verifyUser = async (req, res) => {
     const { userId } = req.params;
-    const { field } = req.body;
-
-    if (!['email_verified'].includes(field)) {
+    const { field }  = req.body;
+ 
+    const ALLOWED_FIELDS = ['email_verified'];
+ 
+    // kyc_approve is handled separately with document validation
+    if (field === 'kyc_approve') {
+        try {
+            // Check a real document exists
+            const [[kycDoc]] = await pool.execute(
+                `SELECT id, file_path, status
+                 FROM kyc_documents
+                 WHERE user_id = ?
+                   AND file_path IS NOT NULL
+                   AND file_path != ''
+                   AND status IN ('pending', 'submitted')
+                 ORDER BY submitted_at DESC LIMIT 1`,
+                [userId]
+            );
+ 
+            if (!kycDoc) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot approve KYC: the user has not submitted any documents. Ask them to upload their ID first.'
+                });
+            }
+ 
+            await pool.execute(
+                "UPDATE users SET kyc_status = 'approved', updated_at = NOW() WHERE id = ?",
+                [userId]
+            );
+            await pool.execute(
+                `UPDATE kyc_documents
+                 SET status = 'approved', reviewed_at = NOW(), reviewed_by = ?
+                 WHERE id = ?`,
+                [req.user.id, kycDoc.id]
+            );
+ 
+            await logKycAudit(pool, {
+                userId,
+                kycDocId:    kycDoc.id,
+                action:      'approved',
+                performedBy: req.user.id,
+                notes:       'Quick-verified via user detail page',
+                ip:          req.ip,
+            });
+ 
+            return res.json({ success: true, message: 'KYC approved.' });
+        } catch (error) {
+            console.error('[verifyUser/kyc_approve]', error);
+            return res.status(500).json({ success: false, message: 'KYC approval failed.' });
+        }
+    }
+ 
+    if (!ALLOWED_FIELDS.includes(field)) {
         return res.status(400).json({ success: false, message: 'Invalid field.' });
     }
-
+ 
     try {
         await pool.execute(
             `UPDATE users SET ${field} = 1, updated_at = NOW() WHERE id = ?`,
             [userId]
         );
-        return jsonSuccess(res, 'Email verified.');
+        return res.json({ success: true, message: 'Updated.' });
     } catch (error) {
-        return jsonError(res, error);
+        console.error('[verifyUser]', error);
+        return res.status(500).json({ success: false, message: 'Action failed.' });
     }
 };
+
 
 exports.deleteUser = async (req, res) => {
     const { userId } = req.params;
@@ -677,39 +730,96 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+
+async function logKycAudit(pool, { userId, kycDocId = null, action, performedBy = null, notes = null, ip = null }) {
+    try {
+        await pool.execute(
+            `INSERT INTO kyc_audit_log (user_id, kyc_doc_id, action, performed_by, notes, ip_address)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [userId, kycDocId, action, performedBy, notes, ip]
+        );
+    } catch (err) {
+        // Never let an audit failure break the main flow — just warn
+        console.error('[KYC AUDIT LOG FAILED]', err.message);
+    }
+}
+
+exports.getKYCAuditLog = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const [[user]] = await pool.execute(
+            "SELECT id, CONCAT(first_name, ' ', last_name) AS username, email, kyc_status FROM users WHERE id = ?",
+            [userId]
+        );
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/admin/users');
+        }
+ 
+        const [logs] = await pool.execute(
+            `SELECT
+                kal.*,
+                CONCAT(a.first_name, ' ', a.last_name) AS performed_by_name,
+                kd.document_type,
+                kd.file_path
+             FROM kyc_audit_log kal
+             LEFT JOIN users a  ON a.id  = kal.performed_by
+             LEFT JOIN kyc_documents kd ON kd.id = kal.kyc_doc_id
+             WHERE kal.user_id = ?
+             ORDER BY kal.created_at DESC`,
+            [userId]
+        );
+ 
+        res.render('admin/kyc-audit', {
+            title:  `KYC Audit — ${user.username}`,
+            user,
+            logs,
+            success_msg: req.flash('success'),
+            error_msg:   req.flash('error'),
+        });
+    } catch (error) {
+        console.error('[getKYCAuditLog]', error);
+        req.flash('error', 'Failed to load audit log');
+        res.redirect('/admin/users');
+    }
+};
 // ─── KYC Management ──────────────────────────────────────────────────────────
 
 exports.getKYCReview = async (req, res) => {
     try {
+        // INNER JOIN instead of LEFT JOIN — no docs = not shown.
+        // file_path IS NOT NULL ensures a file was actually uploaded.
+        // status IN ('pending','submitted') — no 'not_submitted' phantoms.
         const [documents] = await pool.execute(
-            `SELECT 
-                u.id AS user_id,
-                u.first_name,
-                u.last_name,
-                CONCAT(u.first_name, ' ', u.last_name) as username,
+            `SELECT
+                u.id            AS user_id,
+                CONCAT(u.first_name, ' ', u.last_name) AS username,
                 u.email,
                 u.kyc_status,
-                k.id AS kyc_id,
+                k.id            AS kyc_id,
                 k.document_type,
                 k.document_number,
                 k.file_path,
                 k.file_path_back,
                 k.file_name,
-                k.status,
+                k.status        AS doc_status,
                 k.admin_notes,
                 k.submitted_at,
                 k.reviewed_at,
                 k.reviewed_by,
                 u.created_at
-             FROM users u
-             LEFT JOIN kyc_documents k ON k.user_id = u.id
-             WHERE u.kyc_status IN ('pending', 'not_submitted', 'submitted') 
+             FROM kyc_documents k
+             INNER JOIN users u ON u.id = k.user_id
+             WHERE k.file_path IS NOT NULL
+               AND k.file_path != ''
+               AND k.status IN ('pending', 'submitted')
                AND u.is_admin = 0
              ORDER BY k.submitted_at DESC`
         );
+ 
         res.render('admin/kyc-review', { title: 'KYC Review', documents });
     } catch (error) {
-        console.error(error);
+        console.error('[getKYCReview]', error);
         res.redirect('/admin/dashboard');
     }
 };
@@ -717,41 +827,72 @@ exports.getKYCReview = async (req, res) => {
 exports.approveKYC = async (req, res) => {
     const { documentId } = req.params;
     const { action, notes } = req.body;
-
+ 
     if (!['approved', 'rejected'].includes(action)) {
         return res.status(400).json({ success: false, message: 'Invalid action.' });
     }
-
+ 
     try {
-        // Get the KYC document to find the user
+        // Fetch the document — must exist and belong to a real submission
         const [[kycDoc]] = await pool.execute(
-            'SELECT user_id FROM kyc_documents WHERE id = ?',
+            `SELECT id, user_id, file_path, status
+             FROM kyc_documents
+             WHERE id = ?`,
             [documentId]
         );
-
+ 
         if (!kycDoc) {
             return res.status(404).json({ success: false, message: 'KYC document not found.' });
         }
-
+ 
+        // ── Guard: block approval if no document was actually uploaded ────────
+        if (action === 'approved') {
+            if (!kycDoc.file_path || kycDoc.file_path.trim() === '') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot approve KYC: no document file has been uploaded by the user. Wait for the user to submit their documents first.'
+                });
+            }
+        }
+ 
+        // ── Guard: don't re-process already reviewed documents ────────────────
+        if (['approved', 'rejected'].includes(kycDoc.status)) {
+            return res.status(409).json({
+                success: false,
+                message: `This document was already ${kycDoc.status}. Reset it first if you need to re-review.`
+            });
+        }
+ 
         const userId = kycDoc.user_id;
-
-        // Update users table
+ 
+        // Update the user's master kyc_status
         await pool.execute(
             'UPDATE users SET kyc_status = ?, updated_at = NOW() WHERE id = ?',
             [action, userId]
         );
-
-        // Update specific kyc_documents record
+ 
+        // Update the specific document record
         await pool.execute(
-            `UPDATE kyc_documents 
-             SET status = ?, admin_notes = ?, reviewed_at = NOW(), reviewed_by = ? 
+            `UPDATE kyc_documents
+             SET status = ?, admin_notes = ?, reviewed_at = NOW(), reviewed_by = ?
              WHERE id = ?`,
             [action, notes || null, req.user.id, documentId]
         );
-
-        return jsonSuccess(res, `KYC ${action}.`);
+ 
+        // ── Audit log ─────────────────────────────────────────────────────────
+        await logKycAudit(pool, {
+            userId,
+            kycDocId:    kycDoc.id,
+            action,
+            performedBy: req.user.id,
+            notes:       notes || null,
+            ip:          req.ip,
+        });
+ 
+        return res.json({ success: true, message: `KYC ${action} successfully.` });
     } catch (error) {
-        return jsonError(res, error);
+        console.error('[approveKYC]', error);
+        return res.status(500).json({ success: false, message: 'Action failed.' });
     }
 };
 
@@ -1668,6 +1809,8 @@ exports.updateSettings = async (req, res) => {
         conn.release();
     }
 };
+
+
 
 // ─── Debug (remove in production) ────────────────────────────────────────────
 
