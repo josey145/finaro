@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const { generateToken } = require('../middleware/auth');
 const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
-const { getSymbol } = require('../utils/currencyConverter'); // ← same helper as userController
+const { getSymbol } = require('../utils/currencyConverter');
 const { 
     generateVerificationToken, 
     hashPin, 
@@ -11,25 +11,19 @@ const {
     generateAccountNumber
 } = require('../utils/helpers');
 
-const PUBLIC_URL = 'https://choreal-pseudoregal-wynona.ngrok-free.dev';
+const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:10000';
 
 // ─── applyUserPrefs ───────────────────────────────────────────────────────────
-// Mirrors userController exactly: reads lang, currency, theme from DB (when
-// logged in) or falls back to session → hard defaults. Writes to res.locals
-// AND req.session so every subsequent request stays in sync.
 async function applyUserPrefs(req, res) {
-    // ── Defaults ──────────────────────────────────────────────────────────────
     let lang     = req.session?.lang     || 'en';
     let theme    = req.session?.theme    || 'light';
     let currency = req.session?.currency || 'USD';
     let symbol   = getSymbol(currency);
 
-    // ── Override from DB when the user is already authenticated ───────────────
     if (req.user?.id) {
         try {
             const [[prefs]] = await pool.execute(
-                `SELECT preferred_language, preferred_currency, preferred_theme
-                 FROM users WHERE id = ?`,
+                `SELECT preferred_language, preferred_currency, preferred_theme FROM users WHERE id = ?`,
                 [req.user.id]
             );
             if (prefs) {
@@ -43,19 +37,16 @@ async function applyUserPrefs(req, res) {
         }
     }
 
-    // ── Persist to res.locals (EJS reads these) ───────────────────────────────
     res.locals.lang           = lang;
     res.locals.theme          = theme;
     res.locals.currency       = currency;
     res.locals.currencySymbol = symbol;
     res.locals.symbol         = symbol;
-    // underscore aliases kept for templates that use _lang / _theme / _symbol
     res.locals._lang          = lang;
     res.locals._theme         = theme;
     res.locals._currency      = currency;
     res.locals._symbol        = symbol;
 
-    // ── Persist to session ────────────────────────────────────────────────────
     if (req.session) {
         req.session.lang     = lang;
         req.session.theme    = theme;
@@ -66,8 +57,6 @@ async function applyUserPrefs(req, res) {
 }
 
 // ─── authLocals ───────────────────────────────────────────────────────────────
-// Builds the base locals object passed to every res.render() call.
-// Now includes currency + symbol to match the user controller pattern.
 function authLocals(req, res, extra = {}) {
     const lang     = res.locals.lang     || req.session?.lang     || 'en';
     const theme    = res.locals.theme    || req.session?.theme    || 'light';
@@ -76,20 +65,14 @@ function authLocals(req, res, extra = {}) {
 
     return {
         title:          extra.title || 'Finora Bank',
-        lang,
-        theme,
-        currency,
+        lang, theme, currency,
         currencySymbol: symbol,
         symbol,
-        // underscore aliases
-        _lang:     lang,
-        _theme:    theme,
-        _currency: currency,
-        _symbol:   symbol,
-        user:      req.user || null,
-        req,               // EJS templates that reference req.session directly
-        errors:    extra.errors    || [],
-        formData:  extra.formData  || {},
+        _lang: lang, _theme: theme, _currency: currency, _symbol: symbol,
+        user:     req.user || null,
+        req,
+        errors:   extra.errors   || [],
+        formData: extra.formData || {},
         ...extra,
     };
 }
@@ -101,6 +84,7 @@ exports.getRegister = async (req, res) => {
 };
 
 // ─── POST register ────────────────────────────────────────────────────────────
+// FIX: kyc_status is explicitly 'not_submitted'. No auto-approval, no phantom KYC.
 exports.postRegister = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -119,8 +103,7 @@ exports.postRegister = async (req, res) => {
         } = req.body;
 
         const [existing] = await pool.execute(
-            'SELECT id FROM users WHERE email = ?',
-            [email]
+            'SELECT id FROM users WHERE email = ?', [email]
         );
         if (existing.length > 0) {
             await applyUserPrefs(req, res);
@@ -131,19 +114,28 @@ exports.postRegister = async (req, res) => {
             }));
         }
 
-        const salt              = await bcrypt.genSalt(12);
-        const hashedPassword    = await bcrypt.hash(password, salt);
+        const salt           = await bcrypt.genSalt(12);
+        const hashedPassword = await bcrypt.hash(password, salt);
         const verificationToken = generateVerificationToken();
 
+        // ── INSERT: kyc_status = 'not_submitted' — never auto-approved ────────
         const [result] = await pool.execute(
             `INSERT INTO users
                 (email, password, first_name, last_name, phone, date_of_birth,
-                 address, city, country, email_verification_token, kyc_status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'not_submitted')`,
-            [email, hashedPassword, first_name, last_name, phone,
-             date_of_birth, address, city, country, verificationToken]
+                 address, city, country, email_verification_token, kyc_status,
+                 email_verified, is_admin, is_suspended)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'not_submitted', 0, 0, 0)`,
+            [
+                email, hashedPassword, first_name, last_name,
+                phone || null, date_of_birth || null,
+                address || null, city || null, country || null,
+                verificationToken,
+            ]
         );
 
+        console.log(`[REGISTER] New user id=${result.insertId} email=${email} kyc_status=not_submitted`);
+
+        // ── Create checking account with zero balance ─────────────────────────
         const accountNumber = generateAccountNumber();
         await pool.execute(
             `INSERT INTO accounts
@@ -158,7 +150,7 @@ exports.postRegister = async (req, res) => {
         res.redirect('/auth/login');
 
     } catch (error) {
-        console.error('Registration error:', error);
+        console.error('[postRegister] error:', error);
         req.flash('error', 'Registration failed. Please try again.');
         res.redirect('/auth/register');
     }
@@ -167,12 +159,11 @@ exports.postRegister = async (req, res) => {
 // ─── GET resend verification ──────────────────────────────────────────────────
 exports.getResendVerification = async (req, res) => {
     await applyUserPrefs(req, res);
-    res.render('auth/resend-verification', authLocals(req, res, {
-        title: 'Resend Verification',
-    }));
+    res.render('auth/resend-verification', authLocals(req, res, { title: 'Resend Verification' }));
 };
 
 // ─── POST resend verification ─────────────────────────────────────────────────
+// FIX: was referencing undefined variables (verificationToken, first_name etc.)
 exports.postResendVerification = async (req, res) => {
     try {
         const { email } = req.body;
@@ -183,11 +174,11 @@ exports.postResendVerification = async (req, res) => {
         }
 
         const [users] = await pool.execute(
-            'SELECT * FROM users WHERE email = ?',
-            [email]
+            'SELECT * FROM users WHERE email = ?', [email]
         );
 
         if (users.length === 0) {
+            // Don't reveal whether email exists
             req.flash('info', 'If this email is registered, a new verification link has been sent.');
             return res.redirect('/auth/resend-verification');
         }
@@ -199,58 +190,73 @@ exports.postResendVerification = async (req, res) => {
             return res.redirect('/auth/login');
         }
 
+        // FIX: use correct variable names — was crashing with ReferenceError
         const newToken = generateVerificationToken();
         await pool.execute(
             'UPDATE users SET email_verification_token = ? WHERE id = ?',
             [newToken, user.id]
         );
-        await sendVerificationEmail(email, verificationToken, `${first_name} ${last_name}`, accountNumber);
+
+        await sendVerificationEmail(
+            user.email,
+            newToken,
+            `${user.first_name} ${user.last_name}`
+        );
 
         req.flash('success', 'A new verification email has been sent. Please check your inbox.');
         res.redirect('/auth/resend-verification');
 
     } catch (error) {
-        console.error('Resend verification error:', error);
+        console.error('[postResendVerification] error:', error);
         req.flash('error', 'Failed to resend verification email. Please try again.');
         res.redirect('/auth/resend-verification');
     }
 };
 
 // ─── Verify email ─────────────────────────────────────────────────────────────
+// FIX: only sets email_verified — does NOT touch kyc_status at all
 exports.verifyEmail = async (req, res) => {
     try {
         const { token } = req.query;
 
+        if (!token) {
+            req.flash('error', 'Verification token is missing');
+            return res.redirect('/auth/login');
+        }
+
         const [users] = await pool.execute(
-            'SELECT * FROM users WHERE email_verification_token = ?',
-            [token]
+            'SELECT * FROM users WHERE email_verification_token = ?', [token]
         );
+
         if (users.length === 0) {
             req.flash('error', 'Invalid or expired verification link');
             return res.redirect('/auth/login');
         }
 
         const user = users[0];
+
+        // ── Only set email_verified. kyc_status stays 'not_submitted' ─────────
         await pool.execute(
-            'UPDATE users SET email_verified = TRUE, email_verification_token = NULL WHERE id = ?',
+            `UPDATE users
+             SET email_verified = 1, email_verification_token = NULL, updated_at = NOW()
+             WHERE id = ?`,
             [user.id]
         );
 
-        // ─── Fetch account number ─────────────────────────────────────────
+        console.log(`[VERIFY EMAIL] user id=${user.id} email_verified=true kyc_status unchanged (${user.kyc_status})`);
+
         const [accounts] = await pool.execute(
-            'SELECT account_number FROM accounts WHERE user_id = ?',
-            [user.id]
+            'SELECT account_number FROM accounts WHERE user_id = ?', [user.id]
         );
         const accountNumber = accounts[0]?.account_number || null;
 
-        // ─── Send welcome email with account number ────────────────────────
         await sendWelcomeEmail(user.email, `${user.first_name} ${user.last_name}`, accountNumber);
 
-        req.flash('success', 'Email verified! Welcome to Ambrato Bank. You can now log in.');
+        req.flash('success', 'Email verified! You can now log in.');
         res.redirect('/auth/login');
 
     } catch (error) {
-        console.error('Verification error:', error);
+        console.error('[verifyEmail] error:', error);
         req.flash('error', 'Verification failed');
         res.redirect('/auth/login');
     }
@@ -268,8 +274,7 @@ exports.postLogin = async (req, res) => {
         const { email, password } = req.body;
 
         const [users] = await pool.execute(
-            'SELECT * FROM users WHERE email = ?',
-            [email]
+            'SELECT * FROM users WHERE email = ?', [email]
         );
         if (users.length === 0) {
             req.flash('error', 'Invalid credentials');
@@ -297,16 +302,15 @@ exports.postLogin = async (req, res) => {
         const token = generateToken(user);
         res.cookie('token', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
 
-        // Set req.user BEFORE applyUserPrefs so DB prefs are read for this user
         req.user = user;
         const { theme, lang, currency } = await applyUserPrefs(req, res);
 
-        // Persist prefs as JS-readable cookies so auth pages (login, pin, set-pin)
-        // can read the correct theme/lang without a DB call or active session
         const prefCookieOpts = { maxAge: 365 * 24 * 60 * 60 * 1000, sameSite: 'lax' };
         res.cookie('finora_theme',    theme,    prefCookieOpts);
         res.cookie('finora_lang',     lang,     prefCookieOpts);
         res.cookie('finora_currency', currency, prefCookieOpts);
+
+        console.log(`[LOGIN] user id=${user.id} email=${user.email} kyc_status=${user.kyc_status} is_admin=${user.is_admin}`);
 
         if (user.is_admin) return res.redirect('/admin/dashboard');
         if (!user.pin)     return res.redirect('/auth/set-pin');
@@ -314,7 +318,7 @@ exports.postLogin = async (req, res) => {
         res.redirect('/auth/pin-entry');
 
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('[postLogin] error:', error);
         req.flash('error', 'Login failed');
         res.redirect('/auth/login');
     }
@@ -337,8 +341,7 @@ exports.postForgotPassword = async (req, res) => {
         }
 
         const [users] = await pool.execute(
-            'SELECT * FROM users WHERE email = ?',
-            [email]
+            'SELECT * FROM users WHERE email = ?', [email]
         );
 
         if (users.length === 0) {
@@ -361,7 +364,7 @@ exports.postForgotPassword = async (req, res) => {
         res.redirect('/auth/login');
 
     } catch (error) {
-        console.error('Forgot password error:', error);
+        console.error('[postForgotPassword] error:', error);
         req.flash('error', 'Failed to send reset link. Please try again.');
         res.redirect('/auth/forgot-password');
     }
@@ -382,17 +385,13 @@ exports.getResetPassword = async (req, res) => {
             return res.redirect('/auth/forgot-password');
         }
 
-        // Attach user so applyUserPrefs can load their stored prefs
         req.user = users[0];
         await applyUserPrefs(req, res);
 
-        res.render('auth/reset-password', authLocals(req, res, {
-            title: 'New Password',
-            token,
-        }));
+        res.render('auth/reset-password', authLocals(req, res, { title: 'New Password', token }));
 
     } catch (error) {
-        console.error('Reset password page error:', error);
+        console.error('[getResetPassword] error:', error);
         req.flash('error', 'Something went wrong');
         res.redirect('/auth/forgot-password');
     }
@@ -427,7 +426,10 @@ exports.postResetPassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         await pool.execute(
-            'UPDATE users SET password = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?',
+            `UPDATE users
+             SET password = ?, password_reset_token = NULL, password_reset_expires = NULL,
+                 updated_at = NOW()
+             WHERE id = ?`,
             [hashedPassword, users[0].id]
         );
 
@@ -435,7 +437,7 @@ exports.postResetPassword = async (req, res) => {
         res.redirect('/auth/login');
 
     } catch (error) {
-        console.error('Reset password error:', error);
+        console.error('[postResetPassword] error:', error);
         req.flash('error', 'Failed to reset password');
         res.redirect('/auth/forgot-password');
     }
@@ -453,8 +455,7 @@ exports.postPinEntry = async (req, res) => {
         const { pin } = req.body;
 
         const [[user]] = await pool.execute(
-            'SELECT * FROM users WHERE id = ?',
-            [req.user.id]
+            'SELECT * FROM users WHERE id = ?', [req.user.id]
         );
 
         const isValid = await verifyPin(pin, user.pin);
@@ -470,7 +471,7 @@ exports.postPinEntry = async (req, res) => {
         res.redirect('/user/dashboard');
 
     } catch (error) {
-        console.error('PIN error:', error);
+        console.error('[postPinEntry] error:', error);
         req.flash('error', 'PIN verification failed');
         res.redirect('/auth/pin-entry');
     }
@@ -499,7 +500,7 @@ exports.postSetPin = async (req, res) => {
 
         const hashedPin = await hashPin(pin);
         await pool.execute(
-            'UPDATE users SET pin = ? WHERE id = ?',
+            'UPDATE users SET pin = ?, updated_at = NOW() WHERE id = ?',
             [hashedPin, req.user.id]
         );
 
@@ -507,7 +508,7 @@ exports.postSetPin = async (req, res) => {
         res.redirect('/auth/pin-entry');
 
     } catch (error) {
-        console.error('Set PIN error:', error);
+        console.error('[postSetPin] error:', error);
         req.flash('error', 'Failed to set PIN');
         res.redirect('/auth/set-pin');
     }
@@ -520,6 +521,6 @@ exports.logout = (req, res) => {
     res.redirect('/auth/login');
 };
 
-// ─── Named exports for middleware use ─────────────────────────────────────────
+// ─── Named exports ────────────────────────────────────────────────────────────
 exports.applyUserPrefs = applyUserPrefs;
 exports.authLocals     = authLocals;
