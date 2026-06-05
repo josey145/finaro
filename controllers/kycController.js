@@ -27,6 +27,8 @@ exports.getKYCPage = async (req, res) => {
 // ─── Submit KYC ───────────────────────────────────────────────────────────────
 
 exports.submitKYC = async (req, res) => {
+    // At the top of submitKYC, before the INSERT:
+console.log('[KYC SUBMIT] document_type received:', req.body.document_type);
     try {
         const frontFile = req.files?.document_front?.[0];
         const backFile  = req.files?.document_back?.[0];

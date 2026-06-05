@@ -659,7 +659,7 @@ exports.verifyUser = async (req, res) => {
                  WHERE user_id = ?
                    AND file_path IS NOT NULL
                    AND file_path != ''
-                   AND status IN ('pending', 'submitted')
+                   AND k.status = 'pending'
                  ORDER BY submitted_at DESC LIMIT 1`,
                 [userId]
             );
@@ -793,8 +793,10 @@ exports.getKYCReview = async (req, res) => {
         const [documents] = await pool.execute(
             `SELECT
                 u.id            AS user_id,
-                CONCAT(u.first_name, ' ', u.last_name) AS username,
+                u.first_name,
+                u.last_name,
                 u.email,
+                CONCAT(u.first_name, ' ', u.last_name) AS username,
                 u.kyc_status,
                 k.id            AS kyc_id,
                 k.document_type,
@@ -802,7 +804,7 @@ exports.getKYCReview = async (req, res) => {
                 k.file_path,
                 k.file_path_back,
                 k.file_name,
-                k.status        AS doc_status,
+                k.status        AS status,
                 k.admin_notes,
                 k.submitted_at,
                 k.reviewed_at,
@@ -812,7 +814,7 @@ exports.getKYCReview = async (req, res) => {
              INNER JOIN users u ON u.id = k.user_id
              WHERE k.file_path IS NOT NULL
                AND k.file_path != ''
-               AND k.status IN ('pending', 'submitted')
+               AND k.status = 'pending'
                AND u.is_admin = 0
              ORDER BY k.submitted_at DESC`
         );

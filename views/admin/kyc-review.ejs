@@ -581,8 +581,8 @@
     async function approveKYC(id) {
         if (!confirm('Approve this KYC document?')) return;
         try {
-            const res  = await fetch(`/admin/kyc/${id}`, {
-                method:  'POST',
+            const res = await fetch(`/admin/kyc/${id}/review`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({ action: 'approved', notes: '' }),
             });
@@ -607,7 +607,7 @@
         const notes = document.getElementById('rejectNotes').value.trim();
         if (!notes) { alert('Please provide a reason for rejection.'); return; }
         try {
-            const res  = await fetch(`/admin/kyc/${currentKycId}`, {
+            const res  = await fetch(`/admin/kyc/${currentKycId}/review`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({ action: 'rejected', notes }),
